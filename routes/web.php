@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     $backendUrl = rtrim(config('services.backend_api.url') ?? env('BACKEND_API_URL', 'http://127.0.0.1:8000/api/v1'), '/');
-    $apiUrl = $backendUrl . '/users';
+    $apiUrl = $backendUrl.'/users';
 
     $initialData = null;
     $initialError = null;
@@ -16,9 +16,9 @@ Route::get('/', function () {
         if ($response->successful()) {
             $initialData = $response->json();
         } else {
-            $initialError = 'HTTP ' . $response->status() . ' - ' . $response->reason();
+            $initialError = 'HTTP '.$response->status().' - '.$response->reason();
         }
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         $initialError = $e->getMessage();
     }
 
@@ -36,6 +36,7 @@ Route::prefix('auth')->group(function () {
             'email' => 'required|email',
             'password' => 'required|min:8',
         ]);
+
         return redirect('/dashboard');
     });
 
@@ -45,8 +46,11 @@ Route::prefix('auth')->group(function () {
             'email' => 'required|email',
             'password' => 'required|min:8',
         ]);
+
         return redirect('/dashboard');
     });
 });
 
 Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
+Route::get('/dashboard-pengurus', fn () => view('dashboard-pengurus'))->name('dashboard-pengurus');
+Route::get('/dashboard-pm', fn () => view('dashboard-pm'))->name('dashboard-pm');
