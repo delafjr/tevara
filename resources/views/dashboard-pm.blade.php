@@ -11,6 +11,7 @@
 <div class="flex min-h-screen">
 
     {{-- ===== SIDEBAR ===== --}}
+    <!-- contoh -->
     <aside class="w-64 min-h-screen bg-white border-r border-slate-100 flex flex-col fixed top-0 left-0 z-30">
 
         <div class="px-6 py-5 border-b border-slate-100">
