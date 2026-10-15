@@ -34,8 +34,8 @@
 
             <div>
                 <label for="password" class="block text-xs font-semibold text-text-primary mb-1">Kata Sandi</label>
-                <input type="password" id="password" name="password" minlength="8" required
-                    placeholder="Minimal 8 karakter"
+                <input type="password" id="password" name="password" required
+                    placeholder="Masukkan kata sandi"
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20">
             </div>
 

@@ -5,39 +5,47 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    $backendUrl = rtrim(config('services.backend_api.url') ?? env('BACKEND_API_URL', 'http://127.0.0.1:8000/api/v1'), '/');
-    $apiUrl = $backendUrl.'/users';
-
-    $initialData = null;
-    $initialError = null;
-
-    try {
-        $response = Http::timeout(3)->get($apiUrl);
-        if ($response->successful()) {
-            $initialData = $response->json();
-        } else {
-            $initialError = 'HTTP '.$response->status().' - '.$response->reason();
-        }
-    } catch (Throwable $e) {
-        $initialError = $e->getMessage();
+    if (session('api_token')) {
+        return redirect()->route('dashboard');
     }
-
-    return view('welcome', [
-        'apiUrl' => $apiUrl,
-        'initialData' => $initialData,
-        'initialError' => $initialError,
-    ]);
+    return redirect()->route('login');
 });
 
 Route::prefix('auth')->group(function () {
-    Route::get('/login', fn () => view('auth.login'))->name('login');
+    Route::get('/login', function () {
+        if (session('api_token')) {
+            return redirect()->route('dashboard');
+        }
+        return view('auth.login');
+    })->name('login');
+
     Route::post('/login', function (Request $request) {
         $request->validate([
             'email' => 'required|email',
-            'password' => 'required|min:8',
+            'password' => 'required',
         ]);
 
-        return redirect('/dashboard');
+        $backendUrl = rtrim(config('services.backend_api.url'), '/');
+
+        try {
+            $response = Http::timeout(5)->post($backendUrl . '/auth/login', [
+                'email' => $request->email,
+                'password' => $request->password,
+            ]);
+
+            if ($response->successful() && $response->json('success')) {
+                $data = $response->json('data');
+                session([
+                    'api_token' => $data['token'],
+                    'user'      => $data['user'],
+                ]);
+                return redirect()->route('dashboard');
+            }
+
+            return back()->withErrors(['email' => $response->json('message', 'Login gagal')])->withInput();
+        } catch (\Throwable $e) {
+            return back()->withErrors(['email' => 'Tidak dapat terhubung ke server: ' . $e->getMessage()])->withInput();
+        }
     });
 
     Route::get('/register', fn () => view('auth.register'))->name('register');
@@ -49,8 +57,26 @@ Route::prefix('auth')->group(function () {
 
         return redirect('/dashboard');
     });
+
+    Route::post('/logout', function () {
+        session()->forget(['api_token', 'user']);
+        return redirect()->route('login');
+    })->name('logout');
 });
 
-Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
-Route::get('/dashboard-pengurus', fn () => view('dashboard-pengurus'))->name('dashboard-pengurus');
-Route::get('/dashboard-pm', fn () => view('dashboard-pm'))->name('dashboard-pm');
+// Dashboard routes — protected by session check
+Route::middleware('auth.api')->group(function () {
+    Route::get('/dashboard', function () {
+        $user = session('user');
+        $role = $user['roles'][0] ?? 'klien';
+        $map = [
+            'klien'         => 'dashboard',
+            'pengurus_tefa' => 'dashboard-pengurus',
+            'dosen'         => 'dashboard-pm',
+            'mahasiswa'     => 'dashboard-mahasiswa',
+            'jurusan'       => 'dashboard-jurusan',
+        ];
+        $view = $map[$role] ?? 'dashboard';
+        return view($view, ['user' => $user]);
+    })->name('dashboard');
+});

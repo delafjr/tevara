@@ -8,6 +8,13 @@
 </head>
 <body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased">
 
+@php
+    $user = $user ?? session('user');
+    $userName = $user['name'] ?? 'Pengurus';
+    $initials = collect(explode(' ', $userName))->map(fn($w) => mb_substr($w, 0, 1))->take(2)->join('');
+    $firstName = explode(' ', $userName)[0] ?? 'Pengurus';
+@endphp
+
 <div class="flex min-h-screen">
 
     {{-- ===== SIDEBAR ===== --}}
@@ -89,10 +96,10 @@
         <div class="px-4 py-4 border-t border-slate-100">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full bg-[#0B3B82] flex items-center justify-center flex-shrink-0">
-                    <span class="text-white text-xs font-bold">IP</span>
+                    <span class="text-white text-xs font-bold">{{ $initials }}</span>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-[13px] font-semibold text-[#1E293B] truncate">Indra Pratama</p>
+                    <p class="text-[13px] font-semibold text-[#1E293B] truncate">{{ $userName }}</p>
                     <p class="text-[11px] text-slate-400 truncate">Pengelola TeFa</p>
                 </div>
             </div>
@@ -106,12 +113,15 @@
         <header class="bg-white border-b border-slate-100 px-8 py-4 flex items-center justify-between sticky top-0 z-20">
             <div>
                 <p class="text-xs text-slate-400 font-medium">Dashboard</p>
-                <p class="text-[15px] font-semibold text-[#1E293B] leading-tight">Selamat datang, Indra 👋</p>
+                <p class="text-[15px] font-semibold text-[#1E293B] leading-tight">Selamat datang, {{ $firstName }} 👋</p>
             </div>
             <div class="flex items-center gap-3">
                 <span class="text-xs text-slate-400">{{ now()->isoFormat('dddd, D MMMM Y') }}</span>
                 <div class="w-px h-4 bg-slate-200"></div>
-                <a href="#" class="text-xs text-slate-500 hover:text-[#0B3B82] font-medium transition-colors">Logout</a>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="text-xs text-slate-500 hover:text-[#0B3B82] font-medium transition-colors">Logout</button>
+                </form>
             </div>
         </header>
 
