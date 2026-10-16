@@ -36,8 +36,9 @@ Route::prefix('auth')->group(function () {
             if ($response->successful() && $response->json('success')) {
                 $data = $response->json('data');
                 session([
-                    'api_token' => $data['token'],
-                    'user'      => $data['user'],
+                    'api_token'   => $data['token'],
+                    'user'        => $data['user'],
+                    'active_role' => $data['user']['roles'][0] ?? 'klien',
                 ]);
                 return redirect()->route('dashboard');
             }
@@ -68,7 +69,11 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth.api')->group(function () {
     Route::get('/dashboard', function () {
         $user = session('user');
-        $role = $user['roles'][0] ?? 'klien';
+        $role = session('active_role') ?? ($user['roles'][0] ?? 'klien');
+        if ($role === 'pm') {
+            $role = 'dosen';
+        }
+
         $map = [
             'klien'         => 'dashboard',
             'pengurus_tefa' => 'dashboard-pengurus',
@@ -76,7 +81,47 @@ Route::middleware('auth.api')->group(function () {
             'mahasiswa'     => 'dashboard-mahasiswa',
             'jurusan'       => 'dashboard-jurusan',
         ];
+
         $view = $map[$role] ?? 'dashboard';
-        return view($view, ['user' => $user]);
+        return view($view, ['user' => $user, 'currentRole' => $role]);
     })->name('dashboard');
+
+    // Switch Role handlers
+    Route::get('/switch-role/{role}', function ($role) {
+        $validRoles = ['klien', 'pengurus_tefa', 'dosen', 'pm', 'mahasiswa', 'jurusan'];
+        if (in_array($role, $validRoles)) {
+            session(['active_role' => $role === 'pm' ? 'dosen' : $role]);
+        }
+        return redirect()->route('dashboard');
+    })->name('switch-role.get');
+
+    Route::post('/switch-role', function (Request $request) {
+        $role = $request->input('role');
+        $validRoles = ['klien', 'pengurus_tefa', 'dosen', 'pm', 'mahasiswa', 'jurusan'];
+        if (in_array($role, $validRoles)) {
+            session(['active_role' => $role === 'pm' ? 'dosen' : $role]);
+        }
+        return redirect()->route('dashboard');
+    })->name('switch-role');
+
+    // Direct dashboard aliases
+    Route::get('/dashboard-pengurus', function () {
+        session(['active_role' => 'pengurus_tefa']);
+        return redirect()->route('dashboard');
+    })->name('dashboard-pengurus');
+
+    Route::get('/dashboard-pm', function () {
+        session(['active_role' => 'dosen']);
+        return redirect()->route('dashboard');
+    })->name('dashboard-pm');
+
+    Route::get('/dashboard-mahasiswa', function () {
+        session(['active_role' => 'mahasiswa']);
+        return redirect()->route('dashboard');
+    })->name('dashboard-mahasiswa');
+
+    Route::get('/dashboard-jurusan', function () {
+        session(['active_role' => 'jurusan']);
+        return redirect()->route('dashboard');
+    })->name('dashboard-jurusan');
 });
