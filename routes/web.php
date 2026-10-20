@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    if (session('api_token')) {
+    if (session('api_token') || app()->environment('local')) {
         return redirect()->route('dashboard');
     }
     return redirect()->route('login');

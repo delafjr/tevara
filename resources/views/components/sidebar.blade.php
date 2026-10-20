@@ -67,7 +67,7 @@
         ],
         'dosen' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => '#'],
+            ['id' => 'project',      'label' => 'Project',               'icon' => 'project',        'href' => '#'],
             ['id' => 'anggota-tim',  'label' => 'Anggota & Tim',         'icon' => 'team',           'href' => '#'],
             ['id' => 'task-timeline','label' => 'Task & Timeline',       'icon' => 'task',           'href' => '#'],
         ],
@@ -95,21 +95,9 @@
 <aside class="w-64 min-h-screen bg-[#F4F7FC] border-r border-slate-200/70 flex flex-col fixed top-0 left-0 z-30 select-none">
 
     {{-- ===== LOGO TEVARA ===== --}}
-    <div class="px-6 py-6 border-b border-slate-200/50">
-        <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
-            {{-- Dual wave icon (Blue & Gold) --}}
-            <div class="relative w-8 h-8 flex-shrink-0 flex items-center justify-center">
-                <svg viewBox="0 0 54 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
-                    <!-- Blue upper swoosh -->
-                    <path d="M4 25C12 12 25 8 40 11C31 15 22 19 14 28L4 25Z" fill="#0B3B82" />
-                    <!-- Gold lower swoosh -->
-                    <path d="M14 28C22 19 32 16 48 18C38 23 28 31 18 31C14 31 13 29 14 28Z" fill="#FFB800" />
-                </svg>
-            </div>
-            <div>
-                <p class="text-[14px] font-black text-[#0B3B82] leading-none tracking-tight">TEVARA</p>
-                <p class="text-[9.5px] font-medium text-slate-400 mt-1 leading-none tracking-tight">Knowledge Into Action</p>
-            </div>
+    <div class="px-6 py-6 border-b border-slate-200/50 flex items-center">
+        <a href="{{ route('dashboard') }}" class="block">
+            <img src="{{ asset('images/logo-tevara.png') }}" alt="TEVARA Knowledge into Action" class="h-8 w-auto max-w-[185px] object-contain">
         </a>
     </div>
 
@@ -120,8 +108,8 @@
                 $isActive = ($active === $item['id']);
             @endphp
             <a href="{{ $item['href'] }}"
-               class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-[13.5px] transition-all duration-150 {{ $isActive ? 'bg-[#DDE9FA] text-[#0B3B82] font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 font-medium' }}">
-                <span class="w-5 h-5 flex-shrink-0 {{ $isActive ? 'text-[#0B3B82]' : 'text-slate-500' }}">
+               class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-[13.5px] transition-all duration-150 {{ $isActive ? 'bg-[#DDE9FA] text-[#2563EB] font-semibold' : 'text-slate-500 hover:text-slate-900 hover:bg-white/70 font-medium' }}">
+                <span class="w-5 h-5 flex-shrink-0 {{ $isActive ? 'text-[#2563EB]' : 'text-slate-400' }}">
                     @if($item['icon'] === 'dashboard')
                         {{-- Bento / Grid 4-square icon --}}
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
@@ -252,25 +240,18 @@
             <button
                 @click="openRoleMenu = !openRoleMenu"
                 type="button"
-                class="w-full bg-white rounded-2xl p-2.5 flex items-center justify-between shadow-xs border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-150 text-left cursor-pointer group"
+                class="w-full bg-white rounded-2xl p-3 flex items-center gap-3 shadow-xs border border-slate-100 hover:border-slate-200 transition-all duration-150 text-left cursor-pointer group"
                 title="Klik untuk ganti role"
             >
-                <div class="flex items-center gap-2.5 min-w-0">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
                     {{-- Initials Badge --}}
-                    <div class="w-9 h-9 rounded-xl bg-[#0B254A] flex items-center justify-center text-white font-bold text-xs tracking-wider flex-shrink-0 shadow-xs">
+                    <div class="w-10 h-10 rounded-xl bg-[#0B1E3F] flex items-center justify-center text-white font-bold text-xs tracking-wider flex-shrink-0 shadow-xs">
                         {{ $initials }}
                     </div>
                     <div class="min-w-0 flex-1">
                         <p class="text-[13px] font-bold text-[#0F172A] leading-tight truncate">{{ $userName }}</p>
-                        <p class="text-[11px] text-slate-400 font-medium leading-none mt-1 truncate">{{ $roleLabel }}</p>
+                        <p class="text-[11px] text-slate-400 font-normal leading-tight mt-0.5 truncate">{{ $roleLabel }}</p>
                     </div>
-                </div>
-
-                {{-- Switch Role Arrow Indicator --}}
-                <div class="text-slate-400 group-hover:text-[#0B3B82] transition-colors flex-shrink-0 pl-1.5">
-                    <svg class="w-4 h-4 transition-transform duration-200" :class="openRoleMenu ? 'rotate-180 text-[#0B3B82]' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                    </svg>
                 </div>
             </button>
 
