@@ -124,4 +124,13 @@ Route::middleware('auth.api')->group(function () {
         session(['active_role' => 'jurusan']);
         return redirect()->route('dashboard');
     })->name('dashboard-jurusan');
+
+    // ── Pengurus TEFA sub-pages ──
+    Route::get('/pengurus/projek', fn () => view('pengurus.projek', ['user' => session('user')]))->name('pengurus.projek');
+    Route::get('/pengurus/klien-mitra', fn () => view('pengurus.klien-mitra', ['user' => session('user')]))->name('pengurus.klien-mitra');
+    Route::get('/pengurus/dosen', fn () => view('pengurus.dosen', ['user' => session('user')]))->name('pengurus.dosen');
+    Route::get('/pengurus/mahasiswa', fn () => view('pengurus.mahasiswa', ['user' => session('user')]))->name('pengurus.mahasiswa');
+    Route::get('/pengurus/validasi-proposal', fn () => view('pengurus.validasi-proposal', ['user' => session('user')]))->name('pengurus.validasi-proposal');
+    Route::get('/pengurus/keuangan', fn () => view('pengurus.keuangan', ['user' => session('user')]))->name('pengurus.keuangan');
+    Route::get('/pengurus/monitoring', fn () => view('pengurus.monitoring', ['user' => session('user')]))->name('pengurus.monitoring');
 });
