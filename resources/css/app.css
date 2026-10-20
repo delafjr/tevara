@@ -46,3 +46,7 @@
     --error: #DC2626;
     --danger: #DC2626;
 }
+
+[x-cloak] {
+    display: none !important;
+}
