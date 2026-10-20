@@ -11,65 +11,16 @@
 </head>
 <body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased">
 
+@php
+    $user = $user ?? session('user');
+    $userName = $user['name'];
+@endphp
+
 {{-- == ( layout utama : sidebar + main ) == --}}
 <div class="flex min-h-screen">
 
-    {{-- == ( sidebar : panel navigasi kiri ) == --}}
-    <aside class="w-64 min-h-screen bg-white border-r border-slate-100 flex flex-col fixed top-0 left-0 z-30">
-
-        {{-- == ( logo tevara ) == --}}
-        <div class="px-6 py-5 border-b border-slate-100">
-            <img src="{{ asset('images/tevara-logo.png') }}" alt="Logo TEVARA - Knowledge into Action" class="h-9 w-auto">
-        </div>
-
-        {{-- == ( navigasi menu ) == --}}
-        <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-
-            @php
-            $navItems = [
-                ['icon' => 'home', 'label' => 'Dashboard', 'active' => true],
-                ['icon' => 'plus-circle', 'label' => 'Ajukan Proyek', 'active' => false],
-                ['icon' => 'folder', 'label' => 'Proyek Saya', 'active' => false],
-                ['icon' => 'credit-card', 'label' => 'Tagihan & Pembayaran', 'active' => false],
-            ];
-            @endphp
-
-            @foreach($navItems as $item)
-            <a href="#"
-               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium transition-colors
-                      {{ $item['active']
-                          ? 'bg-[#EAF3FF] text-[#0B3B82]'
-                          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                <span class="w-4 h-4 flex-shrink-0">
-                    @if($item['icon'] === 'home')
-                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
-                    @elseif($item['icon'] === 'plus-circle')
-                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                    @elseif($item['icon'] === 'folder')
-                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/></svg>
-                    @elseif($item['icon'] === 'credit-card')
-                    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>
-                    @endif
-                </span>
-                <span class="flex-1">{{ $item['label'] }}</span>
-            </a>
-            @endforeach
-        </nav>
-
-        {{-- == ( profil user ) == --}}
-        <div class="px-4 py-4 border-t border-slate-100 mt-auto">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-[#0B3B82] flex items-center justify-center flex-shrink-0">
-                    <span class="text-white text-xs font-bold">BS</span>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-[13px] font-semibold text-[#1E293B] truncate">Budi Santoso</p>
-                    <p class="text-[11px] text-slate-400 truncate">Klien</p>
-                </div>
-                <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"/></svg>
-            </div>
-        </div>
-    </aside>
+    {{-- == ( sidebar komponen DRY ) == --}}
+    <x-sidebar active="dashboard" />
 
     {{-- == ( konten utama ) == --}}
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
@@ -88,7 +39,7 @@
                         Workspace Klien
                     </span>
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
-                        Selamat Datang, <span class="text-[#FFB800]">Budi Santoso</span>
+                        Selamat Datang, <span class="text-[#FFB800]">{{ $userName }}</span>
                     </h1>
                     <p class="text-sm text-slate-400 mt-1.5">Pantau perkembangan proyek dan kolaborasi bersama TEVARA secara terpadu</p>
                 </div>
