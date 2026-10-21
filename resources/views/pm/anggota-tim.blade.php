@@ -11,6 +11,7 @@
 @php
     $user = $user ?? session('user');
     $userName = $user['name'] ?? 'Project Manager';
+    $isDosen = session('active_role') === 'dosen';
 
     // Ikon kategori per tipe proyek
     $katIkon = [
@@ -133,6 +134,12 @@
             </div>
         </div>
 
+        @if($isDosen)
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs px-8 py-14 text-center">
+                <h2 class="text-lg font-bold text-[#0B254A]">Belum ada proyek terdaftar</h2>
+                <p class="text-sm text-slate-500 mt-2">Informasi tim akan muncul setelah proyek ditugaskan kepada Anda.</p>
+            </div>
+        @else
         {{-- ── 2. STAT CARDS ── --}}
         <div class="grid grid-cols-3 gap-5">
 
@@ -406,6 +413,7 @@
             </div>
 
         </div>
+        @endif
 
     </main>
 

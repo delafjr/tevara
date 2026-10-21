@@ -11,6 +11,7 @@
 @php
     $user = $user ?? session('user');
     $userName = $user['name'] ?? 'Project Manager';
+    $isDosen = session('active_role') === 'dosen';
 
     $projects = [
         [
@@ -178,6 +179,12 @@
             </div>
         </div>
 
+        @if($isDosen)
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs px-8 py-14 text-center">
+                <h2 class="text-lg font-bold text-[#0B254A]">Belum ada proyek terdaftar</h2>
+                <p class="text-sm text-slate-500 mt-2">Proyek yang ditugaskan kepada Anda akan muncul di halaman ini.</p>
+            </div>
+        @else
         {{-- ── 2. STAT CARDS ── --}}
         <div class="grid grid-cols-4 gap-5">
 
@@ -515,6 +522,7 @@
             </div>
 
         </div>
+        @endif
 
     </main>
 

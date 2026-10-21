@@ -114,4 +114,116 @@ class DashboardAccessTest extends TestCase
         $dashResponse->assertStatus(200);
         $dashResponse->assertSee('Dosen PM');
     }
+
+    public function test_pm_can_access_project_and_task_timeline_pages(): void
+    {
+        $session = [
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 6,
+                'name' => 'Dosen PM',
+                'roles' => ['dosen'],
+                'is_pm' => true,
+            ],
+            'active_role' => 'pm',
+        ];
+
+        $projectResponse = $this->withSession($session)->get('/pm/project');
+        $projectResponse->assertOk();
+        $projectResponse->assertSee('href="' . route('pm.project') . '"', false);
+        $projectResponse->assertSee('href="' . route('pm.task-timeline') . '"', false);
+
+        $taskTimelineResponse = $this->withSession($session)->get('/pm/task-timeline');
+        $taskTimelineResponse->assertOk();
+        $taskTimelineResponse->assertSee('href="' . route('pm.project') . '"', false);
+        $taskTimelineResponse->assertSee('href="' . route('pm.task-timeline') . '"', false);
+    }
+
+    public function test_dosen_pm_sidebar_links_open_pm_pages(): void
+    {
+        $session = [
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 6,
+                'name' => 'Dosen PM',
+                'roles' => ['dosen', 'pm'],
+                'is_pm' => false,
+            ],
+            'active_role' => 'dosen',
+        ];
+
+        $response = $this->withSession($session)->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSee('href="' . route('pm.project') . '"', false);
+        $response->assertSee('href="' . route('pm.anggota-tim') . '"', false);
+        $response->assertSee('href="' . route('pm.task-timeline') . '"', false);
+
+        $this->withSession($session)->get(route('pm.project'))->assertOk();
+        $this->withSession($session)->get(route('pm.task-timeline'))->assertOk();
+    }
+
+    public function test_dosen_can_open_project_and_task_pages_when_no_project_is_assigned(): void
+    {
+        $response = $this->withSession([
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 6,
+                'name' => 'Dosen',
+                'roles' => ['dosen'],
+                'is_pm' => false,
+            ],
+            'active_role' => 'dosen',
+        ])->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSee('href="' . route('pm.project') . '"', false);
+        $response->assertSee('href="' . route('pm.anggota-tim') . '"', false);
+        $response->assertSee('href="' . route('pm.task-timeline') . '"', false);
+
+        $projectResponse = $this->withSession([
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 6,
+                'name' => 'Dosen',
+                'roles' => ['dosen'],
+                'is_pm' => false,
+            ],
+            'active_role' => 'dosen',
+        ])->get(route('pm.project'));
+
+        $projectResponse->assertOk();
+        $projectResponse->assertSee('Belum ada proyek terdaftar');
+        $projectResponse->assertDontSee('PRJ-2026/044');
+
+        $teamResponse = $this->withSession([
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 6,
+                'name' => 'Dosen',
+                'roles' => ['dosen'],
+                'is_pm' => false,
+            ],
+            'active_role' => 'dosen',
+        ])->get(route('pm.anggota-tim'));
+
+        $teamResponse->assertOk();
+        $teamResponse->assertSee('Belum ada proyek terdaftar');
+        $teamResponse->assertDontSee('PRJ-2026/014');
+
+        $taskResponse = $this->withSession([
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 6,
+                'name' => 'Dosen',
+                'roles' => ['dosen'],
+                'is_pm' => false,
+            ],
+            'active_role' => 'dosen',
+        ])->get(route('pm.task-timeline'));
+
+        $taskResponse->assertOk();
+        $taskResponse->assertSee('Belum ada proyek terdaftar');
+        $taskResponse->assertDontSee('PRJ-2026/001');
+    }
 }

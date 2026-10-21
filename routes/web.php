@@ -254,7 +254,7 @@ Route::middleware('auth.api')->group(function () {
     Route::get('/mahasiswa/task', fn () => view('mahasiswa.task', ['user' => session('user')]))->name('mahasiswa.task');
 
     // PM sub-pages (Protected by role pm)
-    Route::middleware('auth.api:pm')->prefix('pm')->name('pm.')->group(function () {
+    Route::middleware('auth.api:pm|dosen')->prefix('pm')->name('pm.')->group(function () {
         Route::get('/project', fn () => view('pm.project', ['user' => session('user')]))->name('project');
         Route::get('/anggota-tim', fn () => view('pm.anggota-tim', ['user' => session('user')]))->name('anggota-tim');
         Route::get('/task-timeline', fn () => view('pm.task-timeline', ['user' => session('user')]))->name('task-timeline');

@@ -82,9 +82,9 @@
         ],
         'dosen' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'project',      'label' => 'Project',               'icon' => 'project',        'href' => '#'],
-            ['id' => 'anggota-tim',  'label' => 'Anggota & Tim',         'icon' => 'team',           'href' => '#'],
-            ['id' => 'task-timeline','label' => 'Task & Timeline',       'icon' => 'task',           'href' => '#'],
+            ['id' => 'project',      'label' => 'Project',               'icon' => 'project',        'href' => route('pm.project')],
+            ['id' => 'anggota-tim',  'label' => 'Anggota & Tim',         'icon' => 'team',           'href' => route('pm.anggota-tim')],
+            ['id' => 'task-timeline','label' => 'Task & Timeline',       'icon' => 'task',           'href' => route('pm.task-timeline')],
         ],
         'pengurus_tefa' => [
             ['id' => 'dashboard',         'label' => 'Dashboard',         'icon' => 'dashboard',      'href' => route('dashboard')],

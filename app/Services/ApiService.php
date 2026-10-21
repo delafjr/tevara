@@ -78,7 +78,7 @@ class ApiService
 
     /**
      * Extract allowed roles from user payload.
-     * Rule: Kalau is_pm: true, maka dia juga PM.
+     * Include PM access when assigned explicitly or indicated by is_pm.
      */
     public static function getUserRoles(?array $user): array
     {
@@ -91,12 +91,8 @@ class ApiService
             $roles = [$roles];
         }
 
-        if (!empty($user['is_pm'])) {
-            if (!in_array('pm', $roles, true)) {
-                $roles[] = 'pm';
-            }
-        } else {
-            $roles = array_values(array_diff($roles, ['pm']));
+        if (!empty($user['is_pm']) && !in_array('pm', $roles, true)) {
+            $roles[] = 'pm';
         }
 
         return array_values(array_unique($roles));
