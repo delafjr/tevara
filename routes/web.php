@@ -150,6 +150,9 @@ Route::middleware('auth.api')->group(function () {
         return redirect()->route('dashboard');
     })->name('dashboard-mahasiswa');
 
+    Route::get('/mahasiswa/project', fn () => view('mahasiswa.project', ['user' => session('user')]))->name('mahasiswa.project');
+    Route::get('/mahasiswa/task', fn () => view('mahasiswa.task', ['user' => session('user')]))->name('mahasiswa.task');
+
     Route::get('/dashboard-jurusan', function () {
         session(['active_role' => 'jurusan']);
         return redirect()->route('dashboard');
