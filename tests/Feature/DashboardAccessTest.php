@@ -6,6 +6,29 @@ use Tests\TestCase;
 
 class DashboardAccessTest extends TestCase
 {
+    public function test_guest_can_access_main_page(): void
+    {
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $response->assertSee('Tevara');
+    }
+
+    public function test_authenticated_user_can_access_main_page(): void
+    {
+        $response = $this->withSession([
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 1,
+                'name' => 'Test User',
+                'roles' => ['klien'],
+            ],
+            'active_role' => 'klien',
+        ])->get('/');
+
+        $response->assertStatus(200);
+        $response->assertSee('Dashboard');
+    }
+
     public function test_guest_is_redirected_to_login(): void
     {
         $response = $this->get('/dashboard');

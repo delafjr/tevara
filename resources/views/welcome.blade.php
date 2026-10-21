@@ -54,6 +54,18 @@
                     </svg>
                     <span class="hidden sm:inline" x-text="isLoading ? 'Memuat...' : 'Hit API'">Hit API</span>
                 </button>
+
+                @if(session('api_token') && session('user'))
+                    <a href="{{ route('dashboard') }}" class="inline-flex items-center space-x-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-primary bg-section hover:bg-primary/10 transition duration-150 border border-primary/20">
+                        <span>Dashboard</span>
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="inline-flex items-center space-x-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-primary bg-section hover:bg-primary/10 transition duration-150 border border-primary/20">
+                        <span>Login</span>
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                    </a>
+                @endif
             </div>
         </div>
     </header>
