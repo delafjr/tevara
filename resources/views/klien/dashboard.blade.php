@@ -98,7 +98,7 @@
             {{-- == ( tombol aksi : ajukan & lihat semua ) == --}}
             <div class="flex items-center justify-between gap-6">
                 <div class="flex items-center gap-3">
-                    <a href="#"
+                    <a href="{{ route('klien.ajukan-proyek') }}"
                        class="flex items-center gap-2 bg-[#0B3B82] text-white rounded-full px-5 py-3 font-semibold text-sm hover:bg-[#0a3372] transition-colors shadow-sm">
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>

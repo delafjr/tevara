@@ -65,7 +65,7 @@
     $menus = [
         'klien' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'ajukan-projek','label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => '#'],
+            ['id' => 'ajukan-projek','label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => route('klien.ajukan-proyek')],
             ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => '#'],
             ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => '#'],
         ],
