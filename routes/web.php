@@ -145,6 +145,83 @@ Route::middleware('auth.api')->group(function () {
         return redirect()->route('dashboard');
     })->name('switch-role');
 
+    // Klien: Ajukan Proyek Baru
+    Route::middleware('auth.api:klien')->prefix('klien')->name('klien.')->group(function () {
+        Route::get('/ajukan-proyek', fn () => view('klien.ajukan-proyek', ['user' => session('user')]))
+            ->name('ajukan-proyek');
+
+        Route::post('/ajukan-proyek', function (Request $request, ApiService $api) {
+            // Modul dikirim sebagai JSON string dari repeater Alpine, decode dulu agar rule array berlaku.
+            $request->merge([
+                'modul' => json_decode($request->input('modul', '[]'), true) ?: [],
+            ]);
+
+            $validated = $request->validate([
+                'nama_instansi'     => ['required', 'string', 'max:255'],
+                'pic_nama'          => ['required', 'string', 'max:100'],
+                'kontak_nomor'      => ['nullable', 'string', 'max:30'],
+                'kontak_email'      => ['required', 'email', 'max:255'],
+                'judul_proyek'      => ['required', 'string', 'max:255'],
+                // ponytail: id kategori di-hardcode karena backend belum menyediakan endpoint master data.
+                // Ganti dengan fetch dari /master/proposal-categories saat endpoint tersedia.
+                'kategori_id'       => ['required', 'integer', 'in:1,2,3,4,5'],
+                'ringkasan'         => ['required', 'string', 'min:100', 'max:500'],
+                'deskripsi'         => ['nullable', 'string', 'max:2000'],
+                'target_pengguna'   => ['nullable', 'string', 'max:1000'],
+                'deadline'          => ['required', 'date', 'after_or_equal:' . now()->addDays(30)->toDateString()],
+                'anggaran'          => ['nullable', 'numeric', 'min:0'],
+                'modul'             => ['required', 'array', 'min:1'],
+                'modul.*.judul'     => ['required', 'string', 'max:255'],
+                'modul.*.deskripsi' => ['nullable', 'string', 'max:1000'],
+            ]);
+
+            // ponytail: backend POST /proposals hanya menyimpan field resmi (title/background/destination).
+            // Data kontak & modul digabung ke background supaya tidak hilang; pisahkan ke kolom sendiri
+            // (scope_of_work / tabel modules) begitu endpoint modul & profil klien tersedia di backend.
+            $modul = collect($validated['modul'] ?? [])
+                ->filter(fn ($m) => !empty($m['judul']))
+                ->values();
+
+            $background = sprintf(
+                "Kontak: %s | PIC: %s | %s%s\n\n%s",
+                $validated['nama_instansi'],
+                $validated['pic_nama'],
+                $validated['kontak_email'],
+                !empty($validated['kontak_nomor']) ? ' | ' . $validated['kontak_nomor'] : '',
+                $validated['ringkasan']
+            );
+
+            if (!empty($validated['deskripsi'])) {
+                $background .= "\n\nDetail kebutuhan:\n" . $validated['deskripsi'];
+            }
+
+            if ($modul->isNotEmpty()) {
+                $background .= "\n\nModul yang diminta:\n" . $modul
+                    ->map(fn ($m, $i) => ($i + 1) . '. ' . $m['judul'] . (!empty($m['deskripsi']) ? ' — ' . $m['deskripsi'] : ''))
+                    ->implode("\n");
+            }
+
+            $response = $api->post('proposals', [
+                'title'            => $validated['judul_proyek'],
+                'background'       => $background,
+                'category_id'      => (int) $validated['kategori_id'],
+                'desired_deadline' => $validated['deadline'],
+                'target_audience'  => $validated['target_pengguna'] ?? null,
+                'estimated_budget' => $validated['anggaran'] ?? null,
+            ]);
+
+            if ($response->successful()) {
+                return redirect()
+                    ->route('klien.ajukan-proyek')
+                    ->with('success', 'Pengajuan proyek berhasil dikirim ke administrators TEVARA. Kode proposal: ' . ($response->json('proposal_code') ?? '-'));
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', 'Pengajuan gagal: ' . ($response->json('message') ?? 'terjadi kesalahan pada server TEVARA.'));
+        })->name('ajukan-proyek.store');
+    });
+
     // Role-specific dashboard direct URLs
     Route::get('/dashboard-pengurus', function () {
         $user = session('user');
