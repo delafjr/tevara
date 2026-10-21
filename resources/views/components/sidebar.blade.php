@@ -2,26 +2,25 @@
 
 @php
     $user = session('user') ?? [];
-    $currentRole = session('active_role') ?? ($user['roles'][0] ?? 'klien');
-    if ($currentRole === 'pm') {
-        $currentRole = 'dosen';
+    $allowedRoles = \App\Services\ApiService::getUserRoles($user);
+    $currentRole = session('active_role') ?? ($allowedRoles[0] ?? 'klien');
+
+    // Pastikan currentRole ada di role yang diizinkan user
+    if (!empty($allowedRoles) && !in_array($currentRole, $allowedRoles, true)) {
+        $currentRole = $allowedRoles[0];
     }
 
-    $userName = $user['name'] ?? match($currentRole) {
-        'dosen', 'pm' => 'Dimas Setiawan',
-        'pengurus_tefa' => 'Indra Pratama',
-        'mahasiswa' => 'Rian Hidayat',
-        'jurusan' => 'Kajur Elektro',
-        default => 'Budi Santoso'
-    };
+    $userName = $user['name'] ?? 'User';
 
     // Ekstrak 2 huruf inisial dari nama
-    $words = array_values(array_filter(explode(' ', $userName), fn($w) => !empty($w) && !str_contains($w, '.') && !str_contains($w, ',')));
-    $initials = '';
-    if (count($words) >= 2) {
-        $initials = mb_substr($words[0], 0, 1) . mb_substr($words[1], 0, 1);
-    } elseif (count($words) === 1) {
-        $initials = mb_substr($words[0], 0, 2);
+    $cleanWords = array_values(array_filter(
+        explode(' ', $userName),
+        fn($w) => !empty($w) && !str_contains($w, '.') && !str_contains($w, ',')
+    ));
+    if (count($cleanWords) >= 2) {
+        $initials = mb_substr($cleanWords[0], 0, 1) . mb_substr($cleanWords[1], 0, 1);
+    } elseif (count($cleanWords) === 1) {
+        $initials = mb_substr($cleanWords[0], 0, 2);
     } else {
         $initials = mb_substr($userName, 0, 2);
     }
@@ -36,9 +35,13 @@
             'label' => 'Mahasiswa',
             'sub'   => 'Mahasiswa',
         ],
-        'dosen' => [
+        'pm' => [
             'label' => 'Project Manager',
-            'sub'   => 'Dosen / PM',
+            'sub'   => 'Project Manager',
+        ],
+        'dosen' => [
+            'label' => 'Dosen',
+            'sub'   => 'Dosen Pengampu',
         ],
         'pengurus_tefa' => [
             'label' => 'Pengurus TeFa',
@@ -50,7 +53,13 @@
         ],
     ];
 
-    $roleLabel = $rolesConfig[$currentRole]['label'] ?? 'User';
+    // Filter hanya role yang dimiliki user dari BE
+    $availableRoles = array_intersect_key($rolesConfig, array_flip($allowedRoles));
+    if (empty($availableRoles)) {
+        $availableRoles = [$currentRole => $rolesConfig[$currentRole] ?? ['label' => ucfirst($currentRole), 'sub' => '']];
+    }
+
+    $roleLabel = $rolesConfig[$currentRole]['label'] ?? ucfirst($currentRole);
 
     // Menu sidebar sesuai spesifikasi tiap role
     $menus = [
@@ -64,6 +73,12 @@
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
             ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => '#'],
             ['id' => 'task-saya',    'label' => 'Task Saya',             'icon' => 'task',           'href' => '#'],
+        ],
+        'pm' => [
+            ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
+            ['id' => 'project',      'label' => 'Project',               'icon' => 'project',        'href' => '#'],
+            ['id' => 'anggota-tim',  'label' => 'Anggota & Tim',         'icon' => 'team',           'href' => '#'],
+            ['id' => 'task-timeline','label' => 'Task & Timeline',       'icon' => 'task',           'href' => '#'],
         ],
         'dosen' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
@@ -192,12 +207,12 @@
             >
                 <div class="px-2.5 py-1.5 flex items-center justify-between border-b border-slate-100 mb-1">
                     <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Switch Role</span>
-                    <span class="text-[10px] font-semibold text-[#0B3B82] bg-[#EAF3FF] px-2 py-0.5 rounded-full">5 Role</span>
+                    <span class="text-[10px] font-semibold text-[#0B3B82] bg-[#EAF3FF] px-2 py-0.5 rounded-full">{{ count($availableRoles) }} Role</span>
                 </div>
 
                 {{-- Role Choices --}}
                 <div class="space-y-0.5 py-1">
-                    @foreach($rolesConfig as $rKey => $rMeta)
+                    @foreach($availableRoles as $rKey => $rMeta)
                         @php
                             $isCurrent = ($currentRole === $rKey);
                         @endphp
