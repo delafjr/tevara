@@ -112,7 +112,7 @@
     {{-- ===== LOGO TEVARA ===== --}}
     <div class="px-6 py-6 border-b border-slate-200/50 flex items-center">
         <a href="{{ route('dashboard') }}" class="block">
-            <img src="{{ asset('images/logo-tevara.png') }}" alt="TEVARA Knowledge into Action" class="h-8 w-auto max-w-[185px] object-contain">
+            <img src="{{ asset('images/tevara-logo.png') }}" alt="TEVARA Knowledge into Action" class="h-8 w-auto max-w-[185px] object-contain">
         </a>
     </div>
 
