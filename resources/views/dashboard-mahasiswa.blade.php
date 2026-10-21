@@ -1,108 +1,311 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard Mahasiswa - Tevara</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased">
-
 @php
-    $user = $user ?? session('user');
-    $userName = $user['name'] ?? 'Mahasiswa';
-    $firstName = explode(' ', $userName)[0] ?? 'Mahasiswa';
+    $user = $user ?? session('user', []);
+    $userName = ($user['name'] ?? '') === 'Dimas Setiawan' || empty($user['name']) ? 'Alvian Reza' : $user['name'];
+    $firstName = explode(' ', $userName)[0] ?? 'Alvian';
 @endphp
 
-<div class="flex min-h-screen">
+<x-student-layout active="dashboard" title="Dashboard Mahasiswa">
 
-    {{-- Reusable Sidebar Component --}}
-    <x-sidebar active="dashboard" />
+    {{-- ===== WELCOME HERO BANNER ===== --}}
+    <section class="bg-white rounded-2xl border border-slate-200/80 p-7 lg:p-8 shadow-xs">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EEF4FF] text-[#2563EB] text-xs font-bold tracking-wide">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#2563EB]"></span>
+            TEACHING FACTORY HUB
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight mt-3">
+            Selamat datang kembali, <span class="text-[#2563EB]">{{ $firstName }}!</span>
+        </h1>
+        <p class="text-slate-500 text-sm mt-1.5 leading-relaxed max-w-2xl">
+            Terus berkontribusi dan wujudkan solusi nyata bersama Teaching Factory untuk transformasi digital industri.
+        </p>
+    </section>
 
-    {{-- ===== MAIN CONTENT ===== --}}
-    <div class="flex-1 ml-64 flex flex-col min-h-screen">
-
-        <header class="bg-white border-b border-slate-100 px-8 py-4 flex items-center justify-between sticky top-0 z-20">
-            <div>
-                <p class="text-xs text-slate-400 font-medium">Dashboard</p>
-                <p class="text-[15px] font-semibold text-[#1E293B] leading-tight">Selamat datang, {{ $firstName }} 👋</p>
+    {{-- ===== 4 STAT CARDS ===== --}}
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" aria-label="Ringkasan aktivitas">
+        {{-- Card 1: Project Aktif --}}
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-500 text-sm font-medium">
+                <span>Project Aktif</span>
+                <span class="w-9 h-9 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                </span>
             </div>
+            <strong class="text-3xl font-extrabold text-[#0F172A] mt-4 tracking-tight">08</strong>
+        </div>
+
+        {{-- Card 2: Menunggu Review --}}
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-500 text-sm font-medium">
+                <span>Menunggu Review</span>
+                <span class="w-9 h-9 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                </span>
+            </div>
+            <strong class="text-3xl font-extrabold text-[#0F172A] mt-4 tracking-tight">03</strong>
+        </div>
+
+        {{-- Card 3: Project Selesai --}}
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-500 text-sm font-medium">
+                <span>Project Selesai</span>
+                <span class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </span>
+            </div>
+            <strong class="text-3xl font-extrabold text-[#0F172A] mt-4 tracking-tight">12</strong>
+        </div>
+
+        {{-- Card 4: Deadline Terdekat --}}
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-500 text-sm font-medium">
+                <span>Deadline Terdekat</span>
+                <span class="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </span>
+            </div>
+            <strong class="text-3xl font-extrabold text-rose-600 mt-4 tracking-tight">2 hari</strong>
+        </div>
+    </section>
+
+    {{-- ===== PROJECT TERBARU TABLE ===== --}}
+    <section class="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
+        <div class="px-6 py-5 flex items-center justify-between border-b border-slate-100">
             <div class="flex items-center gap-3">
-                <span class="text-xs text-slate-400">{{ now()->isoFormat('dddd, D MMMM Y') }}</span>
-                <div class="w-px h-4 bg-slate-200"></div>
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="text-xs text-slate-500 hover:text-[#0B3B82] font-medium transition-colors">Logout</button>
-                </form>
+                <h2 class="text-lg font-bold text-slate-900 tracking-tight">Project Terbaru</h2>
+                <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">4 Aktif</span>
             </div>
-        </header>
+            <a href="{{ route('mahasiswa.project') }}" class="text-sm font-semibold text-[#2563EB] hover:text-blue-700 inline-flex items-center gap-1 group transition">
+                <span>Lihat Semua</span>
+                <span class="group-hover:translate-x-0.5 transition-transform">→</span>
+            </a>
+        </div>
 
-        <main class="flex-1 px-8 py-7 space-y-7">
-
-            {{-- HERO BANNER --}}
-            <div class="relative overflow-hidden rounded-2xl bg-[#0B3B82] px-8 py-7">
-                <div class="absolute -right-16 -top-16 w-72 h-72 rounded-full bg-white/5"></div>
-                <div class="absolute right-24 -bottom-10 w-40 h-40 rounded-full bg-[#FFB800]/10"></div>
-                <div class="relative z-10 max-w-lg">
-                    <p class="text-[#FFB800] text-xs font-semibold tracking-wide mb-2">Teaching Factory · Polines</p>
-                    <h1 class="text-white text-2xl font-bold leading-snug">
-                        Kerjakan project,<br>bangun portofolio nyata.
-                    </h1>
-                    <p class="text-blue-200 text-sm mt-2 leading-relaxed">
-                        Lihat tugas, pantau progress, dan kolaborasi dengan tim project Anda.
-                    </p>
-                </div>
-            </div>
-
-            {{-- STAT CARDS --}}
-            <div class="grid grid-cols-4 gap-4">
-                @php
-                $stats = [
-                    ['label' => 'Project Aktif', 'value' => '2', 'sub' => 'Ditugaskan ke Anda', 'color' => '#0B3B82', 'icon' => 'folder'],
-                    ['label' => 'Tugas Pending', 'value' => '5', 'sub' => '3 deadline minggu ini', 'color' => '#F59E0B', 'icon' => 'clock'],
-                    ['label' => 'Tugas Selesai', 'value' => '12', 'sub' => 'Bulan ini', 'color' => '#16A34A', 'icon' => 'check'],
-                    ['label' => 'Jam Kontribusi', 'value' => '48', 'sub' => 'Total bulan ini', 'color' => '#6366F1', 'icon' => 'play'],
-                ];
-                @endphp
-
-                @foreach($stats as $stat)
-                <div class="bg-white rounded-xl px-5 py-5 border border-slate-100 shadow-sm">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                             style="background-color: {{ $stat['color'] }}18">
-                            <span style="color: {{ $stat['color'] }}" class="w-4 h-4">
-                                @if($stat['icon'] === 'folder')
-                                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/></svg>
-                                @elseif($stat['icon'] === 'clock')
-                                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                                @elseif($stat['icon'] === 'check')
-                                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                                @elseif($stat['icon'] === 'play')
-                                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                                @endif
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-100 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-white">
+                        <th class="py-3.5 px-6">Nama Project</th>
+                        <th class="py-3.5 px-6">Mitra / Klien</th>
+                        <th class="py-3.5 px-6">Status</th>
+                        <th class="py-3.5 px-6">Progress</th>
+                        <th class="py-3.5 px-6">Deadline</th>
+                        <th class="py-3.5 px-4 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm">
+                    {{-- Row 1: Sistem Informasi UMKM --}}
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-4 px-6">
+                            <strong class="block text-sm font-bold text-slate-900 leading-snug">Sistem Informasi UMKM</strong>
+                            <span class="block text-xs text-slate-400 mt-0.5">Pengembangan sistem transaksi &amp; inventaris digital</span>
+                        </td>
+                        <td class="py-4 px-6 text-slate-600 font-medium">PT. ABC Indonesia</td>
+                        <td class="py-4 px-6">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                Berjalan
                             </span>
-                        </div>
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-28 bg-slate-100 rounded-full h-2 overflow-hidden">
+                                    <div class="bg-[#0B3B82] h-full rounded-full" style="width: 75%"></div>
+                                </div>
+                                <span class="text-xs font-bold text-slate-600">75%</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-slate-600 font-medium">12 Okt 2026</td>
+                        <td class="py-4 px-4 text-center">
+                            <button type="button" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition" title="Menu Opsi">
+                                <svg class="w-4 h-4 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                                    <circle cx="10" cy="4" r="2"/>
+                                    <circle cx="10" cy="10" r="2"/>
+                                    <circle cx="10" cy="16" r="2"/>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+
+                    {{-- Row 2: Smart Farming IoT --}}
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-4 px-6">
+                            <strong class="block text-sm font-bold text-slate-900 leading-snug">Smart Farming IoT</strong>
+                            <span class="block text-xs text-slate-400 mt-0.5">Implementasi telemetri tanah dan irigasi otomatis</span>
+                        </td>
+                        <td class="py-4 px-6 text-slate-600 font-medium">CV. Tani Maju</td>
+                        <td class="py-4 px-6">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                Berjalan
+                            </span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-28 bg-slate-100 rounded-full h-2 overflow-hidden">
+                                    <div class="bg-[#0B3B82] h-full rounded-full" style="width: 60%"></div>
+                                </div>
+                                <span class="text-xs font-bold text-slate-600">60%</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 font-bold text-rose-600">5 Okt 2026</td>
+                        <td class="py-4 px-4 text-center">
+                            <button type="button" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition" title="Menu Opsi">
+                                <svg class="w-4 h-4 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                                    <circle cx="10" cy="4" r="2"/>
+                                    <circle cx="10" cy="10" r="2"/>
+                                    <circle cx="10" cy="16" r="2"/>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+
+                    {{-- Row 3: Website Profil Perusahaan --}}
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-4 px-6">
+                            <strong class="block text-sm font-bold text-slate-900 leading-snug">Website Profil Perusahaan</strong>
+                            <span class="block text-xs text-slate-400 mt-0.5">Desain portal korporat modern dan CMS kustom</span>
+                        </td>
+                        <td class="py-4 px-6 text-slate-600 font-medium">PT. DEF Solusi</td>
+                        <td class="py-4 px-6">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                Selesai
+                            </span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-28 bg-slate-100 rounded-full h-2 overflow-hidden">
+                                    <div class="bg-emerald-500 h-full rounded-full" style="width: 100%"></div>
+                                </div>
+                                <span class="text-xs font-bold text-slate-600">100%</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-slate-400 font-medium">—</td>
+                        <td class="py-4 px-4 text-center">
+                            <button type="button" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition" title="Menu Opsi">
+                                <svg class="w-4 h-4 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                                    <circle cx="10" cy="4" r="2"/>
+                                    <circle cx="10" cy="10" r="2"/>
+                                    <circle cx="10" cy="16" r="2"/>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+
+                    {{-- Row 4: Aplikasi Manajemen Inventori --}}
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-4 px-6">
+                            <strong class="block text-sm font-bold text-slate-900 leading-snug">Aplikasi Manajemen Inventori</strong>
+                            <span class="block text-xs text-slate-400 mt-0.5">Pelacakan logistik pergudangan unit pendidikan</span>
+                        </td>
+                        <td class="py-4 px-6 text-slate-600 font-medium">Dinas Pendidikan</td>
+                        <td class="py-4 px-6">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                Berjalan
+                            </span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-28 bg-slate-100 rounded-full h-2 overflow-hidden">
+                                    <div class="bg-[#0B3B82] h-full rounded-full" style="width: 25%"></div>
+                                </div>
+                                <span class="text-xs font-bold text-slate-600">25%</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-slate-600 font-medium">18 Okt 2026</td>
+                        <td class="py-4 px-4 text-center">
+                            <button type="button" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition" title="Menu Opsi">
+                                <svg class="w-4 h-4 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                                    <circle cx="10" cy="4" r="2"/>
+                                    <circle cx="10" cy="10" r="2"/>
+                                    <circle cx="10" cy="16" r="2"/>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    {{-- ===== DEADLINE MENDATANG ===== --}}
+    <section class="space-y-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <h2 class="text-lg font-bold text-slate-900 tracking-tight">Deadline Mendatang</h2>
+                <span class="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[10px] font-extrabold tracking-wider border border-rose-100">
+                    URGENT
+                </span>
+            </div>
+            <a href="{{ route('mahasiswa.task') }}" class="text-sm font-semibold text-[#2563EB] hover:text-blue-700 inline-flex items-center gap-1.5 transition">
+                <span>Lihat Kalender</span>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <rect width="18" height="18" x="3" y="4" rx="2"/>
+                    <path d="M16 2v4"/>
+                    <path d="M8 2v4"/>
+                    <path d="M3 10h18"/>
+                </svg>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {{-- Card 1: Smart Farming IoT --}}
+            <a href="{{ route('mahasiswa.task') }}" class="bg-white border border-slate-200/80 hover:border-rose-300 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-4 transition-all duration-150 hover:shadow-sm group">
+                <div class="flex items-center gap-4 min-w-0">
+                    <div class="w-13 h-14 rounded-xl bg-rose-50/70 border border-rose-200 flex flex-col items-center justify-center flex-shrink-0">
+                        <span class="text-lg font-black text-rose-600 leading-none">5</span>
+                        <span class="text-[10px] font-bold text-rose-500 uppercase mt-1 tracking-wider">OKT</span>
                     </div>
-                    <p class="text-3xl font-bold text-[#1E293B] leading-none">{{ $stat['value'] }}</p>
-                    <p class="text-xs text-slate-400 mt-1.5 font-medium">{{ $stat['label'] }}</p>
-                    <p class="text-[11px] mt-1" style="color: {{ $stat['color'] }}">{{ $stat['sub'] }}</p>
+                    <div class="min-w-0 flex-1">
+                        <span class="inline-block px-2 py-0.5 rounded-full bg-rose-100 text-rose-600 text-[10px] font-bold">2 HARI LAGI</span>
+                        <h3 class="text-sm font-bold text-slate-900 truncate mt-1">Smart Farming IoT</h3>
+                        <p class="text-xs text-slate-400 truncate mt-0.5">Pengumpulan revisi propo...</p>
+                    </div>
                 </div>
-                @endforeach
-            </div>
+                <span class="text-slate-300 text-lg group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all">›</span>
+            </a>
 
-            {{-- INFO --}}
-            <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-                <p class="font-semibold text-[#1E293B] text-[15px] mb-1">Halaman Dashboard Mahasiswa</p>
-                <p class="text-sm text-slate-500">Konten detail akan ditambahkan sesuai kebutuhan fitur.</p>
-            </div>
+            {{-- Card 2: Sistem Informasi UMKM --}}
+            <a href="{{ route('mahasiswa.task') }}" class="bg-white border border-slate-200/80 hover:border-blue-300 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-4 transition-all duration-150 hover:shadow-sm group">
+                <div class="flex items-center gap-4 min-w-0">
+                    <div class="w-13 h-14 rounded-xl bg-blue-50/70 border border-blue-200 flex flex-col items-center justify-center flex-shrink-0">
+                        <span class="text-lg font-black text-blue-700 leading-none">12</span>
+                        <span class="text-[10px] font-bold text-blue-600 uppercase mt-1 tracking-wider">OKT</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <span class="inline-block px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">9 HARI LAGI</span>
+                        <h3 class="text-sm font-bold text-slate-900 truncate mt-1">Sistem Informasi UMKM</h3>
+                        <p class="text-xs text-slate-400 truncate mt-0.5">Presentasi milestone 2 · P...</p>
+                    </div>
+                </div>
+                <span class="text-slate-300 text-lg group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all">›</span>
+            </a>
 
-        </main>
+            {{-- Card 3: Aplikasi Manajemen Inventori --}}
+            <a href="{{ route('mahasiswa.task') }}" class="bg-white border border-slate-200/80 hover:border-slate-300 rounded-2xl p-4 shadow-xs flex items-center justify-between gap-4 transition-all duration-150 hover:shadow-sm group">
+                <div class="flex items-center gap-4 min-w-0">
+                    <div class="w-13 h-14 rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center flex-shrink-0">
+                        <span class="text-lg font-black text-slate-700 leading-none">18</span>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase mt-1 tracking-wider">OKT</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <span class="inline-block px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">15 HARI LAGI</span>
+                        <h3 class="text-sm font-bold text-slate-900 truncate mt-1">Aplikasi Manajemen I...</h3>
+                        <p class="text-xs text-slate-400 truncate mt-0.5">Upload dokumen akhir · D...</p>
+                    </div>
+                </div>
+                <span class="text-slate-300 text-lg group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all">›</span>
+            </a>
+        </div>
+    </section>
 
-        <footer class="px-8 py-4 border-t border-slate-100 bg-white">
-            <p class="text-[11px] text-slate-400">© {{ date('Y') }} TEVARA · Politeknik Negeri Semarang</p>
-        </footer>
-    </div>
-</div>
-
-</body>
-</html>
+</x-student-layout>
