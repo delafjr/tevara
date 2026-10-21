@@ -13,7 +13,7 @@
 
 @php
     $user = $user ?? session('user');
-    $userName = $user['name'];
+    $userName = $user['name'] ?? 'Klien';
 @endphp
 
 {{-- == ( layout utama : sidebar + main ) == --}}
