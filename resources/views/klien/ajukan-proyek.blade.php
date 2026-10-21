@@ -110,6 +110,7 @@
                             <div class="lg:col-span-2">
                                 <label for="nama_instansi" class="{{ $label }}">Nama Klien / Instansi <span class="text-red-500">*</span></label>
                                 <input id="nama_instansi" name="nama_instansi" type="text" required
+                                       placeholder="Contoh: PT. Maju Bersama Sentosa"
                                        value="{{ old('nama_instansi') ?: $profile['instansi'] }}"
                                        class="{{ $errors->has('nama_instansi') ? $inputErr : $inputOk }}">
                                 @error('nama_instansi') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
@@ -119,6 +120,7 @@
                             <div>
                                 <label for="pic_nama" class="{{ $label }}">Nama Penanggung Jawab (PIC) <span class="text-red-500">*</span></label>
                                 <input id="pic_nama" name="pic_nama" type="text" required
+                                       placeholder="Contoh: Budi Santoso"
                                        value="{{ old('pic_nama') ?: $profile['pic'] }}"
                                        class="{{ $errors->has('pic_nama') ? $inputErr : $inputOk }}">
                                 @error('pic_nama') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
@@ -128,6 +130,7 @@
                             <div>
                                 <label for="kontak_nomor" class="{{ $label }}">Kontak / No. WhatsApp <span class="text-slate-300 normal-case tracking-normal font-medium">(opsional)</span></label>
                                 <input id="kontak_nomor" name="kontak_nomor" type="text"
+                                       placeholder="Contoh: 6281234567890"
                                        value="{{ old('kontak_nomor') ?: $profile['telepon'] }}"
                                        class="{{ $errors->has('kontak_nomor') ? $inputErr : $inputOk }}">
                                 @error('kontak_nomor') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
@@ -145,6 +148,7 @@
                                     </button>
                                 </div>
                                 <input id="kontak_email" name="kontak_email" type="email" required
+                                       placeholder="nama@perusahaan.co.id"
                                        value="{{ old('kontak_email') ?: $profile['email'] }}"
                                        class="{{ $errors->has('kontak_email') ? $inputErr : $inputOk }}">
                                 @error('kontak_email') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror

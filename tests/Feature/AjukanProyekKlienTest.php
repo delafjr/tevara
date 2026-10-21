@@ -37,6 +37,26 @@ class AjukanProyekKlienTest extends TestCase
         ])->get('/klien/ajukan-proyek')->assertStatus(403);
     }
 
+    public function test_halaman_ajukan_proyek_menampilkan_data_profil(): void
+    {
+        $this->withSession($this->sessionKlien())
+            ->get('/klien/ajukan-proyek')
+            ->assertStatus(200)
+            ->assertSee('Budi Santoso')
+            ->assertSee('6281234567890')
+            ->assertSee('budi.santoso@majubersamasentosa.co.id');
+    }
+
+    public function test_field_kosong_setelah_submit_gagal_jatuh_ke_profil(): void
+    {
+        // Simulasikan submit gagal: old input berisi string kosong.
+        $this->withSession($this->sessionKlien() + ['_old_input' => ['nama_instansi' => '', 'kontak_nomor' => '']])
+            ->get('/klien/ajukan-proyek')
+            ->assertStatus(200)
+            ->assertSee('value="Budi Santoso"', false)
+            ->assertSee('value="6281234567890"', false);
+    }
+
     public function test_pengajuan_valid_dikirim_ke_backend(): void
     {
         Http::fake([
