@@ -74,12 +74,12 @@
         'pengurus_tefa' => [
             ['id' => 'dashboard',         'label' => 'Dashboard',         'icon' => 'dashboard',      'href' => route('dashboard')],
             ['id' => 'projek',            'label' => 'Projek',            'icon' => 'project',        'href' => route('pengurus.projek')],
-            ['id' => 'klien-mitra',       'label' => 'Klien & Mitra',     'icon' => 'team',           'href' => route('pengurus.klien-mitra')],
+            ['id' => 'klien-mitra',       'label' => 'Client & Mitra',    'icon' => 'team',           'href' => route('pengurus.klien-mitra')],
             ['id' => 'dosen',             'label' => 'Dosen',             'icon' => 'team',           'href' => route('pengurus.dosen')],
             ['id' => 'mahasiswa',         'label' => 'Mahasiswa',         'icon' => 'team',           'href' => route('pengurus.mahasiswa')],
             ['id' => 'validasi-proposal', 'label' => 'Validasi Proposal', 'icon' => 'proposal',       'href' => route('pengurus.validasi-proposal')],
             ['id' => 'keuangan',          'label' => 'Keuangan',          'icon' => 'tagihan',        'href' => route('pengurus.keuangan')],
-            ['id' => 'monitoring',        'label' => 'Monitoring',        'icon' => 'monitoring',     'href' => route('pengurus.monitoring')],
+            ['id' => 'monitoring',        'label' => 'Laporan & Monitoring','icon' => 'monitoring',   'href' => route('pengurus.monitoring')],
         ],
         'jurusan' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
@@ -95,21 +95,11 @@
 <aside class="w-64 min-h-screen bg-[#F4F7FC] border-r border-slate-200/70 flex flex-col fixed top-0 left-0 z-30 select-none">
 
     {{-- ===== LOGO TEVARA ===== --}}
-    <div class="px-6 py-6 border-b border-slate-200/50">
-        <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
-            {{-- Dual wave icon (Blue & Gold) --}}
-            <div class="relative w-8 h-8 flex-shrink-0 flex items-center justify-center">
-                <svg viewBox="0 0 54 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
-                    <!-- Blue upper swoosh -->
-                    <path d="M4 25C12 12 25 8 40 11C31 15 22 19 14 28L4 25Z" fill="#0B3B82" />
-                    <!-- Gold lower swoosh -->
-                    <path d="M14 28C22 19 32 16 48 18C38 23 28 31 18 31C14 31 13 29 14 28Z" fill="#FFB800" />
-                </svg>
-            </div>
-            <div>
-                <p class="text-[14px] font-black text-[#0B3B82] leading-none tracking-tight">TEVARA</p>
-                <p class="text-[9.5px] font-medium text-slate-400 mt-1 leading-none tracking-tight">Knowledge Into Action</p>
-            </div>
+    <div class="px-5 py-4 border-b border-slate-200/50">
+        <a href="{{ route('dashboard') }}" class="flex items-center group">
+            <img src="{{ asset('images/logo-tevara.png') }}"
+                 alt="Tevara"
+                 class="h-10 w-auto object-contain transition-opacity group-hover:opacity-80">
         </a>
     </div>
 
@@ -120,7 +110,7 @@
                 $isActive = ($active === $item['id']);
             @endphp
             <a href="{{ $item['href'] }}"
-               class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-[13.5px] transition-all duration-150 {{ $isActive ? 'bg-[#DDE9FA] text-[#0B3B82] font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 font-medium' }}">
+               class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-[13.5px] transition-all duration-150 {{ $isActive ? 'bg-[#eef4ff] text-[#0B3B82] font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 font-medium' }}">
                 <span class="w-5 h-5 flex-shrink-0 {{ $isActive ? 'text-[#0B3B82]' : 'text-slate-500' }}">
                     @if($item['icon'] === 'dashboard')
                         {{-- Bento / Grid 4-square icon --}}

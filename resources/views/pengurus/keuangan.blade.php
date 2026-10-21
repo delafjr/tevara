@@ -27,14 +27,14 @@
         <main class="flex-1 px-8 py-7 space-y-7">
 
             {{-- Hero --}}
-            <div class="relative overflow-hidden rounded-2xl bg-[#0B3B82] px-8 py-7">
-                <div class="absolute -right-16 -top-16 w-72 h-72 rounded-full bg-white/5"></div>
-                <div class="absolute right-24 -bottom-10 w-40 h-40 rounded-full bg-[#FFB800]/10"></div>
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#eef4ff] via-[#f0f5ff] to-[#eef4ff] px-8 py-7 border border-[#dde8ff] shadow-sm">
+                <div class="absolute right-40 top-1/2 -translate-y-1/2 w-52 h-52 rounded-full bg-[#FFB800]/10 blur-2xl"></div>
+                <div class="absolute right-24 -bottom-10 w-40 h-40 rounded-full bg-[#FFB800]/20"></div>
                 <div class="relative z-10 flex items-center justify-between">
                     <div class="max-w-lg">
-                        <p class="text-[#FFB800] text-xs font-semibold tracking-wide mb-2">Teaching Factory · Polines</p>
-                        <h1 class="text-white text-2xl font-bold leading-snug">Rekap Keuangan TeFa</h1>
-                        <p class="text-blue-200 text-sm mt-2 leading-relaxed">Pantau pemasukan, pengeluaran, dan laporan keuangan seluruh projek Teaching Factory.</p>
+                        <p class="flex items-center gap-1.5 text-[#64748b] text-xs font-semibold tracking-widest mb-2 uppercase">Teaching Factory · Polines</p>
+                        <h1 class="text-[#0f172a] text-2xl font-bold leading-snug">Rekap Keuangan TeFa</h1>
+                        <p class="text-[#64748b] text-sm mt-2 leading-relaxed">Pantau pemasukan, pengeluaran, dan laporan keuangan seluruh projek Teaching Factory.</p>
                     </div>
                     <a href="#" class="flex items-center gap-2 bg-[#FFB800] text-[#1E293B] font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-yellow-300 transition-colors shadow-sm">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>

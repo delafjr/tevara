@@ -5,328 +5,319 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard Pengurus - Tevara</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        * { font-family: "Inter", sans-serif; box-sizing: border-box; }
+        .stat-card { transition: box-shadow 0.2s, transform 0.2s; }
+        .stat-card:hover { box-shadow: 0 8px 24px rgba(11,59,130,0.10); transform: translateY(-2px); }
+        .action-btn-primary { background: #1a2e6e; transition: background 0.2s, box-shadow 0.2s; }
+        .action-btn-primary:hover { background: #0d2155; box-shadow: 0 4px 16px rgba(26,46,110,0.25); }
+        .action-btn-outline { background: white; border: 1.5px solid #e2e8f0; transition: border-color 0.2s, box-shadow 0.2s; }
+        .action-btn-outline:hover { border-color: #1a2e6e; }
+        .tabel-row:hover { background: #f8faff; }
+        .progress-bar { transition: width 0.6s ease; }
+        .badge-berjalan { background: #dbeafe; color: #1d4ed8; }
+        .badge-review   { background: #fef3c7; color: #d97706; }
+        .badge-selesai  { background: #d1fae5; color: #059669; }
+        .tindakan-card { border: 1.5px solid #e2e8f0; border-radius: 14px; background: white; transition: box-shadow 0.2s; }
+        .tindakan-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    </style>
 </head>
-<body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased">
+<body style="background:#F1F5F9; color:#1E293B; margin:0;">
 
 @php
     $user = $user ?? session('user');
-    $userName = $user['name'] ?? 'Pengurus';
-    $firstName = explode(' ', $userName)[0] ?? 'Pengurus';
+    $userName = $user['name'] ?? 'Pengurus TEFA';
 @endphp
 
-<div class="flex min-h-screen">
-
-    {{-- Reusable Sidebar Component --}}
+<div style="display:flex; min-height:100vh;">
     <x-sidebar active="dashboard" />
+    <div style="flex:1; margin-left:256px; display:flex; flex-direction:column; min-height:100vh;">
 
-    {{-- ===== MAIN ===== --}}
-    <div class="flex-1 ml-64 flex flex-col min-h-screen">
-
-        {{-- Topbar --}}
-        <header class="bg-white border-b border-slate-100 px-8 py-4 flex items-center justify-between sticky top-0 z-20">
+        <!-- HEADER -->
+        <header style="background:white; border-bottom:1px solid #e2e8f0; padding:14px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:20;">
             <div>
-                <p class="text-xs text-slate-400 font-medium">Dashboard</p>
-                <p class="text-[15px] font-semibold text-[#1E293B] leading-tight">Selamat datang, {{ $firstName }} 👋</p>
+                <p style="font-size:11px; color:#94a3b8; font-weight:500; letter-spacing:0.04em; margin:0;">WORKSPACE / PENGURUS TEFA</p>
+                <p style="font-size:15px; font-weight:700; color:#0f172a; margin:2px 0 0;">Dashboard Pengurus TEFA</p>
             </div>
-            <div class="flex items-center gap-3">
-                <span class="text-xs text-slate-400">{{ now()->isoFormat('dddd, D MMMM Y') }}</span>
-                <div class="w-px h-4 bg-slate-200"></div>
-                <form action="{{ route('logout') }}" method="POST">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="display:flex; align-items:center; gap:6px; background:#f8faff; border:1px solid #e2e8f0; border-radius:8px; padding:6px 12px;">
+                    <svg width="13" height="13" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    <span style="font-size:12px; color:#475569; font-weight:500;">{{ now()->locale('id')->isoFormat('dddd, D MMMM Y') }}</span>
+                </div>
+                <form action="{{ route('logout') }}" method="POST" style="margin:0;">
                     @csrf
-                    <button type="submit" class="text-xs text-slate-500 hover:text-[#0B3B82] font-medium transition-colors">Logout</button>
+                    <button type="submit" style="font-size:12px; color:#64748b; font-weight:500; background:none; border:none; cursor:pointer; padding:6px 10px; border-radius:6px;">Logout</button>
                 </form>
             </div>
         </header>
 
-        <main class="flex-1 px-8 py-7 space-y-7">
+        <main style="flex:1; padding:28px 32px; display:flex; flex-direction:column; gap:22px;">
 
-            {{-- ── HERO ── --}}
-            <div class="relative overflow-hidden rounded-2xl bg-[#0B3B82] px-8 py-7">
-                <div class="absolute -right-16 -top-16 w-72 h-72 rounded-full bg-white/5"></div>
-                <div class="absolute right-24 -bottom-10 w-40 h-40 rounded-full bg-[#FFB800]/10"></div>
-                <div class="relative z-10 max-w-lg">
-                    <p class="text-[#FFB800] text-xs font-semibold tracking-wide mb-2">Teaching Factory · Polines</p>
-                    <h1 class="text-white text-2xl font-bold leading-snug">
-                        Kelola seluruh operasional TeFa<br>dari satu tempat.
-                    </h1>
-                    <p class="text-blue-200 text-sm mt-2 leading-relaxed">
-                        Validasi proposal, pantau progress tim, dan pastikan setiap project berjalan sesuai jadwal.
-                    </p>
+            <!-- WELCOME BANNER -->
+            <div style="background:linear-gradient(135deg,#eef4ff 0%,#f0f5ff 60%,#eef4ff 100%); border-radius:16px; padding:28px 32px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:space-between; border:1px solid #dde8ff; box-shadow:0 1px 4px rgba(11,59,130,0.06);">
+                <div style="position:absolute; right:160px; top:50%; transform:translateY(-50%); width:180px; height:180px; border-radius:50%; background:radial-gradient(circle,#fef3c7 0%,transparent 70%); opacity:0.6;"></div>
+                <div style="position:relative; z-index:1;">
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:12px;">
+                        <span style="width:7px; height:7px; border-radius:50%; background:#1a2e6e; display:inline-block;"></span>
+                        <p style="font-size:11px; color:#64748b; font-weight:600; letter-spacing:0.06em; margin:0;">WORKSPACE PENGURUS TEFA</p>
+                    </div>
+                    <h1 style="font-size:24px; font-weight:800; color:#0f172a; line-height:1.3; margin:0 0 8px;">Selamat Datang, {{ $userName }}</h1>
+                    <p style="font-size:13px; color:#64748b; line-height:1.65; margin:0; max-width:520px;">Kelola inisiatif Teaching Factory, sinkronisasi kemitraan industri, validasi proposal, dan tata kelola akademik dalam satu kendali.</p>
+                </div>
+                <div style="position:relative; z-index:1; display:flex; flex-direction:column; gap:10px; flex-shrink:0; margin-left:24px; align-items:flex-end;">
+                    <div style="display:flex; align-items:center; gap:8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px 16px;">
+                        <svg width="14" height="14" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                        <span style="font-size:13px; color:#0f172a; font-weight:600;">{{ now()->locale('id')->isoFormat('dddd, D MMMM Y') }}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; padding:6px 14px; background:#fef9c3; border-radius:8px;">
+                        <span style="width:6px; height:6px; border-radius:50%; background:#ca8a04; display:inline-block;"></span>
+                        <span style="font-size:11.5px; color:#92400e; font-weight:600;">Data terpusat TEFA &bull; Realtime</span>
+                    </div>
                 </div>
             </div>
 
-            {{-- ── 4 STAT CARDS ── --}}
-            <div class="grid grid-cols-4 gap-4">
+            <!-- 4 STAT CARDS -->
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
                 @php
                 $stats = [
-                    ['label' => 'Total Project',      'value' => '28',  'sub' => '+4 dari bulan lalu', 'up' => true,  'color' => '#0B3B82', 'icon' => 'folder'],
-                    ['label' => 'Total Klien / Mitra','value' => '12',  'sub' => '+2 dari bulan lalu', 'up' => true,  'color' => '#F59E0B', 'icon' => 'users'],
-                    ['label' => 'Mahasiswa Terlibat', 'value' => '142', 'sub' => '+18 dari bulan lalu','up' => true,  'color' => '#6366F1', 'icon' => 'academic'],
-                    ['label' => 'Project Berjalan',   'value' => '17',  'sub' => '+3 dari bulan lalu', 'up' => true,  'color' => '#16A34A', 'icon' => 'play'],
+                    ['label'=>'Total Project',       'value'=>'24', 'sub'=>'Aktif Tahun Ini',        'color'=>'#1a2e6e','bg'=>'#eef2ff','icon'=>'folder'],
+                    ['label'=>'Project Berjalan',    'value'=>'14', 'sub'=>'Dalam Penyelesaian',      'color'=>'#059669','bg'=>'#d1fae5','icon'=>'play'],
+                    ['label'=>'Validasi Proposal',   'value'=>'05', 'sub'=>'Menunggu Valid TEFA',     'color'=>'#d97706','bg'=>'#fef3c7','icon'=>'clipboard'],
+                    ['label'=>'Mitra & Klien Aktif', 'value'=>'18', 'sub'=>'Industri, OWN Tahun Ini','color'=>'#7c3aed','bg'=>'#f3e8ff','icon'=>'users'],
                 ];
                 @endphp
-
-                @foreach($stats as $stat)
-                <div class="bg-white rounded-xl px-5 py-5 border border-slate-100 shadow-sm">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                             style="background-color: {{ $stat['color'] }}18">
-                            <span style="color: {{ $stat['color'] }}" class="w-4 h-4 block">
-                                @if($stat['icon'] === 'folder')
-                                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/></svg>
-                                @elseif($stat['icon'] === 'users')
-                                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/></svg>
-                                @elseif($stat['icon'] === 'academic')
-                                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84 51.39 51.39 0 0 0-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5"/></svg>
-                                @elseif($stat['icon'] === 'play')
-                                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>
-                                @endif
-                            </span>
+                @foreach($stats as $s)
+                <div class="stat-card" style="background:white; border-radius:14px; padding:20px; border:1px solid #e2e8f0; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+                    <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px;">
+                        <div style="width:40px; height:40px; border-radius:10px; background:{{ $s['bg'] }}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                            @if($s['icon']==='folder')
+                                <svg width="18" height="18" fill="none" stroke="{{ $s['color'] }}" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                            @elseif($s['icon']==='play')
+                                <svg width="18" height="18" fill="none" stroke="{{ $s['color'] }}" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4V8z"/></svg>
+                            @elseif($s['icon']==='clipboard')
+                                <svg width="18" height="18" fill="none" stroke="{{ $s['color'] }}" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>
+                            @elseif($s['icon']==='users')
+                                <svg width="18" height="18" fill="none" stroke="{{ $s['color'] }}" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            @endif
                         </div>
-                        @if($stat['up'] === true)
-                        <span class="text-[10px] font-semibold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">↑</span>
-                        @endif
+                        <span style="font-size:10px; font-weight:700; color:{{ $s['color'] }}; background:{{ $s['bg'] }}; padding:3px 8px; border-radius:20px;">&#x2191;</span>
                     </div>
-                    <p class="text-3xl font-bold text-[#1E293B] leading-none">{{ $stat['value'] }}</p>
-                    <p class="text-xs text-slate-400 mt-1.5 font-medium">{{ $stat['label'] }}</p>
-                    <p class="text-[11px] mt-1" style="color: {{ $stat['color'] }}">{{ $stat['sub'] }}</p>
+                    <p style="font-size:34px; font-weight:800; color:#0f172a; line-height:1; margin:0;">{{ $s['value'] }}</p>
+                    <p style="font-size:12px; font-weight:600; color:#475569; margin:5px 0 2px;">{{ $s['label'] }}</p>
+                    <p style="font-size:11px; color:{{ $s['color'] }}; margin:0; font-weight:500;">{{ $s['sub'] }}</p>
                 </div>
                 @endforeach
             </div>
 
-            {{-- ── QUICK ACTIONS ── --}}
-            <div class="grid grid-cols-3 gap-3">
-                <a href="#"
-                   class="flex items-center gap-3.5 bg-[#0B3B82] text-white rounded-xl px-5 py-4 font-semibold text-sm hover:bg-[#0a3372] transition-colors shadow-sm">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/>
-                    </svg>
-                    Validasi Proposal
-                    <span class="ml-auto bg-[#FFB800] text-[#1E293B] text-[10px] font-bold px-1.5 py-0.5 rounded-full">7</span>
+            <!-- QUICK ACTIONS -->
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
+                <a href="{{ route('pengurus.validasi-proposal') }}" class="action-btn-primary" style="display:flex; align-items:center; gap:12px; padding:14px 20px; border-radius:12px; text-decoration:none; color:white; font-size:13.5px; font-weight:700;">
+                    <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span>Review Proposal</span>
+                    <span style="margin-left:auto; background:#fbbf24; color:#1a2e6e; font-size:10px; font-weight:800; padding:3px 8px; border-radius:20px;">5+</span>
+                    <svg width="14" height="14" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
-                <a href="#"
-                   class="flex items-center gap-3.5 bg-white border border-slate-200 text-[#1E293B] rounded-xl px-5 py-4 font-semibold text-sm hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors shadow-sm">
-                    <svg class="w-5 h-5 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                    </svg>
-                    Tambah Project
+                <a href="{{ route('pengurus.klien-mitra') }}" class="action-btn-outline" style="display:flex; align-items:center; gap:12px; padding:14px 20px; border-radius:12px; text-decoration:none; color:#1E293B; font-size:13.5px; font-weight:600;">
+                    <svg width="18" height="18" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Kelola Klien / Mitra
                 </a>
-                <a href="#"
-                   class="flex items-center gap-3.5 bg-white border border-slate-200 text-[#1E293B] rounded-xl px-5 py-4 font-semibold text-sm hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors shadow-sm">
-                    <svg class="w-5 h-5 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
-                    </svg>
-                    Lihat Laporan
+                <a href="{{ route('pengurus.dosen') }}" class="action-btn-outline" style="display:flex; align-items:center; gap:12px; padding:14px 20px; border-radius:12px; text-decoration:none; color:#1E293B; font-size:13.5px; font-weight:600;">
+                    <svg width="18" height="18" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                    Kelola Dosen / PM
                 </a>
             </div>
 
-            {{-- ── BOTTOM GRID: Table (col-2) + 2 Charts (col-1 stacked) ── --}}
-            <div class="grid grid-cols-3 gap-6">
-
-                {{-- Project Terbaru (col-span-2) --}}
-                <div class="col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                        <div>
-                            <p class="font-semibold text-[#1E293B] text-[15px]">Project Terbaru</p>
-                            <p class="text-xs text-slate-400 mt-0.5">Semua project yang terdaftar</p>
+            <!-- PROJECT TERBARU -->
+            <div style="background:white; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 1px 4px rgba(0,0,0,0.04); overflow:hidden;">
+                <div style="padding:18px 24px 14px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between;">
+                    <div>
+                        <p style="font-size:15px; font-weight:700; color:#0f172a; margin:0;">Project Terbaru</p>
+                        <p style="font-size:11.5px; color:#94a3b8; margin:3px 0 0;">5 data &middot; Semua project yang terdaftar</p>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="display:flex; align-items:center; gap:8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:7px 12px;">
+                            <svg width="13" height="13" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                            <input type="text" placeholder="Cari project..." style="font-size:12px; color:#475569; border:none; background:transparent; outline:none; width:140px;">
                         </div>
-                        <a href="#" class="text-xs font-semibold text-[#0B3B82] hover:underline flex items-center gap-1">
-                            Lihat Semua
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                        <a href="{{ route('pengurus.projek') }}" style="font-size:12px; font-weight:600; color:#1a2e6e; text-decoration:none; display:flex; align-items:center; gap:4px; white-space:nowrap;">
+                            Lihat Semua <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         </a>
                     </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-slate-100">
-                                    <th class="text-left text-[11px] font-semibold text-slate-400 px-6 py-3">Nama Project</th>
-                                    <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Klien / Mitra</th>
-                                    <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">PM / Dosen</th>
-                                    <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Status</th>
-                                    <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3 w-32">Progress</th>
-                                    <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Deadline</th>
-                                    <th class="px-3 py-3 w-10"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50">
-                                @php
-                                $projects = [
-                                    ['name' => 'Sistem Informasi UMKM',    'client' => 'PT. ABC Indonesia',  'pm' => 'Dimas Setiawan', 'category' => 'Website',  'status' => 'Berjalan', 'progress' => 75,  'deadline' => '12 Okt 2026'],
-                                    ['name' => 'Smart Farming IoT',        'client' => 'CV. Tani Maju',      'pm' => 'Rizky Pratama',  'category' => 'IoT',      'status' => 'Review',   'progress' => 60,  'deadline' => '5 Okt 2026'],
-                                    ['name' => 'Website Company Profile',  'client' => 'PT. DEF Solusi',     'pm' => 'Nadia Putri',    'category' => 'Website',  'status' => 'Selesai',  'progress' => 100, 'deadline' => '—'],
-                                    ['name' => 'Aplikasi Inventori',       'client' => 'PT. Maju Sentosa',   'pm' => 'Thomas Elang',   'category' => 'Aplikasi', 'status' => 'Proposal', 'progress' => 25,  'deadline' => '18 Okt 2026'],
-                                    ['name' => 'Monitoring Produksi',      'client' => 'CV. Tani Maju',      'pm' => 'Dimas Setiawan', 'category' => 'Aplikasi', 'status' => 'Berjalan', 'progress' => 40,  'deadline' => '25 Okt 2026'],
-                                ];
-
-                                $statusStyle = [
-                                    'Berjalan' => 'bg-blue-50 text-blue-700',
-                                    'Review'   => 'bg-amber-50 text-amber-700',
-                                    'Selesai'  => 'bg-green-50 text-green-700',
-                                    'Proposal' => 'bg-purple-50 text-purple-700',
-                                ];
-
-                                $progressColor = fn($p) => $p >= 100 ? '#16A34A' : ($p >= 60 ? '#0B3B82' : ($p >= 30 ? '#F59E0B' : '#DC2626'));
-                                @endphp
-
-                                @foreach($projects as $project)
-                                <tr class="hover:bg-slate-50/60 transition-colors">
-                                    <td class="px-6 py-3.5">
-                                        <div>
-                                            <p class="font-semibold text-[#1E293B] text-[13px] leading-tight">{{ $project['name'] }}</p>
-                                            <p class="text-[11px] text-slate-400 mt-0.5">{{ $project['category'] }}</p>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; font-size:13px; border-collapse:collapse;">
+                        <thead>
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                <th style="text-align:left; font-size:11px; font-weight:600; color:#94a3b8; padding:10px 24px; letter-spacing:0.04em;">KODE &amp; NAMA PROJECT</th>
+                                <th style="text-align:left; font-size:11px; font-weight:600; color:#94a3b8; padding:10px 14px;">KLIEN / MITRA</th>
+                                <th style="text-align:left; font-size:11px; font-weight:600; color:#94a3b8; padding:10px 14px;">STATUS</th>
+                                <th style="text-align:left; font-size:11px; font-weight:600; color:#94a3b8; padding:10px 14px; width:160px;">PROGRESS</th>
+                                <th style="text-align:left; font-size:11px; font-weight:600; color:#94a3b8; padding:10px 14px;">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                            $projects = [
+                                ['code'=>'PR-2024/08','name'=>'Smart Farming Peroni & Cold Storage',  'client'=>'PT. ABC Ciri Logistik',    'status'=>'Berjalan',        'progress'=>63,'btn'=>'Detail',  'btnC'=>'#1a2e6e','btnB'=>'#eef2ff'],
+                                ['code'=>'PR-2426/08','name'=>'Smart Farming IoT & Urgent Channels', 'client'=>'CV. Tani Pelajar',         'status'=>'Berjalan',        'progress'=>45,'btn'=>'Detail',  'btnC'=>'#1a2e6e','btnB'=>'#eef2ff'],
+                                ['code'=>'PR-2024/09','name'=>'Profil & Pembakuan Inventori UMKM',   'client'=>'Dinas Koperasi & Lingkar', 'status'=>'Review Proposal', 'progress'=>20,'btn'=>'Validasi','btnC'=>'#d97706','btnB'=>'#fef3c7'],
+                                ['code'=>'PR-2024/14','name'=>'Sistem Manajemen Inventori Gudang',   'client'=>'PT. SDT Solar Mega',       'status'=>'Berjalan',        'progress'=>60,'btn'=>'Detail',  'btnC'=>'#1a2e6e','btnB'=>'#eef2ff'],
+                                ['code'=>'PR-2024/20','name'=>'Aplikasi Perancangan Micro-Savings',  'client'=>'BPR Santana Bahagia',      'status'=>'Berjalan',        'progress'=>40,'btn'=>'Detail',  'btnC'=>'#1a2e6e','btnB'=>'#eef2ff'],
+                            ];
+                            @endphp
+                            @foreach($projects as $pr)
+                            <tr class="tabel-row" style="border-bottom:1px solid #f8fafc;">
+                                <td style="padding:14px 24px;">
+                                    <p style="font-size:10.5px; color:#94a3b8; font-weight:600; letter-spacing:0.03em; margin:0;">{{ $pr['code'] }}</p>
+                                    <p style="font-size:13px; font-weight:600; color:#0f172a; margin:2px 0 0;">{{ $pr['name'] }}</p>
+                                </td>
+                                <td style="padding:14px; font-size:12.5px; color:#475569;">{{ $pr['client'] }}</td>
+                                <td style="padding:14px;">
+                                    <span class="{{ $pr['status']==='Berjalan' ? 'badge-berjalan' : ($pr['status']==='Review Proposal' ? 'badge-review' : 'badge-selesai') }}" style="font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; white-space:nowrap; display:inline-block;">
+                                        {{ $pr['status'] }}
+                                    </span>
+                                </td>
+                                <td style="padding:14px; width:160px;">
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <div style="flex:1; height:6px; background:#f1f5f9; border-radius:99px; overflow:hidden;">
+                                            <div class="progress-bar" style="height:100%; border-radius:99px; background:{{ $pr['progress']>=60 ? '#1a2e6e' : ($pr['progress']>=30 ? '#d97706' : '#dc2626') }}; width:{{ $pr['progress'] }}%;"></div>
                                         </div>
-                                    </td>
-                                    <td class="px-3 py-3.5">
-                                        <span class="text-[12px] text-slate-600">{{ $project['client'] }}</span>
-                                    </td>
-                                    <td class="px-3 py-3.5">
-                                        <span class="text-[12px] text-slate-600">{{ $project['pm'] }}</span>
-                                    </td>
-                                    <td class="px-3 py-3.5">
-                                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full {{ $statusStyle[$project['status']] ?? 'bg-slate-100 text-slate-600' }}">
-                                            {{ $project['status'] }}
-                                        </span>
-                                    </td>
-                                    <td class="px-3 py-3.5 w-32">
-                                        <div class="flex items-center gap-2">
-                                            <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                <div class="h-full rounded-full"
-                                                     style="width: {{ $project['progress'] }}%; background-color: {{ $progressColor($project['progress']) }}">
-                                                </div>
-                                            </div>
-                                            <span class="text-[11px] font-semibold text-slate-500 w-7 text-right">{{ $project['progress'] }}%</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-3 py-3.5">
-                                        <span class="text-[12px] text-slate-500">{{ $project['deadline'] }}</span>
-                                    </td>
-                                    <td class="px-3 py-3.5">
-                                        <button class="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                        <span style="font-size:11px; font-weight:700; color:#475569; width:32px; text-align:right;">{{ $pr['progress'] }}%</span>
+                                    </div>
+                                </td>
+                                <td style="padding:14px;">
+                                    <a href="#" style="font-size:11.5px; font-weight:600; color:{{ $pr['btnC'] }}; background:{{ $pr['btnB'] }}; padding:5px 14px; border-radius:8px; text-decoration:none;">{{ $pr['btn'] }}</a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div style="padding:12px 24px; border-top:1px solid #f8fafc; display:flex; align-items:center; justify-content:space-between;">
+                    <p style="font-size:11.5px; color:#94a3b8; margin:0;">Menampilkan 1&ndash;5 dari 24 project</p>
+                    <div style="display:flex; gap:4px;">
+                        @foreach([1,2,3] as $pg)
+                        <button style="width:28px; height:28px; border-radius:6px; font-size:12px; font-weight:600; border:1px solid {{ $pg===1 ? '#1a2e6e' : '#e2e8f0' }}; background:{{ $pg===1 ? '#1a2e6e' : 'white' }}; color:{{ $pg===1 ? 'white' : '#64748b' }}; cursor:pointer;">{{ $pg }}</button>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <!-- MENUNGGU TINDAKAN -->
+            <div>
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                    <div>
+                        <p style="font-size:15px; font-weight:700; color:#0f172a; margin:0;">&#x23F3; Menunggu Tindakan</p>
+                        <p style="font-size:11.5px; color:#94a3b8; margin:3px 0 0;">Tugas yang memerlukan persetujuan atau tindakan dari Pengurus TEFA</p>
+                    </div>
+                    <span style="font-size:11px; font-weight:700; color:#d97706; background:#fef3c7; padding:4px 12px; border-radius:20px;">7 Perlu Review</span>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
+                    @php
+                    $tindakan = [
+                        ['title'=>'Pengajuan BAST Baru','count'=>'3 Items','color'=>'#d97706','bg'=>'#fef3c7',
+                         'items'=>[['pr'=>'PR-2024/09','name'=>'Smart Farming IoT','date'=>'14 Okt 2026'],['pr'=>'PR-2024/11','name'=>'Website Company Profile','date'=>'15 Okt 2026']],
+                         'action'=>'Tinjau Sekarang'],
+                        ['title'=>'Review Proposal Masuk','count'=>'1 Item','color'=>'#7c3aed','bg'=>'#f3e8ff',
+                         'items'=>[['pr'=>'PR-2024/22','name'=>'Perancangan Sistem ERP','date'=>'Tenggat: 3 hari']],
+                         'action'=>'Validasi'],
+                        ['title'=>'Persetujuan Dosen','count'=>'3 Items','color'=>'#1a2e6e','bg'=>'#eef2ff',
+                         'items'=>[['pr'=>'PR-2024/18','name'=>'Inventori Gudang Digital','date'=>'Irfan Maulana, S.T.'],['pr'=>'PR-2024/20','name'=>'Micro-Savings Nasabah','date'=>'Dr. Hendra Kusuma']],
+                         'action'=>'Tinjau'],
+                    ];
+                    @endphp
+                    @foreach($tindakan as $t)
+                    <div class="tindakan-card" style="padding:18px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                            <p style="font-size:13.5px; font-weight:700; color:#0f172a; margin:0;">{{ $t['title'] }}</p>
+                            <span style="font-size:10.5px; font-weight:700; color:{{ $t['color'] }}; background:{{ $t['bg'] }}; padding:3px 10px; border-radius:20px;">{{ $t['count'] }}</span>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
+                            @foreach($t['items'] as $item)
+                            <div style="background:#f8fafc; border-radius:8px; padding:10px 12px;">
+                                <p style="font-size:10px; color:#94a3b8; font-weight:600; margin:0;">{{ $item['pr'] }}</p>
+                                <p style="font-size:12.5px; font-weight:600; color:#0f172a; margin:2px 0 1px;">{{ $item['name'] }}</p>
+                                <p style="font-size:11px; color:#64748b; margin:0;">{{ $item['date'] }}</p>
+                            </div>
+                            @endforeach
+                        </div>
+                        <a href="#" style="display:flex; align-items:center; justify-content:center; gap:6px; width:100%; padding:9px; border-radius:9px; background:{{ $t['bg'] }}; color:{{ $t['color'] }}; font-size:12.5px; font-weight:700; text-decoration:none;">
+                            {{ $t['action'] }}
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- BOTTOM: DISTRIBUSI + STATUS -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+
+                <!-- Distribusi Kategori -->
+                <div style="background:white; border-radius:16px; border:1px solid #e2e8f0; padding:22px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+                    <p style="font-size:14px; font-weight:700; color:#0f172a; margin:0 0 4px;">Distribusi Kategori</p>
+                    <p style="font-size:11.5px; color:#94a3b8; margin:0 0 18px;">24 Total Project</p>
+                    <div style="display:flex; align-items:center; gap:24px;">
+                        <div style="position:relative; width:120px; height:120px; flex-shrink:0;"
+                             x-data="{segs:[{pct:29.2,color:'#1a2e6e'},{pct:20.8,color:'#FFB800'},{pct:16.7,color:'#7c3aed'},{pct:12.5,color:'#059669'},{pct:12.5,color:'#ec4899'},{pct:8.3,color:'#94a3b8'}],get arcs(){const c=251.2;let off=0;return this.segs.map(s=>{const da=(s.pct/100)*c;const o=-(off/100)*c;off+=s.pct;return{...s,da,o};})}}">
+                            <svg viewBox="0 0 100 100" style="width:100%;height:100%;transform:rotate(-90deg);">
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="#f1f5f9" stroke-width="18"/>
+                                <template x-for="a in arcs" :key="a.color">
+                                    <circle cx="50" cy="50" r="40" fill="none" :stroke="a.color" stroke-width="18" :stroke-dasharray="`${a.da} ${251.2-a.da}`" :stroke-dashoffset="a.o"/>
+                                </template>
+                            </svg>
+                            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                                <p style="font-size:24px;font-weight:800;color:#0f172a;line-height:1;margin:0;">24</p>
+                                <p style="font-size:10px;color:#94a3b8;font-weight:500;margin:0;">Project</p>
+                            </div>
+                        </div>
+                        <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+                            @php $cats=[['label'=>'Web & Sistem Info','count'=>7,'pct'=>'29.2%','color'=>'#1a2e6e'],['label'=>'IoT & Embedded','count'=>5,'pct'=>'20.8%','color'=>'#FFB800'],['label'=>'Aplikasi Mobile','count'=>4,'pct'=>'16.7%','color'=>'#7c3aed'],['label'=>'Desain & Kreatif','count'=>3,'pct'=>'12.5%','color'=>'#059669'],['label'=>'Riset & Analitik','count'=>3,'pct'=>'12.5%','color'=>'#ec4899'],['label'=>'Lainnya','count'=>2,'pct'=>'8.3%','color'=>'#94a3b8']]; @endphp
+                            @foreach($cats as $c)
+                            <div style="display:flex; align-items:center; justify-content:space-between;">
+                                <div style="display:flex; align-items:center; gap:7px;">
+                                    <span style="width:10px;height:10px;border-radius:3px;background:{{ $c['color'] }};flex-shrink:0;display:inline-block;"></span>
+                                    <span style="font-size:11.5px; color:#475569;">{{ $c['label'] }}</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span style="font-size:11px; color:#94a3b8;">{{ $c['pct'] }}</span>
+                                    <span style="font-size:12px; font-weight:700; color:#0f172a;">{{ $c['count'] }}</span>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
 
-                {{-- Right col: Donut + Status stacked --}}
-                <div class="flex flex-col gap-6">
-
-                    {{-- Distribusi Kategori --}}
-                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 flex flex-col">
-                        <div class="mb-4">
-                            <p class="font-semibold text-[#1E293B] text-[15px]">Distribusi Kategori</p>
-                            <p class="text-xs text-slate-400 mt-0.5">Project per kategori</p>
-                        </div>
-
-                        <div class="flex items-center justify-center" x-data="{
-                            segments: [
-                                { label: 'Website',         pct: 28.6, color: '#0B3B82' },
-                                { label: 'IoT & Embedded',  pct: 21.4, color: '#FFB800' },
-                                { label: 'Aplikasi',        pct: 17.9, color: '#6366F1' },
-                                { label: 'Sistem Informasi',pct: 14.3, color: '#16A34A' },
-                                { label: 'Desain',          pct: 10.7, color: '#EC4899' },
-                                { label: 'Lainnya',         pct: 7.1,  color: '#94A3B8' },
-                            ],
-                            total: 28,
-                            get arcs() {
-                                let offset = 0;
-                                return this.segments.map(s => {
-                                    const da = (s.pct / 100) * 251.2;
-                                    const off = -(offset / 100) * 251.2;
-                                    offset += s.pct;
-                                    return { ...s, da, off };
-                                });
-                            }
-                        }">
-                            <div class="relative w-36 h-36">
-                                <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
-                                    <circle cx="50" cy="50" r="40" fill="none" stroke="#F1F5F9" stroke-width="16"/>
-                                    <template x-for="arc in arcs" :key="arc.label">
-                                        <circle cx="50" cy="50" r="40" fill="none"
-                                            :stroke="arc.color" stroke-width="16"
-                                            :stroke-dasharray="`${arc.da} ${251.2 - arc.da}`"
-                                            :stroke-dashoffset="arc.off"/>
-                                    </template>
-                                </svg>
-                                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                    <p class="text-2xl font-bold text-[#1E293B]">28</p>
-                                    <p class="text-[10px] text-slate-400 font-medium">Project</p>
+                <!-- Status Project -->
+                <div style="background:white; border-radius:16px; border:1px solid #e2e8f0; padding:22px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+                    <p style="font-size:14px; font-weight:700; color:#0f172a; margin:0 0 4px;">Status Project</p>
+                    <p style="font-size:11.5px; color:#94a3b8; margin:0 0 18px;">14 Total Status</p>
+                    @php $statuses=[['label'=>'Belum Berjalan','count'=>'14 Project (60%)','pct'=>60,'color'=>'#1a2e6e'],['label'=>'Sedang Berjalan','count'=>'5 Project (22%)','pct'=>22,'color'=>'#059669'],['label'=>'SELESAI / DITOLAK','count'=>'3 Project (13%)','pct'=>13,'color'=>'#FFB800'],['label'=>'Website & Penelitian','count'=>'3 Project (13%)','pct'=>13,'color'=>'#7c3aed'],['label'=>'Mobile & Formulasi','count'=>'2 Project (8%)','pct'=>8,'color'=>'#ec4899']]; @endphp
+                    <div style="display:flex; flex-direction:column; gap:14px;">
+                        @foreach($statuses as $s)
+                        <div>
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;">
+                                <div style="display:flex; align-items:center; gap:7px;">
+                                    <span style="width:8px;height:8px;border-radius:50%;background:{{ $s['color'] }};flex-shrink:0;display:inline-block;"></span>
+                                    <span style="font-size:12px; color:#475569; font-weight:500;">{{ $s['label'] }}</span>
                                 </div>
+                                <span style="font-size:11.5px; font-weight:700; color:#0f172a;">{{ $s['count'] }}</span>
+                            </div>
+                            <div style="height:7px; background:#f1f5f9; border-radius:99px; overflow:hidden;">
+                                <div class="progress-bar" style="height:100%; border-radius:99px; background:{{ $s['color'] }}; width:{{ $s['pct'] }}%;"></div>
                             </div>
                         </div>
-
-                        <div class="mt-4 space-y-2">
-                            @php
-                            $donut = [
-                                ['label' => 'Website',          'count' => 8,  'color' => '#0B3B82'],
-                                ['label' => 'IoT & Embedded',   'count' => 6,  'color' => '#FFB800'],
-                                ['label' => 'Aplikasi',         'count' => 5,  'color' => '#6366F1'],
-                                ['label' => 'Sistem Informasi', 'count' => 4,  'color' => '#16A34A'],
-                                ['label' => 'Desain & Kreatif', 'count' => 3,  'color' => '#EC4899'],
-                                ['label' => 'Lainnya',          'count' => 2,  'color' => '#94A3B8'],
-                            ];
-                            @endphp
-                            @foreach($donut as $d)
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background-color: {{ $d['color'] }}"></span>
-                                    <span class="text-[11.5px] text-slate-600">{{ $d['label'] }}</span>
-                                </div>
-                                <span class="text-[11.5px] font-semibold text-[#1E293B]">{{ $d['count'] }}</span>
-                            </div>
-                            @endforeach
-                        </div>
+                        @endforeach
                     </div>
-
-                    {{-- Status Project --}}
-                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-                        <div class="mb-4">
-                            <p class="font-semibold text-[#1E293B] text-[15px]">Status Project</p>
-                            <p class="text-xs text-slate-400 mt-0.5">Distribusi berdasarkan status</p>
-                        </div>
-
-                        @php
-                        $statuses = [
-                            ['label' => 'Proposal',   'count' => 5,  'color' => '#6366F1', 'total' => 28],
-                            ['label' => 'Review',     'count' => 4,  'color' => '#F59E0B', 'total' => 28],
-                            ['label' => 'Berjalan',   'count' => 17, 'color' => '#0B3B82', 'total' => 28],
-                            ['label' => 'Selesai',    'count' => 16, 'color' => '#16A34A', 'total' => 28],
-                            ['label' => 'Dibatalkan', 'count' => 2,  'color' => '#DC2626', 'total' => 28],
-                        ];
-                        @endphp
-
-                        <div class="space-y-3">
-                            @foreach($statuses as $s)
-                            <div>
-                                <div class="flex items-center justify-between mb-1">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: {{ $s['color'] }}"></span>
-                                        <span class="text-[12px] text-slate-600 font-medium">{{ $s['label'] }}</span>
-                                    </div>
-                                    <span class="text-[12px] font-bold text-[#1E293B]">{{ $s['count'] }}</span>
-                                </div>
-                                <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full transition-all duration-500"
-                                         style="width: {{ round($s['count'] / $s['total'] * 100) }}%; background-color: {{ $s['color'] }}">
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-
-                </div>{{-- /right col --}}
-            </div>{{-- /bottom grid --}}
+                </div>
+            </div>
 
         </main>
 
-        <footer class="px-8 py-4 border-t border-slate-100 bg-white">
-            <p class="text-[11px] text-slate-400">© {{ date('Y') }} TEVARA · Politeknik Negeri Semarang</p>
+        <footer style="padding:14px 32px; border-top:1px solid #e2e8f0; background:white;">
+            <p style="font-size:11px; color:#94a3b8; margin:0;">&#169; {{ date('Y') }} TEVARA &middot; Politeknik Negeri Semarang &middot; <em>Knowledge into Action</em></p>
         </footer>
     </div>
 </div>

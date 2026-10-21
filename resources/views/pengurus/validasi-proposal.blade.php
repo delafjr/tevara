@@ -27,14 +27,14 @@
         <main class="flex-1 px-8 py-7 space-y-7">
 
             {{-- Hero --}}
-            <div class="relative overflow-hidden rounded-2xl bg-[#0B3B82] px-8 py-7">
-                <div class="absolute -right-16 -top-16 w-72 h-72 rounded-full bg-white/5"></div>
-                <div class="absolute right-24 -bottom-10 w-40 h-40 rounded-full bg-[#FFB800]/10"></div>
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#eef4ff] via-[#f0f5ff] to-[#eef4ff] px-8 py-7 border border-[#dde8ff] shadow-sm">
+                <div class="absolute right-40 top-1/2 -translate-y-1/2 w-52 h-52 rounded-full bg-[#FFB800]/10 blur-2xl"></div>
+                <div class="absolute right-24 -bottom-10 w-40 h-40 rounded-full bg-[#FFB800]/20"></div>
                 <div class="relative z-10 flex items-center justify-between">
                     <div class="max-w-lg">
-                        <p class="text-[#FFB800] text-xs font-semibold tracking-wide mb-2">Teaching Factory · Polines</p>
-                        <h1 class="text-white text-2xl font-bold leading-snug">Validasi Proposal Projek</h1>
-                        <p class="text-blue-200 text-sm mt-2 leading-relaxed">Tinjau, setujui, atau tolak proposal projek yang masuk dari klien dan tim internal.</p>
+                        <p class="flex items-center gap-1.5 text-[#64748b] text-xs font-semibold tracking-widest mb-2 uppercase">Teaching Factory · Polines</p>
+                        <h1 class="text-[#0f172a] text-2xl font-bold leading-snug">Validasi Proposal Projek</h1>
+                        <p class="text-[#64748b] text-sm mt-2 leading-relaxed">Tinjau, setujui, atau tolak proposal projek yang masuk dari klien dan tim internal.</p>
                     </div>
                     <div class="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-5 py-3.5">
                         <div class="text-center">
