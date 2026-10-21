@@ -10,7 +10,7 @@
 
 @php
     $user = $user ?? session('user');
-    $userName = $user['name'] ?? 'Dimas Setiawan';
+    $userName = $user['name'] ?? 'Project Manager';
 @endphp
 
 <div class="flex min-h-screen">
