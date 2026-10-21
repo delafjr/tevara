@@ -91,12 +91,12 @@ Route::middleware('auth.api')->group(function () {
         }
 
         $viewMap = [
-            'klien'         => 'dashboard',
-            'pengurus_tefa' => 'dashboard-pengurus',
-            'pm'            => 'dashboard-pm',
-            'dosen'         => 'dashboard-pm',
-            'mahasiswa'     => 'dashboard-mahasiswa',
-            'jurusan'       => 'dashboard-jurusan',
+            'klien'         => 'klien.dashboard',
+            'pengurus_tefa' => 'pengurus-tefa.dashboard',
+            'pm'            => 'pm.dashboard',
+            'dosen'         => 'dosen.dashboard',
+            'mahasiswa'     => 'mahasiswa.dashboard',
+            'jurusan'       => 'jurusan.dashboard',
         ];
 
         $view = $viewMap[$activeRole] ?? 'dashboard';
@@ -157,6 +157,9 @@ Route::middleware('auth.api')->group(function () {
         return redirect()->route('dashboard');
     })->name('dashboard-mahasiswa');
 
+    Route::get('/mahasiswa/project', fn () => view('mahasiswa.project', ['user' => session('user')]))->name('mahasiswa.project');
+    Route::get('/mahasiswa/task', fn () => view('mahasiswa.task', ['user' => session('user')]))->name('mahasiswa.task');
+
     Route::get('/dashboard-jurusan', function () {
         $user = session('user');
         if (!ApiService::hasRole($user, 'jurusan')) {
@@ -167,13 +170,13 @@ Route::middleware('auth.api')->group(function () {
     })->name('dashboard-jurusan');
 
     // Pengurus TEFA sub-pages (Protected by role pengurus_tefa)
-    Route::middleware('auth.api:pengurus_tefa')->prefix('pengurus')->name('pengurus.')->group(function () {
-        Route::get('/projek', fn () => view('pengurus.projek', ['user' => session('user')]))->name('projek');
-        Route::get('/klien-mitra', fn () => view('pengurus.klien-mitra', ['user' => session('user')]))->name('klien-mitra');
-        Route::get('/dosen', fn () => view('pengurus.dosen', ['user' => session('user')]))->name('dosen');
-        Route::get('/mahasiswa', fn () => view('pengurus.mahasiswa', ['user' => session('user')]))->name('mahasiswa');
-        Route::get('/validasi-proposal', fn () => view('pengurus.validasi-proposal', ['user' => session('user')]))->name('validasi-proposal');
-        Route::get('/keuangan', fn () => view('pengurus.keuangan', ['user' => session('user')]))->name('keuangan');
-        Route::get('/monitoring', fn () => view('pengurus.monitoring', ['user' => session('user')]))->name('monitoring');
+    Route::middleware('auth.api:pengurus_tefa')->prefix('pengurus-tefa')->name('pengurus-tefa.')->group(function () {
+        Route::get('/projek', fn () => view('pengurus-tefa.projek', ['user' => session('user')]))->name('projek');
+        Route::get('/klien-mitra', fn () => view('pengurus-tefa.klien-mitra', ['user' => session('user')]))->name('klien-mitra');
+        Route::get('/dosen', fn () => view('pengurus-tefa.dosen', ['user' => session('user')]))->name('dosen');
+        Route::get('/mahasiswa', fn () => view('pengurus-tefa.mahasiswa', ['user' => session('user')]))->name('mahasiswa');
+        Route::get('/validasi-proposal', fn () => view('pengurus-tefa.validasi-proposal', ['user' => session('user')]))->name('validasi-proposal');
+        Route::get('/keuangan', fn () => view('pengurus-tefa.keuangan', ['user' => session('user')]))->name('keuangan');
+        Route::get('/monitoring', fn () => view('pengurus-tefa.monitoring', ['user' => session('user')]))->name('monitoring');
     });
 });

@@ -71,8 +71,8 @@
         ],
         'mahasiswa' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => '#'],
-            ['id' => 'task-saya',    'label' => 'Task Saya',             'icon' => 'task',           'href' => '#'],
+            ['id' => 'project',      'label' => 'Project',               'icon' => 'project',        'href' => route('mahasiswa.project')],
+            ['id' => 'task-saya',    'label' => 'Task Saya',             'icon' => 'task',           'href' => route('mahasiswa.task')],
         ],
         'pm' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
@@ -88,13 +88,13 @@
         ],
         'pengurus_tefa' => [
             ['id' => 'dashboard',         'label' => 'Dashboard',         'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'projek',            'label' => 'Projek',            'icon' => 'project',        'href' => route('pengurus.projek')],
-            ['id' => 'klien-mitra',       'label' => 'Klien & Mitra',     'icon' => 'team',           'href' => route('pengurus.klien-mitra')],
-            ['id' => 'dosen',             'label' => 'Dosen',             'icon' => 'team',           'href' => route('pengurus.dosen')],
-            ['id' => 'mahasiswa',         'label' => 'Mahasiswa',         'icon' => 'team',           'href' => route('pengurus.mahasiswa')],
-            ['id' => 'validasi-proposal', 'label' => 'Validasi Proposal', 'icon' => 'proposal',       'href' => route('pengurus.validasi-proposal')],
-            ['id' => 'keuangan',          'label' => 'Keuangan',          'icon' => 'tagihan',        'href' => route('pengurus.keuangan')],
-            ['id' => 'monitoring',        'label' => 'Monitoring',        'icon' => 'monitoring',     'href' => route('pengurus.monitoring')],
+            ['id' => 'projek',            'label' => 'Projek',            'icon' => 'project',        'href' => route('pengurus-tefa.projek')],
+            ['id' => 'klien-mitra',       'label' => 'Klien & Mitra',     'icon' => 'team',           'href' => route('pengurus-tefa.klien-mitra')],
+            ['id' => 'dosen',             'label' => 'Dosen',             'icon' => 'team',           'href' => route('pengurus-tefa.dosen')],
+            ['id' => 'mahasiswa',         'label' => 'Mahasiswa',         'icon' => 'team',           'href' => route('pengurus-tefa.mahasiswa')],
+            ['id' => 'validasi-proposal', 'label' => 'Validasi Proposal', 'icon' => 'proposal',       'href' => route('pengurus-tefa.validasi-proposal')],
+            ['id' => 'keuangan',          'label' => 'Keuangan',          'icon' => 'tagihan',        'href' => route('pengurus-tefa.keuangan')],
+            ['id' => 'monitoring',        'label' => 'Monitoring',        'icon' => 'monitoring',     'href' => route('pengurus-tefa.monitoring')],
         ],
         'jurusan' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
@@ -107,7 +107,7 @@
     $currentMenu = $menus[$currentRole] ?? $menus['klien'];
 @endphp
 
-<aside class="w-64 min-h-screen bg-[#F4F7FC] border-r border-slate-200/70 flex flex-col fixed top-0 left-0 z-30 select-none">
+<aside data-role="{{ $currentRole }}" class="w-64 min-h-screen bg-[#F8FAFC] border-r border-slate-200/70 flex flex-col fixed top-0 left-0 z-30 select-none">
 
     {{-- ===== LOGO TEVARA ===== --}}
     <div class="px-6 py-6 border-b border-slate-200/50 flex items-center">
@@ -147,14 +147,22 @@
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                         </svg>
                     @elseif($item['icon'] === 'task')
-                        {{-- Task & Timeline / Calendar checklist icon --}}
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
-                            <rect width="18" height="18" x="3" y="4" rx="2"/>
-                            <path d="M16 2v4"/>
-                            <path d="M8 2v4"/>
-                            <path d="M3 10h18"/>
-                            <path d="m9 16 2 2 4-4"/>
-                        </svg>
+                        @if($currentRole === 'mahasiswa')
+                            {{-- Circular Task Icon matching student design --}}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                                <circle cx="12" cy="12" r="9"/>
+                                <polyline points="9 12 11.5 14.5 15.5 9.5"/>
+                            </svg>
+                        @else
+                            {{-- Task & Timeline / Calendar checklist icon --}}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                                <rect width="18" height="18" x="3" y="4" rx="2"/>
+                                <path d="M16 2v4"/>
+                                <path d="M8 2v4"/>
+                                <path d="M3 10h18"/>
+                                <path d="m9 16 2 2 4-4"/>
+                            </svg>
+                        @endif
                     @elseif($item['icon'] === 'ajukan-projek')
                         {{-- Plus circle icon --}}
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
@@ -183,7 +191,7 @@
                         </svg>
                     @endif
                 </span>
-                <span class="flex-1 truncate">{{ $item['label'] }}</span>
+                <span class="flex-1 truncate">                <span class="sidebar-label">{{ $item['label'] }}</span></span>
             </a>
         @endforeach
     </nav>
