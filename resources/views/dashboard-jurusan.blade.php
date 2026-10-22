@@ -11,7 +11,7 @@
 
 @php
     $user = $user ?? session('user');
-    $userName = $user['name'] ?? 'Dr. Ahmad Wijaya';
+    $userName = $user['name'];
 @endphp
 
 <div class="flex min-h-screen">
