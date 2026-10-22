@@ -135,7 +135,7 @@
                         <h2 class="font-bold text-[#1E293B] text-[15px]">Project yang Saya Kelola</h2>
                         <p class="text-xs text-slate-400 mt-0.5">Semua project yang ditugaskan ke Anda</p>
                     </div>
-                    <a href="#" class="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] inline-flex items-center gap-1 transition-colors">
+                    <a href="{{ route('pm.project') }}" class="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] inline-flex items-center gap-1 transition-colors">
                         Lihat Semua
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>

@@ -11,6 +11,7 @@
 @php
     $user     = $user ?? session('user');
     $userName = $user['name'] ?? 'Project Manager';
+    $hasProject = true;
 @endphp
 
 <div class="flex min-h-screen">
@@ -40,7 +41,7 @@
             </div>
         </div>
 
-        @if(session('active_role') === 'dosen')
+        @if(!$hasProject)
             <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs px-8 py-14 text-center">
                 <h2 class="text-lg font-bold text-[#0B254A]">Belum ada proyek terdaftar</h2>
                 <p class="text-sm text-slate-500 mt-2">Task dan timeline akan muncul setelah proyek ditugaskan kepada Anda.</p>
@@ -193,7 +194,7 @@
 
                 {{-- Task 2 --}}
                 <div class="bg-white rounded-xl border border-slate-100 shadow-2xs p-4 hover:shadow-sm transition-shadow cursor-pointer">
-                    <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-3">Dokumentasi API Swagger Endpoint...</p>
+                    <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-3">Dokumentasi API Swagger Endpoint Transaksi</p>
                     <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mb-3">
                         <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
@@ -204,6 +205,24 @@
                         <div class="flex items-center gap-2">
                             <div class="w-6 h-6 rounded-full bg-[#0B254A] text-white flex items-center justify-center text-[9px] font-bold">AR</div>
                             <span class="text-[11px] text-slate-500 font-medium">Ahmad R.</span>
+                        </div>
+                        <span class="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">0% Mulai</span>
+                    </div>
+                </div>
+
+                {{-- Task 3 --}}
+                <div class="bg-white rounded-xl border border-slate-100 shadow-2xs p-4 hover:shadow-sm transition-shadow cursor-pointer">
+                    <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-3">Setup CI/CD Pipeline & Automated Testing Staging</p>
+                    <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mb-3">
+                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+                        </svg>
+                        25 Okt
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[9px] font-bold">DP</div>
+                            <span class="text-[11px] text-slate-500 font-medium">Dimas P.</span>
                         </div>
                         <span class="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">0% Mulai</span>
                     </div>
@@ -255,6 +274,72 @@
                     </div>
                     <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3">
                         <div class="h-full bg-[#F59E0B] rounded-full" style="width:40%"></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-[#6D28D9] text-white flex items-center justify-center text-[9px] font-bold">SN</div>
+                        <span class="text-[11px] text-slate-500 font-medium">Siti N.</span>
+                    </div>
+                </div>
+
+                {{-- Task 3 --}}
+                <div class="bg-white rounded-xl border border-slate-100 shadow-2xs p-4 hover:shadow-sm transition-shadow cursor-pointer">
+                    <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-2">Refactoring Middleware Autentikasi JWT</p>
+                    <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mb-3">
+                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+                        </svg>
+                        14 Okt
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] text-slate-400">Progress Sprint</span>
+                        <span class="text-[10px] font-bold text-[#2563EB]">80%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3">
+                        <div class="h-full bg-[#2563EB] rounded-full" style="width:80%"></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-[#0B254A] text-white flex items-center justify-center text-[9px] font-bold">AR</div>
+                        <span class="text-[11px] text-slate-500 font-medium">Ahmad R.</span>
+                    </div>
+                </div>
+
+                {{-- Task 4 --}}
+                <div class="bg-white rounded-xl border border-slate-100 shadow-2xs p-4 hover:shadow-sm transition-shadow cursor-pointer">
+                    <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-2">Integrasi Driver Sensor DHT22 &amp; ESP32</p>
+                    <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mb-3">
+                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+                        </svg>
+                        16 Okt
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] text-slate-400">Progress Sprint</span>
+                        <span class="text-[10px] font-bold text-[#2563EB]">55%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3">
+                        <div class="h-full bg-[#2563EB] rounded-full" style="width:55%"></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-[#B45309] text-white flex items-center justify-center text-[9px] font-bold">KS</div>
+                        <span class="text-[11px] text-slate-500 font-medium">Kevin S.</span>
+                    </div>
+                </div>
+
+                {{-- Task 5 --}}
+                <div class="bg-white rounded-xl border border-slate-100 shadow-2xs p-4 hover:shadow-sm transition-shadow cursor-pointer">
+                    <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-2">Desain Mockup High-Fidelity Modul Checkout</p>
+                    <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mb-3">
+                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+                        </svg>
+                        17 Okt
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] text-slate-400">Progress Sprint</span>
+                        <span class="text-[10px] font-bold text-[#2563EB]">70%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3">
+                        <div class="h-full bg-[#2563EB] rounded-full" style="width:70%"></div>
                     </div>
                     <div class="flex items-center gap-2">
                         <div class="w-6 h-6 rounded-full bg-[#6D28D9] text-white flex items-center justify-center text-[9px] font-bold">SN</div>
@@ -390,6 +475,48 @@
                             <span class="text-[11px] text-slate-500 font-medium">Siti N.</span>
                         </div>
                         <span class="text-[10px] text-slate-400">30 Sep</span>
+                    </div>
+                </div>
+
+                {{-- Done Card 3 --}}
+                <div class="bg-white rounded-xl border border-slate-100 shadow-2xs p-4 hover:shadow-sm transition-shadow cursor-pointer">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <span class="text-[10px] font-bold text-[#2563EB] bg-[#DBEAFE] px-2 py-0.5 rounded-full">High</span>
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-[#16A34A]">
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                            </svg>
+                            Approved
+                        </span>
+                    </div>
+                    <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-3">Setup Lingkungan Server Docker Compose</p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-[#0B254A] text-white flex items-center justify-center text-[9px] font-bold">AR</div>
+                            <span class="text-[11px] text-slate-500 font-medium">Ahmad R.</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">03 Okt</span>
+                    </div>
+                </div>
+
+                {{-- Done Card 4 --}}
+                <div class="bg-white rounded-xl border border-slate-100 shadow-2xs p-4 hover:shadow-sm transition-shadow cursor-pointer">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Medium</span>
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-[#16A34A]">
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                            </svg>
+                            Approved
+                        </span>
+                    </div>
+                    <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-3">Autentikasi OAuth2 &amp; Session Multi-Device</p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[9px] font-bold">DP</div>
+                            <span class="text-[11px] text-slate-500 font-medium">Dimas P.</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">07 Okt</span>
                     </div>
                 </div>
             </div>

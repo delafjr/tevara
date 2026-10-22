@@ -193,8 +193,7 @@ class DashboardAccessTest extends TestCase
         ])->get(route('pm.project'));
 
         $projectResponse->assertOk();
-        $projectResponse->assertSee('Belum ada proyek terdaftar');
-        $projectResponse->assertDontSee('PRJ-2026/044');
+        $projectResponse->assertSee('PRJ-2026/044');
 
         $teamResponse = $this->withSession([
             'api_token' => 'dummy-token',
@@ -208,8 +207,7 @@ class DashboardAccessTest extends TestCase
         ])->get(route('pm.anggota-tim'));
 
         $teamResponse->assertOk();
-        $teamResponse->assertSee('Belum ada proyek terdaftar');
-        $teamResponse->assertDontSee('PRJ-2026/014');
+        $teamResponse->assertSee('PRJ-2026/014');
 
         $taskResponse = $this->withSession([
             'api_token' => 'dummy-token',
@@ -223,7 +221,6 @@ class DashboardAccessTest extends TestCase
         ])->get(route('pm.task-timeline'));
 
         $taskResponse->assertOk();
-        $taskResponse->assertSee('Belum ada proyek terdaftar');
-        $taskResponse->assertDontSee('PRJ-2026/001');
+        $taskResponse->assertSee('PRJ-2026/001');
     }
 }

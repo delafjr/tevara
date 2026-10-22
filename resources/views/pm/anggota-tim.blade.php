@@ -32,7 +32,7 @@
             'klien'       => 'PT. ABC Indonesia',
             'jml'         => 4,
             'expanded'    => true,
-            'avatars'     => ['AR','SN','DP','KS'],
+            'avatars'     => ['DP','AR','SN','KS'],
             'anggota'     => [
                 ['inisial'=>'DP','nama'=>'Dimas Prasetyo', 'nim'=>'22641181999','prodi'=>'D3 Teknik Informatika','peran'=>'Backend Lead'],
                 ['inisial'=>'AR','nama'=>'Ahmad Rifai',    'nim'=>'22641181645','prodi'=>'D3 Teknik Informatika','peran'=>'Fullstack Lead'],
@@ -50,7 +50,11 @@
             'jml'         => 3,
             'expanded'    => false,
             'avatars'     => ['BR','PA','DS'],
-            'anggota'     => [],
+            'anggota'     => [
+                ['inisial'=>'BR','nama'=>'Bagas Rahmawan',   'nim'=>'22641181701','prodi'=>'D3 Teknik Informatika','peran'=>'Mobile Dev'],
+                ['inisial'=>'PA','nama'=>'Putri Ayu Lestari','nim'=>'22641181722','prodi'=>'D3 Teknik Informatika','peran'=>'UI/UX Designer'],
+                ['inisial'=>'DS','nama'=>'Daffa Syahputra',  'nim'=>'22641181745','prodi'=>'D3 Teknik Informatika','peran'=>'QA Tester'],
+            ],
         ],
         [
             'id'          => 'PRJ-2026/021',
@@ -62,7 +66,10 @@
             'jml'         => 2,
             'expanded'    => false,
             'avatars'     => ['BR','MI'],
-            'anggota'     => [],
+            'anggota'     => [
+                ['inisial'=>'BR','nama'=>'Budi Ramadhan',  'nim'=>'22641181810','prodi'=>'D4 Teknik Telekomunikasi','peran'=>'DevOps'],
+                ['inisial'=>'MI','nama'=>'M. Irfan Hakim', 'nim'=>'22641181833','prodi'=>'D3 Teknik Informatika','peran'=>'Frontend Lead'],
+            ],
         ],
         [
             'id'          => 'PRJ-2026/005',
@@ -74,7 +81,11 @@
             'jml'         => 3,
             'expanded'    => false,
             'avatars'     => ['FA','NI','HW'],
-            'anggota'     => [],
+            'anggota'     => [
+                ['inisial'=>'FA','nama'=>'Farhan Aditya','nim'=>'22641181902','prodi'=>'D3 Teknik Informatika','peran'=>'Frontend Lead'],
+                ['inisial'=>'NI','nama'=>'Nurul Izzah',  'nim'=>'22641181919','prodi'=>'D3 Teknik Informatika','peran'=>'Backend Lead'],
+                ['inisial'=>'HW','nama'=>'Hendra Wijaya','nim'=>'22641181954','prodi'=>'D3 Teknik Informatika','peran'=>'DevOps'],
+            ],
         ],
         [
             'id'          => 'PRJ-2026/027',
@@ -86,7 +97,10 @@
             'jml'         => 2,
             'expanded'    => false,
             'avatars'     => ['MI','MZ'],
-            'anggota'     => [],
+            'anggota'     => [
+                ['inisial'=>'MI','nama'=>'M. Iqbal Kurniawan','nim'=>'22641182001','prodi'=>'D4 Teknik Telekomunikasi','peran'=>'Fullstack Lead'],
+                ['inisial'=>'MZ','nama'=>'M. Zaki Fadhilah',  'nim'=>'22641182035','prodi'=>'D3 Teknik Informatika','peran'=>'Backend Lead'],
+            ],
         ],
     ];
 
@@ -134,7 +148,7 @@
             </div>
         </div>
 
-        @if($isDosen)
+        @if(empty($timProyek))
             <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs px-8 py-14 text-center">
                 <h2 class="text-lg font-bold text-[#0B254A]">Belum ada proyek terdaftar</h2>
                 <p class="text-sm text-slate-500 mt-2">Informasi tim akan muncul setelah proyek ditugaskan kepada Anda.</p>
