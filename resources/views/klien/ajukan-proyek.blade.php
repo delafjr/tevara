@@ -74,13 +74,9 @@
             <main class="flex-1 px-8 py-7 flex flex-col">
 
                 {{-- == ( header halaman ) == --}}
-                <header class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
-                    <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+                <header class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6">
+                    <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-70 pointer-events-none"></div>
                     <div class="relative z-10">
-                        <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                            Formulir Pengajuan
-                        </span>
                         <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                             Ajukan Proyek <span class="text-[#FFB800]">Baru</span>
                         </h1>
@@ -128,6 +124,9 @@
                                        value="{{ old('pic_nama') ?: $profile['pic'] }}"
                                        class="{{ $errors->has('pic_nama') ? $inputErr : $inputOk }}">
                                 @error('pic_nama') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
+                                @if ($profile['jabatan'])
+                                    <p class="mt-1.5 text-xs text-slate-400">Jabatan PIC: {{ $profile['jabatan'] }}</p>
+                                @endif
                             </div>
 
                             {{-- Nomor kontak --}}
