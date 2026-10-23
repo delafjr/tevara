@@ -22,33 +22,26 @@
     <main class="flex-1 ml-64 p-8 min-h-screen flex flex-col gap-6">
 
         {{-- ── 1. GREETING BANNER ── --}}
-        <div class="relative overflow-hidden bg-white rounded-2xl border border-slate-100 shadow-2xs px-8 py-7 flex items-center justify-between">
-            <!-- Subtle soft warm background tint on the top-right -->
-            <div class="absolute -top-12 -right-12 w-80 h-48 bg-gradient-to-bl from-amber-50/50 via-amber-50/20 to-transparent pointer-events-none rounded-full blur-2xl"></div>
+        <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+            {{-- gradient dekoratif --}}
+            <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
 
             <div class="relative z-10">
-                <h1 class="text-2xl font-bold text-[#0B254A] tracking-tight">
-                    Selamat <span class="text-[#F59E0B]">Datang</span> , {{ $userName }}
+                <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                    Workspace Dosen
+                </span>
+                <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                    Selamat Datang, <span class="text-[#FFB800]">{{ $userName }}</span>
                 </h1>
-                <p class="text-xs text-slate-400 mt-2 font-normal">
-                    Pantau progres mahasiswa, review laporan sprint, dan pastikan milestone tercapai tepat waktu
-                </p>
+                <p class="text-sm text-slate-400 mt-1.5">Pantau progres mahasiswa, review laporan sprint, dan pastikan milestone tercapai tepat waktu</p>
             </div>
 
-            <div class="relative z-10 flex flex-col items-end gap-1.5 flex-shrink-0">
-                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-slate-200/80 rounded-xl text-xs font-medium text-slate-600 shadow-2xs">
-                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <rect width="18" height="18" x="3" y="4" rx="2"/>
-                        <path d="M16 2v4"/>
-                        <path d="M8 2v4"/>
-                        <path d="M3 10h18"/>
-                    </svg>
-                    <span>Rabu, 30 September 2026</span>
-                </div>
-                <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#10B981] inline-block"></span>
-                    <span>Data terbaru ter-sinkron</span>
-                </div>
+            <div class="relative z-10 flex flex-col items-end gap-2 flex-shrink-0">
+                <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[11.5px] font-semibold px-3 py-1.5 rounded-lg">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                    Data terbaru
+                </span>
             </div>
         </div>
 

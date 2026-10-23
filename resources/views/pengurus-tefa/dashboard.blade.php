@@ -22,36 +22,29 @@
     {{-- ===== MAIN ===== --}}
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
 
-        {{-- Topbar --}}
-        <header class="bg-white border-b border-slate-100 px-8 py-4 flex items-center justify-between sticky top-0 z-20">
-            <div>
-                <p class="text-xs text-slate-400 font-medium">Dashboard</p>
-                <p class="text-[15px] font-semibold text-[#1E293B] leading-tight">Selamat datang, {{ $firstName }} 👋</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="text-xs text-slate-400">{{ now()->isoFormat('dddd, D MMMM Y') }}</span>
-                <div class="w-px h-4 bg-slate-200"></div>
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="text-xs text-slate-500 hover:text-[#0B3B82] font-medium transition-colors">Logout</button>
-                </form>
-            </div>
-        </header>
-
         <main class="flex-1 px-8 py-7 space-y-7">
 
-            {{-- ── HERO ── --}}
-            <div class="relative overflow-hidden rounded-2xl bg-[#0B3B82] px-8 py-7">
-                <div class="absolute -right-16 -top-16 w-72 h-72 rounded-full bg-white/5"></div>
-                <div class="absolute right-24 -bottom-10 w-40 h-40 rounded-full bg-[#FFB800]/10"></div>
-                <div class="relative z-10 max-w-lg">
-                    <p class="text-[#FFB800] text-xs font-semibold tracking-wide mb-2">Teaching Factory · Polines</p>
-                    <h1 class="text-white text-2xl font-bold leading-snug">
-                        Kelola seluruh operasional TeFa<br>dari satu tempat.
+            {{-- ── HERO CARD ── --}}
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                {{-- gradient dekoratif --}}
+                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                        Workspace Pengurus TeFa
+                    </span>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                        Selamat Datang, <span class="text-[#FFB800]">{{ $userName }}</span>
                     </h1>
-                    <p class="text-blue-200 text-sm mt-2 leading-relaxed">
-                        Validasi proposal, pantau progress tim, dan pastikan setiap project berjalan sesuai jadwal.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Kelola seluruh operasional TeFa, validasi proposal, dan pantau progress tim secara terpadu</p>
+                </div>
+
+                <div class="relative z-10 flex flex-col items-end gap-2 flex-shrink-0">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[11.5px] font-semibold px-3 py-1.5 rounded-lg">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                        Data terbaru
+                    </span>
                 </div>
             </div>
 

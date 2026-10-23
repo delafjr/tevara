@@ -23,29 +23,26 @@
     <div class="flex-1 ml-64 flex flex-col min-h-screen p-8 gap-6">
 
         {{-- HEADER / HERO SECTION --}}
-        <div class="bg-gradient-to-r from-white to-[#FDF9F1] rounded-2xl p-8 shadow-sm border border-slate-100 flex justify-between items-start relative overflow-hidden">
+        <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+            {{-- gradient dekoratif --}}
+            <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
             <div class="relative z-10">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/80 text-[#0B3B82] text-xs font-semibold tracking-wide mb-4">
+                <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                    WORKSPACE JURUSAN
-                </div>
-                <h1 class="text-[28px] font-bold text-[#1E293B] leading-tight mb-2">
-                    Selamat Datang, <span class="text-[#F59E0B]">{{ $userName }}</span>
+                    Workspace Jurusan
+                </span>
+                <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                    Selamat Datang, <span class="text-[#FFB800]">{{ $userName }}</span>
                 </h1>
-                <p class="text-slate-500 text-sm">
-                    Pantau perkembangan proyek dan kolaborasi bersama TEVARA secara terpadu
-                </p>
+                <p class="text-sm text-slate-400 mt-1.5">Pantau perkembangan proyek dan kolaborasi bersama TEVARA secara terpadu</p>
             </div>
-            
-            <div class="flex flex-col items-end gap-3 relative z-10">
-                <div class="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-xl text-sm font-medium text-slate-700 shadow-sm border border-slate-100">
-                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    Rabu, 30 September 2026
-                </div>
-                <div class="flex items-center gap-1.5 bg-blue-50 text-[#0B3B82] px-3 py-1.5 rounded-lg text-xs font-medium">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+
+            <div class="relative z-10 flex flex-col items-end gap-2 flex-shrink-0">
+                <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[11.5px] font-semibold px-3 py-1.5 rounded-lg">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
                     Data terbaru
-                </div>
+                </span>
             </div>
         </div>
 
