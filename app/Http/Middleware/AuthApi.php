@@ -14,7 +14,8 @@ class AuthApi
             return redirect()->route('login');
         }
 
-        if ($role && !ApiService::hasRole(session('user'), $role)) {
+        $allowedRoles = $role ? explode('|', $role) : [];
+        if ($allowedRoles && !array_intersect($allowedRoles, ApiService::getUserRoles(session('user')))) {
             abort(403, 'Akses ditolak: Anda tidak memiliki akses untuk role ' . $role);
         }
 

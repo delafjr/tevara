@@ -13,13 +13,10 @@
 @php
     $user = $user ?? session('user', []);
     $profile = [
-        // Nama perusahaan berasal dari backend (company_name). Fallback ke nama user supaya
-        // akun klien tanpa client_profiles tetap punya isian yang tidak kosong.
-        'instansi' => $user['company_name'] ?? $user['name'] ?? '',
+        'instansi' => $user['name'] ?? '',
         'pic'      => $user['name'] ?? '',
         'telepon'  => $user['phone_number'] ?? '',
         'email'    => $user['email'] ?? '',
-        'jabatan'  => $user['position'] ?? '',
     ];
     $deadlineMin = now()->addDays(30)->toDateString();
     $categories = [
