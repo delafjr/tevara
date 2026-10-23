@@ -4,15 +4,24 @@
 
 <x-student-layout active="project" title="Project Saya">
 
-    {{-- ===== HEADER TITLE ===== --}}
-    <section class="space-y-1">
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
-            Project <span class="text-[#2563EB]">Saya</span>
-        </h1>
-        <p class="text-slate-500 text-sm leading-relaxed max-w-3xl">
-            Daftar seluruh proyek Teaching Factory industri yang sedang dan telah Anda kerjakan bersama tim pengembang TEVARA.
-        </p>
-    </section>
+    {{-- ===== HEADER CARD ===== --}}
+    <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+        {{-- gradient dekoratif --}}
+        <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+        <div class="relative z-10">
+            <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                Workspace Mahasiswa
+            </span>
+            <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                Project <span class="text-[#FFB800]">Saya</span>
+            </h1>
+            <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
+                Daftar seluruh proyek Teaching Factory industri yang sedang dan telah Anda kerjakan bersama tim pengembang TEVARA.
+            </p>
+        </div>
+    </div>
 
     {{-- ===== 4 STAT CARDS ===== --}}
     <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" aria-label="Ringkasan project">

@@ -26,20 +26,29 @@
         </header>
         <main class="flex-1 px-8 py-7 space-y-7">
 
-            {{-- Hero --}}
-            <div class="relative overflow-hidden rounded-2xl bg-[#0B3B82] px-8 py-7">
-                <div class="absolute -right-16 -top-16 w-72 h-72 rounded-full bg-white/5"></div>
-                <div class="absolute right-24 -bottom-10 w-40 h-40 rounded-full bg-[#FFB800]/10"></div>
-                <div class="relative z-10 flex items-center justify-between">
-                    <div class="max-w-lg">
-                        <p class="text-[#FFB800] text-xs font-semibold tracking-wide mb-2">Teaching Factory · Polines</p>
-                        <h1 class="text-white text-2xl font-bold leading-snug">Validasi Proposal Projek</h1>
-                        <p class="text-blue-200 text-sm mt-2 leading-relaxed">Tinjau, setujui, atau tolak proposal projek yang masuk dari klien dan tim internal.</p>
-                    </div>
-                    <div class="flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-5 py-3.5">
+            {{-- Hero Card --}}
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                {{-- gradient dekoratif --}}
+                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                        Teaching Factory · Polines
+                    </span>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                        Validasi <span class="text-[#FFB800]">Proposal Projek</span>
+                    </h1>
+                    <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
+                        Tinjau, setujui, atau tolak proposal projek yang masuk dari klien dan tim internal.
+                    </p>
+                </div>
+
+                <div class="relative z-10 flex-shrink-0">
+                    <div class="flex items-center gap-2 bg-[#FFF9ED] border border-[#FFE8A3] rounded-xl px-5 py-2.5">
                         <div class="text-center">
-                            <p class="text-3xl font-bold text-[#FFB800]">7</p>
-                            <p class="text-blue-200 text-xs">Menunggu Validasi</p>
+                            <p class="text-2xl font-bold text-[#FFB800]">7</p>
+                            <p class="text-slate-500 text-xs font-medium">Menunggu Validasi</p>
                         </div>
                     </div>
                 </div>

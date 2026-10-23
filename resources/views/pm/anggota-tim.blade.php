@@ -135,14 +135,19 @@
     <main class="flex-1 ml-64 p-8 min-h-screen flex flex-col gap-6">
 
         {{-- ── 1. PAGE HEADER ── --}}
-        <div class="relative overflow-hidden bg-white rounded-2xl border border-slate-100 shadow-2xs px-8 py-7">
-            <div class="absolute -top-10 -right-10 w-72 h-44 bg-gradient-to-bl from-amber-50/60 via-blue-50/20 to-transparent pointer-events-none rounded-full blur-2xl"></div>
+        <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+            {{-- gradient dekoratif --}}
+            <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
             <div class="relative z-10">
-                <p class="text-[11px] font-semibold text-slate-400 tracking-wide uppercase mb-0.5">Manajemen Anggota</p>
-                <h1 class="text-2xl font-extrabold text-[#0B254A] tracking-tight leading-none">
-                    <span class="text-[#F59E0B]">Tim Mahasiswa</span>
+                <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                    Manajemen Anggota
+                </span>
+                <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                    Tim <span class="text-[#FFB800]">Mahasiswa</span>
                 </h1>
-                <p class="text-xs text-slate-400 mt-2 font-normal max-w-lg leading-relaxed">
+                <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
                     Pantau alokasi mahasiswa pelaksana Teaching Factory, distribusi role/peran, susunan struktur tim, serta status keaktifan anggota per proyek binaan Anda.
                 </p>
             </div>

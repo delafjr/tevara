@@ -28,14 +28,19 @@
           }">
 
         {{-- ── 1. PAGE HEADER ── --}}
-        <div class="relative overflow-hidden bg-white rounded-2xl border border-slate-100 shadow-2xs px-8 py-6">
-            <div class="absolute -top-10 -right-10 w-72 h-44 bg-gradient-to-bl from-amber-50/60 via-blue-50/20 to-transparent pointer-events-none rounded-full blur-2xl"></div>
+        <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+            {{-- gradient dekoratif --}}
+            <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
             <div class="relative z-10">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Monitoring Penugasan &nbsp;·&nbsp; Semester Ganjil 2026/2027</p>
-                <h1 class="text-2xl font-extrabold text-[#0B254A] tracking-tight leading-none">
-                    Task &amp; <span class="text-[#F59E0B]">Timeline</span>
+                <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                    Monitoring Penugasan · Semester Ganjil 2026/2027
+                </span>
+                <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                    Task &amp; <span class="text-[#FFB800]">Timeline</span>
                 </h1>
-                <p class="text-xs text-slate-400 mt-2 font-normal max-w-lg leading-relaxed">
+                <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
                     Pantau kemajuan pengerjaan tiket, review hasil pekerjaan mahasiswa, dan koordinasi deadline proyek.
                 </p>
             </div>
