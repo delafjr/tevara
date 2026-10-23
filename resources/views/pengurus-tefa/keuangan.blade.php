@@ -11,19 +11,6 @@
 <div class="flex min-h-screen">
     <x-sidebar active="keuangan" />
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
-        <header class="bg-white border-b border-slate-100 px-8 py-4 flex items-center justify-between sticky top-0 z-20">
-            <div>
-                <p class="text-xs text-slate-400 font-medium">Pengurus TEFA</p>
-                <p class="text-[15px] font-semibold text-[#1E293B] leading-tight">Manajemen Keuangan</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="text-xs text-slate-400">{{ now()->isoFormat('dddd, D MMMM Y') }}</span>
-                <div class="w-px h-4 bg-slate-200"></div>
-                <form action="{{ route('logout') }}" method="POST">@csrf
-                    <button type="submit" class="text-xs text-slate-500 hover:text-[#0B3B82] font-medium transition-colors">Logout</button>
-                </form>
-            </div>
-        </header>
         <main class="flex-1 px-8 py-7 space-y-7">
 
             {{-- Hero Card --}}
