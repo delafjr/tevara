@@ -13,10 +13,13 @@
 @php
     $user = $user ?? session('user', []);
     $profile = [
-        'instansi' => $user['name'] ?? '',
+        // Nama perusahaan berasal dari backend (company_name). Fallback ke nama user supaya
+        // akun klien tanpa client_profiles tetap punya isian yang tidak kosong.
+        'instansi' => $user['company_name'] ?? $user['name'] ?? '',
         'pic'      => $user['name'] ?? '',
         'telepon'  => $user['phone_number'] ?? '',
         'email'    => $user['email'] ?? '',
+        'jabatan'  => $user['position'] ?? '',
     ];
     $deadlineMin = now()->addDays(30)->toDateString();
     $categories = [
@@ -124,6 +127,9 @@
                                        value="{{ old('pic_nama') ?: $profile['pic'] }}"
                                        class="{{ $errors->has('pic_nama') ? $inputErr : $inputOk }}">
                                 @error('pic_nama') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
+                                @if ($profile['jabatan'])
+                                    <p class="mt-1.5 text-xs text-slate-400">Jabatan PIC: {{ $profile['jabatan'] }}</p>
+                                @endif
                             </div>
 
                             {{-- Nomor kontak --}}

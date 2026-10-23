@@ -16,6 +16,8 @@ class AjukanProyekKlienTest extends TestCase
                 'name'         => 'Budi Santoso',
                 'email'        => 'budi.santoso@majubersamasentosa.co.id',
                 'phone_number' => '6281234567890',
+                'company_name' => 'PT. Maju Bersama Sentosa',
+                'position'     => 'IT Manager',
                 'roles'        => ['klien'],
                 'is_pm'        => false,
             ],
@@ -45,6 +47,52 @@ class AjukanProyekKlienTest extends TestCase
             ->assertSee('Budi Santoso')
             ->assertSee('6281234567890')
             ->assertSee('budi.santoso@majubersamasentosa.co.id');
+    }
+
+    public function test_nama_instansi_diisi_dengan_nama_perusahaan_bukan_nama_pic(): void
+    {
+        $response = $this->withSession($this->sessionKlien())
+            ->get('/klien/ajukan-proyek')
+            ->assertStatus(200);
+
+        // Field instansi harus berisi nama perusahaan, bukan nama orang.
+        $response->assertSee('value="PT. Maju Bersama Sentosa"', false);
+        $response->assertSee('value="Budi Santoso"', false);
+        // Jabatan PIC dari backend ditampilkan sebagai info.
+        $response->assertSee('Jabatan PIC: IT Manager');
+    }
+
+    public function test_setelah_login_field_instansi_terisi_nama_perusahaan(): void
+    {
+        Http::fake([
+            '*/api/v1/auth/login' => Http::response([
+                'success' => true,
+                'message' => 'Login berhasil',
+                'data'    => [
+                    'user'  => [
+                        'id'           => 106,
+                        'name'         => 'Budi Santoso',
+                        'email'        => 'budi.santoso@majubersamasentosa.co.id',
+                        'phone_number' => '6281234567890',
+                        'company_name' => 'PT. Maju Bersama Sentosa',
+                        'position'     => 'IT Manager',
+                        'roles'        => ['klien'],
+                        'is_pm'        => false,
+                    ],
+                    'token' => 'fake-token',
+                ],
+            ]),
+        ]);
+
+        $this->post('/auth/login', [
+            'email'    => 'budi.santoso@majubersamasentosa.co.id',
+            'password' => 'password',
+        ])->assertRedirect('/dashboard');
+
+        $this->get('/klien/ajukan-proyek')
+            ->assertStatus(200)
+            ->assertSee('value="PT. Maju Bersama Sentosa"', false)
+            ->assertSee('Jabatan PIC: IT Manager');
     }
 
     public function test_field_kosong_setelah_submit_gagal_jatuh_ke_profil(): void
