@@ -92,7 +92,7 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth.api')->group(function () {
 
     // Main dashboard router
-    Route::get('/dashboard', function () {
+    Route::get('/dashboard', function (ApiService $api) {
         $user = session('user');
         $allowedRoles = ApiService::getUserRoles($user);
 
@@ -106,6 +106,14 @@ Route::middleware('auth.api')->group(function () {
             session(['active_role' => $activeRole]);
         }
 
+        $dashboardData = [];
+        if ($activeRole === 'mahasiswa') {
+            $res = $api->get('mahasiswa/dashboard');
+            if ($res->successful()) {
+                $dashboardData = $res->json('data', []);
+            }
+        }
+
         $viewMap = [
             'klien'         => 'klien.dashboard',
             'pengurus_tefa' => 'pengurus-tefa.dashboard',
@@ -116,7 +124,7 @@ Route::middleware('auth.api')->group(function () {
         ];
 
         $view = $viewMap[$activeRole] ?? 'dashboard';
-        return view($view, ['user' => $user, 'currentRole' => $activeRole]);
+        return view($view, ['user' => $user, 'currentRole' => $activeRole, 'dashboard' => $dashboardData]);
     })->name('dashboard');
 
     // Switch Role handlers (Strictly validated against allowed roles)
