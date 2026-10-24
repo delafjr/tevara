@@ -13,10 +13,11 @@
 @php
     $user = $user ?? session('user', []);
     $profile = [
-        'instansi' => $user['name'] ?? '',
+        'instansi' => $user['company_name'] ?? $user['client_profile']['company_name'] ?? $user['name'] ?? '',
         'pic'      => $user['name'] ?? '',
         'telepon'  => $user['phone_number'] ?? '',
         'email'    => $user['email'] ?? '',
+        'jabatan'  => $user['position'] ?? $user['client_pic']['position'] ?? '',
     ];
     $deadlineMin = now()->addDays(30)->toDateString();
     $categories = [
@@ -124,7 +125,7 @@
                                        value="{{ old('pic_nama') ?: $profile['pic'] }}"
                                        class="{{ $errors->has('pic_nama') ? $inputErr : $inputOk }}">
                                 @error('pic_nama') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
-                                @if ($profile['jabatan'])
+                                @if (!empty($profile['jabatan']))
                                     <p class="mt-1.5 text-xs text-slate-400">Jabatan PIC: {{ $profile['jabatan'] }}</p>
                                 @endif
                             </div>

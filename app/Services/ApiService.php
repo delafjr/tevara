@@ -68,6 +68,15 @@ class ApiService
     }
 
     /**
+     * Send PATCH request to backend API.
+     */
+    public function patch(string $endpoint, array $data = []): Response
+    {
+        $url = $this->baseUrl . '/' . ltrim($endpoint, '/');
+        return $this->withToken()->patch($url, $data);
+    }
+
+    /**
      * Send DELETE request to backend API.
      */
     public function delete(string $endpoint, array $data = []): Response
