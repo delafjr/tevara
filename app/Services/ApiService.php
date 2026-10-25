@@ -99,6 +99,22 @@ class ApiService
     }
 
     /**
+     * Roles yang dipakai untuk navigasi.
+     * Dosen dan PM memakai dashboard yang sama, jadi bila user juga PM,
+     * role dosen tidak ditampilkan lagi agar tidak duplikat.
+     */
+    public static function getEffectiveRoles(?array $user): array
+    {
+        $roles = self::getUserRoles($user);
+
+        if (in_array('pm', $roles, true)) {
+            $roles = array_values(array_diff($roles, ['dosen']));
+        }
+
+        return $roles;
+    }
+
+    /**
      * Check if user possesses specific role.
      */
     public static function hasRole(?array $user, string $role): bool

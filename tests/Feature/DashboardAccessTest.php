@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class DashboardAccessTest extends TestCase
@@ -100,6 +101,8 @@ class DashboardAccessTest extends TestCase
 
         $response->assertRedirect('/dashboard');
 
+        Http::fake();
+
         $dashResponse = $this->withSession([
             'api_token' => 'dummy-token',
             'user' => [
@@ -113,6 +116,86 @@ class DashboardAccessTest extends TestCase
 
         $dashResponse->assertStatus(200);
         $dashResponse->assertSee('Dosen PM');
+    }
+
+    public function test_pm_dashboard_renders_data_from_dosen_dashboard_api(): void
+    {
+        Http::fake([
+            '*/dosen/dashboard' => Http::response([
+                'success' => true,
+                'message' => 'Dosen dashboard',
+                'data' => [
+                    'total_projects' => 4,
+                    'active_projects' => 2,
+                    'completed_projects' => 1,
+                    'waiting_review' => 1,
+                    'projects' => [
+                        [
+                            'id' => 1,
+                            'title' => 'Sistem Informasi Manajemen Teaching Factory',
+                            'client_name' => 'PT. Maju Bersama Sentosa',
+                            'status' => 'Completed',
+                            'progress' => 100,
+                            'deadline' => '2025-12-15',
+                        ],
+                    ],
+                    'category_distribution' => [
+                        ['web' => 4],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->withSession([
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 6,
+                'name' => 'Dosen PM',
+                'roles' => ['dosen'],
+                'is_pm' => true,
+            ],
+            'active_role' => 'pm',
+        ])->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSee('Sistem Informasi Manajemen Teaching Factory');
+        $response->assertSee('PT. Maju Bersama Sentosa');
+        $response->assertSee('Completed');
+        $response->assertSee('100%');
+    }
+
+    public function test_dosen_without_projects_renders_zero_cards_and_empty_state(): void
+    {
+        Http::fake([
+            '*/dosen/dashboard' => Http::response([
+                'success' => true,
+                'message' => 'Dosen dashboard',
+                'data' => [
+                    'total_projects' => 0,
+                    'active_projects' => 0,
+                    'completed_projects' => 0,
+                    'waiting_review' => 0,
+                    'projects' => [],
+                    'category_distribution' => [],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->withSession([
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 6,
+                'name' => 'Dosen Baru',
+                'roles' => ['dosen'],
+                'is_pm' => false,
+            ],
+            'active_role' => 'dosen',
+        ])->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSee('Workspace Dosen');
+        $response->assertSee('Anda belum pernah menangani project');
+        $response->assertSee('>0</p>', false);
     }
 
     public function test_pm_can_access_project_and_task_timeline_pages(): void
@@ -152,19 +235,47 @@ class DashboardAccessTest extends TestCase
             'active_role' => 'dosen',
         ];
 
+        Http::fake();
+
         $response = $this->withSession($session)->get('/dashboard');
 
         $response->assertOk();
         $response->assertSee('href="' . route('pm.project') . '"', false);
         $response->assertSee('href="' . route('pm.anggota-tim') . '"', false);
         $response->assertSee('href="' . route('pm.task-timeline') . '"', false);
+        $response->assertSee('Workspace Project Manager');
+        $response->assertSee('Anda belum pernah menangani project');
 
         $this->withSession($session)->get(route('pm.project'))->assertOk();
         $this->withSession($session)->get(route('pm.task-timeline'))->assertOk();
     }
 
+    public function test_sidebar_merges_dosen_role_into_pm_when_user_is_also_pm(): void
+    {
+        Http::fake();
+
+        $response = $this->withSession([
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 6,
+                'name' => 'Eri Eli Lavindi',
+                'roles' => ['dosen'],
+                'is_pm' => true,
+            ],
+            'active_role' => 'dosen',
+        ])->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSee('Workspace Project Manager');
+        $response->assertSee('<span>Project Manager</span>', false);
+        $response->assertDontSee('<span>Dosen</span>', false);
+        $response->assertSee('1 Role');
+    }
+
     public function test_dosen_can_open_project_and_task_pages_when_no_project_is_assigned(): void
     {
+        Http::fake();
+
         $response = $this->withSession([
             'api_token' => 'dummy-token',
             'user' => [
@@ -177,6 +288,8 @@ class DashboardAccessTest extends TestCase
         ])->get('/dashboard');
 
         $response->assertOk();
+        $response->assertSee('Workspace Dosen');
+        $response->assertSee('Anda belum pernah menangani project');
         $response->assertSee('href="' . route('pm.project') . '"', false);
         $response->assertSee('href="' . route('pm.anggota-tim') . '"', false);
         $response->assertSee('href="' . route('pm.task-timeline') . '"', false);
