@@ -38,6 +38,8 @@ class DashboardAccessTest extends TestCase
 
     public function test_wiktasari_can_access_pengurus_dashboard(): void
     {
+        Http::fake();
+
         $response = $this->withSession([
             'api_token' => 'dummy-token',
             'user' => [
@@ -390,5 +392,122 @@ class DashboardAccessTest extends TestCase
 
         $taskResponse->assertOk();
         $taskResponse->assertSee('PRJ-2026/001');
+    }
+
+    public function test_pengurus_tefa_dashboard_uses_tefa_api_with_backend_card_order(): void
+    {
+        Http::fake([
+            '*/tefa/dashboard' => Http::response($this->adminDashboardPayload(), 200),
+        ]);
+
+        $response = $this->withSession([
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 5,
+                'name' => 'Wiktasari, S.T., M.Kom.',
+                'roles' => ['pengurus_tefa'],
+                'is_pm' => false,
+            ],
+            'active_role' => 'pengurus_tefa',
+        ])->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSeeInOrder([
+            'Total Project',
+            'Project Berjalan',
+            'Total Klien / Mitra',
+            'Mahasiswa Terlibat',
+        ]);
+        $response->assertSee('Website Portal Berita dan Informasi Kota Semarang');
+        $response->assertSee('Dinas Komunikasi dan Informatika Kota Semarang');
+        $response->assertSee('Angga Wahyu Wibowo, S.Kom., M.Eng.');
+        $response->assertSee('Testing');
+        $response->assertSee('31 Jul 2026');
+    }
+
+    public function test_jurusan_dashboard_uses_jurusan_api_with_backend_card_order(): void
+    {
+        Http::fake([
+            '*/jurusan/dashboard' => Http::response($this->adminDashboardPayload(), 200),
+        ]);
+
+        $response = $this->withSession([
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 7,
+                'name' => 'Kaprodi',
+                'roles' => ['jurusan'],
+                'is_pm' => false,
+            ],
+            'active_role' => 'jurusan',
+        ])->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSeeInOrder([
+            'Total Project',
+            'Project Berjalan',
+            'Total Klien / Mitra',
+            'Mahasiswa Terlibat',
+        ]);
+        $response->assertSee('Website Portal Berita dan Informasi Kota Semarang');
+        $response->assertSee('Dinas Komunikasi dan Informatika Kota Semarang');
+        $response->assertSee('Testing');
+        $response->assertSee('46%');
+        $response->assertDontSee('Validasi Proposal');
+    }
+
+    private function adminDashboardPayload(): array
+    {
+        return [
+            'success' => true,
+            'message' => 'TeFa dashboard',
+            'data' => [
+                'total_projects' => 3,
+                'running_projects' => 2,
+                'total_clients' => 5,
+                'total_students' => 18,
+                'projects' => [
+                    [
+                        'id' => 3,
+                        'title' => 'Website Portal Berita dan Informasi Kota Semarang',
+                        'client_name' => 'Dinas Komunikasi dan Informatika Kota Semarang',
+                        'pm_name' => 'Angga Wahyu Wibowo, S.Kom., M.Eng.',
+                        'category' => 'web',
+                        'status' => 'Testing',
+                        'progress' => 100,
+                        'deadline' => '2026-07-31',
+                    ],
+                    [
+                        'id' => 2,
+                        'title' => 'Aplikasi Monitoring IoT Pertanian Berbasis Web',
+                        'client_name' => 'CV. Teknologi Nusantara',
+                        'pm_name' => 'Liliek Triyono, S.T., M.Kom.',
+                        'category' => 'iot',
+                        'status' => 'Active',
+                        'progress' => 46,
+                        'deadline' => '2026-09-30',
+                    ],
+                    [
+                        'id' => 1,
+                        'title' => 'Sistem Informasi Manajemen Teaching Factory',
+                        'client_name' => 'PT. Maju Bersama Sentosa',
+                        'pm_name' => 'Eri Eli Lavindi, S.Kom., M.Kom.',
+                        'category' => 'web',
+                        'status' => 'Completed',
+                        'progress' => 100,
+                        'deadline' => '2025-12-15',
+                    ],
+                ],
+                'category_distribution' => [
+                    ['web' => 2],
+                    ['iot' => 1],
+                ],
+                'status_distribution' => [
+                    ['testing' => 1],
+                    ['active' => 1],
+                    ['completed' => 1],
+                ],
+            ],
+        ];
     }
 }

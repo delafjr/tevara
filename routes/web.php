@@ -108,11 +108,13 @@ Route::middleware('auth.api')->group(function () {
 
         // Endpoint dashboard per role. Dosen & PM memakai endpoint dosen/dashboard.
         $dashboardEndpoint = match ($activeRole) {
-            'klien'     => 'klien/dashboard',
-            'mahasiswa' => 'mahasiswa/dashboard',
-            'pm'        => 'dosen/dashboard',
-            'dosen'     => 'dosen/dashboard',
-            default     => null,
+            'klien'         => 'klien/dashboard',
+            'mahasiswa'     => 'mahasiswa/dashboard',
+            'pm'            => 'dosen/dashboard',
+            'dosen'         => 'dosen/dashboard',
+            'pengurus_tefa' => 'tefa/dashboard',
+            'jurusan'       => 'jurusan/dashboard',
+            default         => null,
         };
 
         $dashboardData = [];
