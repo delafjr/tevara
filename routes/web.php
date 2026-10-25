@@ -49,7 +49,7 @@ Route::prefix('auth')->group(function () {
             if ($response->successful() && $response->json('success')) {
                 $data = $response->json('data');
                 $user = $data['user'];
-                $allowedRoles = ApiService::getUserRoles($user);
+                $allowedRoles = ApiService::getEffectiveRoles($user);
 
                 if (empty($allowedRoles)) {
                     return back()->withErrors(['email' => 'Akun tidak memiliki hak akses role.'])->withInput();
@@ -92,9 +92,9 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth.api')->group(function () {
 
     // Main dashboard router
-    Route::get('/dashboard', function () {
+    Route::get('/dashboard', function (ApiService $api) {
         $user = session('user');
-        $allowedRoles = ApiService::getUserRoles($user);
+        $allowedRoles = ApiService::getEffectiveRoles($user);
 
         if (empty($allowedRoles)) {
             abort(403, 'Akun Anda tidak memiliki hak akses role.');
@@ -106,23 +106,47 @@ Route::middleware('auth.api')->group(function () {
             session(['active_role' => $activeRole]);
         }
 
+        // Endpoint dashboard per role. Dosen & PM memakai endpoint dosen/dashboard.
+        $dashboardEndpoint = match ($activeRole) {
+            'klien'         => 'klien/dashboard',
+            'mahasiswa'     => 'mahasiswa/dashboard',
+            'pm'            => 'dosen/dashboard',
+            'dosen'         => 'dosen/dashboard',
+            'pengurus_tefa' => 'tefa/dashboard',
+            'jurusan'       => 'jurusan/dashboard',
+            default         => null,
+        };
+
+        $dashboardData = [];
+        if ($dashboardEndpoint) {
+            try {
+                $res = $api->get($dashboardEndpoint);
+                if ($res->successful()) {
+                    $dashboardData = $res->json('data', []);
+                }
+            } catch (\Throwable $e) {
+                // Biarkan halaman tetap tampil dengan nilai default bila backend tidak tersedia.
+                $dashboardData = [];
+            }
+        }
+
         $viewMap = [
             'klien'         => 'klien.dashboard',
             'pengurus_tefa' => 'pengurus-tefa.dashboard',
             'pm'            => 'pm.dashboard',
-            'dosen'         => 'dosen.dashboard',
+            'dosen'         => 'pm.dashboard',
             'mahasiswa'     => 'mahasiswa.dashboard',
             'jurusan'       => 'jurusan.dashboard',
         ];
 
         $view = $viewMap[$activeRole] ?? 'dashboard';
-        return view($view, ['user' => $user, 'currentRole' => $activeRole]);
+        return view($view, ['user' => $user, 'currentRole' => $activeRole, 'dashboard' => $dashboardData]);
     })->name('dashboard');
 
     // Switch Role handlers (Strictly validated against allowed roles)
     Route::get('/switch-role/{role}', function ($role) {
         $user = session('user');
-        $allowedRoles = ApiService::getUserRoles($user);
+        $allowedRoles = ApiService::getEffectiveRoles($user);
 
         if (!in_array($role, $allowedRoles, true)) {
             abort(403, 'Akses ditolak: Anda tidak memiliki role ' . $role);
@@ -135,7 +159,7 @@ Route::middleware('auth.api')->group(function () {
     Route::post('/switch-role', function (Request $request) {
         $role = $request->input('role');
         $user = session('user');
-        $allowedRoles = ApiService::getUserRoles($user);
+        $allowedRoles = ApiService::getEffectiveRoles($user);
 
         if (!in_array($role, $allowedRoles, true)) {
             abort(403, 'Akses ditolak: Anda tidak memiliki role ' . $role);
