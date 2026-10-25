@@ -198,6 +198,61 @@ class DashboardAccessTest extends TestCase
         $response->assertSee('>0</p>', false);
     }
 
+    public function test_klien_dashboard_renders_data_from_klien_dashboard_api(): void
+    {
+        Http::fake([
+            '*/klien/dashboard' => Http::response([
+                'success' => true,
+                'message' => 'Klien dashboard',
+                'data' => [
+                    'total_projects' => 2,
+                    'active_projects' => 0,
+                    'completed_projects' => 0,
+                    'waiting_review' => 1,
+                    'projects' => [
+                        [
+                            'id' => 4,
+                            'title' => 'Sistem ERP Sederhana untuk UMKM Binaan Polines',
+                            'status' => 'Under Review',
+                            'progress' => 0,
+                            'deadline' => '2027-03-01',
+                        ],
+                        [
+                            'id' => 6,
+                            'title' => 'Platform E-Learning Interaktif Polines',
+                            'status' => 'Rejected',
+                            'progress' => 0,
+                            'deadline' => '2025-08-01',
+                        ],
+                    ],
+                    'category_distribution' => [
+                        ['web' => 2],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->withSession([
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 106,
+                'name' => 'Budi Santoso',
+                'company_name' => 'PT. Maju Bersama Sentosa',
+                'roles' => ['klien'],
+            ],
+            'active_role' => 'klien',
+        ])->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSee('Sistem ERP Sederhana untuk UMKM Binaan Polines');
+        $response->assertSee('Platform E-Learning Interaktif Polines');
+        $response->assertSee('Under Review');
+        $response->assertSee('Rejected');
+        $response->assertSee('Website');
+        $response->assertDontSee('Klien / Mitra');
+        $response->assertDontSee('PT. Maju Bersama Sentosa');
+    }
+
     public function test_pm_can_access_project_and_task_timeline_pages(): void
     {
         $session = [
