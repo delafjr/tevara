@@ -225,19 +225,10 @@
                                 @error('ringkasan') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                             </div>
 
-                            {{-- Detail kebutuhan --}}
-                            <div>
-                                <label for="deskripsi" class="{{ $label }}">Detail Kebutuhan Proyek <span class="text-slate-300 normal-case tracking-normal font-medium">(opsional)</span></label>
-                                <textarea id="deskripsi" name="deskripsi" rows="3"
-                                          placeholder="Spesifikasi tambahan, fitur wajib, atau referensi sistem yang sudah dipakai perusahaan."
-                                          class="{{ $errors->has('deskripsi') ? $inputErr : $inputOk }}">{{ old('deskripsi') }}</textarea>
-                                @error('deskripsi') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
-                            </div>
-
                             {{-- Target pengguna --}}
                             <div>
-                                <label for="target_pengguna" class="{{ $label }}">Target Pengguna <span class="text-slate-300 normal-case tracking-normal font-medium">(opsional)</span></label>
-                                <textarea id="target_pengguna" name="target_pengguna" rows="2"
+                                <label for="target_pengguna" class="{{ $label }}">Target Pengguna <span class="text-red-500">*</span></label>
+                                <textarea id="target_pengguna" name="target_pengguna" rows="2" required
                                           placeholder="Siapa yang akan memakai hasil proyek, misalnya: staff operasional, pelanggan, atau siswa."
                                           class="{{ $errors->has('target_pengguna') ? $inputErr : $inputOk }}">{{ old('target_pengguna') }}</textarea>
                                 @error('target_pengguna') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
@@ -271,10 +262,10 @@
 
                             {{-- Anggaran --}}
                             <div>
-                                <label for="anggaran" class="{{ $label }}">Estimasi Anggaran <span class="text-slate-300 normal-case tracking-normal font-medium">(opsional)</span></label>
+                                <label for="anggaran" class="{{ $label }}">Estimasi Anggaran <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">Rp</span>
-                                    <input id="anggaran" name="anggaran" type="number" min="0" step="100000"
+                                    <input id="anggaran" name="anggaran" type="number" min="0" step="100000" required
                                            value="{{ old('anggaran') }}"
                                            placeholder="0"
                                            class="{{ $errors->has('anggaran') ? $inputErr : $inputOk }} pl-11">
@@ -321,7 +312,7 @@
                                                 </div>
                                             </div>
                                             <button type="button" @click="removeModule(i)"
-                                                    class="shrink-0 mt-1 p-2 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition cursor-pointer"
+                                                    class="shrink-0 mt-1 p-2 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
                                                     :aria-label="'Hapus modul ' + (i + 1)">
                                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
                                             </button>

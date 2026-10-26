@@ -199,7 +199,6 @@ class AjukanProyekKlienTest extends TestCase
             'judul_proyek'   => 'Sistem Informasi Manajemen Teaching Factory',
             'kategori_id'    => 1,
             'ringkasan'      => str_repeat('Kami membutuhkan sistem digital untuk mengelola pengajuan proyek Teaching Factory. ', 3),
-            'deskripsi'      => 'Sistem harus mendukung multi role dan dashboard realtime.',
             'target_pengguna' => 'Staf IT perusahaan',
             'deadline'       => now()->addDays(60)->toDateString(),
             'anggaran'       => 45000000,
@@ -236,6 +235,26 @@ class AjukanProyekKlienTest extends TestCase
                 'modul'         => json_encode([['judul' => 'Modul Auth', 'deskripsi' => '']]),
             ])
             ->assertSessionHasErrors(['ringkasan']);
+
+        Http::assertNothingSent();
+    }
+
+    public function test_target_pengguna_dan_anggaran_wajib_diisi(): void
+    {
+        Http::fake();
+
+        $this->withSession($this->sessionKlien())
+            ->post('/klien/ajukan-proyek', [
+                'nama_instansi' => 'PT. Maju Bersama Sentosa',
+                'pic_nama'      => 'Budi Santoso',
+                'kontak_email'  => 'budi@majubersamasentosa.co.id',
+                'judul_proyek'  => 'Sistem Informasi',
+                'kategori_id'   => 1,
+                'ringkasan'     => str_repeat('Kebutuhan sistem yang cukup panjang untuk lolos validasi. ', 3),
+                'deadline'      => now()->addDays(60)->toDateString(),
+                'modul'         => json_encode([['judul' => 'Modul Auth', 'deskripsi' => '']]),
+            ])
+            ->assertSessionHasErrors(['target_pengguna', 'anggaran']);
 
         Http::assertNothingSent();
     }

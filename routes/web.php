@@ -194,10 +194,9 @@ Route::middleware('auth.api')->group(function () {
                 // ID kategori mengikuti master data /categories; validitas akhir dicek backend.
                 'kategori_id'       => ['required', 'integer', 'min:1'],
                 'ringkasan'         => ['required', 'string', 'min:100', 'max:500'],
-                'deskripsi'         => ['nullable', 'string', 'max:2000'],
-                'target_pengguna'   => ['nullable', 'string', 'max:1000'],
+                'target_pengguna'   => ['required', 'string', 'max:1000'],
                 'deadline'          => ['required', 'date', 'after_or_equal:' . now()->addDays(30)->toDateString()],
-                'anggaran'          => ['nullable', 'numeric', 'min:0'],
+                'anggaran'          => ['required', 'numeric', 'min:0'],
                 'modul'             => ['required', 'array', 'min:1'],
                 'modul.*.judul'     => ['required', 'string', 'max:255'],
                 'modul.*.deskripsi' => ['nullable', 'string', 'max:1000'],
@@ -218,10 +217,6 @@ Route::middleware('auth.api')->group(function () {
                 !empty($validated['kontak_nomor']) ? ' | ' . $validated['kontak_nomor'] : '',
                 $validated['ringkasan']
             );
-
-            if (!empty($validated['deskripsi'])) {
-                $background .= "\n\nDetail kebutuhan:\n" . $validated['deskripsi'];
-            }
 
             if ($modul->isNotEmpty()) {
                 $background .= "\n\nModul yang diminta:\n" . $modul
