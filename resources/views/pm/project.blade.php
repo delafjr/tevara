@@ -378,12 +378,8 @@
             <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
 
             <div class="relative z-10">
-                <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                    Daftar &amp; Kelola
-                </span>
                 <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
-                    Kelola <span class="text-[#FFB800]">Proyek</span>
+                    Daftar & Kelola <span class="text-[#FFB800]">Proyek</span>
                 </h1>
                 <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
                     Kelola progress, ambil keputusan eksekusi, dan validasi milestone proyek Teaching Factory secara terpadu.

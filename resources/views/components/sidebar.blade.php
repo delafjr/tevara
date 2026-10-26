@@ -2,7 +2,7 @@
 
 @php
     $user = session('user') ?? [];
-    $allowedRoles = \App\Services\ApiService::getUserRoles($user);
+    $allowedRoles = \App\Services\ApiService::getEffectiveRoles($user);
     $currentRole = session('active_role') ?? ($allowedRoles[0] ?? 'klien');
 
     // Pastikan currentRole ada di role yang diizinkan user

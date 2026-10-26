@@ -12,6 +12,123 @@
     $user = $user ?? session('user');
     $userName = $user['name'] ?? 'Pengurus';
     $firstName = explode(' ', $userName)[0] ?? 'Pengurus';
+
+    $dash = $dashboard ?? [];
+    $totalProjects   = (int) ($dash['total_projects'] ?? 0);
+    $runningProjects = (int) ($dash['running_projects'] ?? 0);
+    $totalClients    = (int) ($dash['total_clients'] ?? 0);
+    $totalStudents   = (int) ($dash['total_students'] ?? 0);
+    $projectsList    = is_array($dash['projects'] ?? null) ? $dash['projects'] : [];
+    $projectCount    = count($projectsList);
+
+    // Label & warna kategori.
+    $categoryLabels = [
+        'web' => 'Website', 'website' => 'Website',
+        'iot' => 'IoT', 'embedded' => 'IoT',
+        'app' => 'Aplikasi', 'apps' => 'Aplikasi', 'aplikasi' => 'Aplikasi', 'mobile' => 'Aplikasi',
+        'sis' => 'Sistem Informasi', 'sistem' => 'Sistem Informasi', 'software' => 'Sistem Informasi', 'system' => 'Sistem Informasi',
+        'design' => 'Desain & Kreatif', 'desain' => 'Desain & Kreatif',
+        'other' => 'Lainnya', 'lainnya' => 'Lainnya',
+    ];
+    $categoryColors = [
+        'web' => '#0B3B82', 'website' => '#0B3B82',
+        'iot' => '#FFB800', 'embedded' => '#FFB800',
+        'app' => '#6366F1', 'apps' => '#6366F1', 'aplikasi' => '#6366F1', 'mobile' => '#6366F1',
+        'sis' => '#16A34A', 'sistem' => '#16A34A', 'software' => '#16A34A', 'system' => '#16A34A',
+        'design' => '#EC4899', 'desain' => '#EC4899',
+        'other' => '#94A3B8', 'lainnya' => '#94A3B8',
+    ];
+    $extraCategoryColors = ['#0EA5E9', '#8B5CF6', '#F97316', '#14B8A6'];
+    $categoryLabel = fn (string $key): string => $categoryLabels[strtolower($key)] ?? ucfirst(str_replace('_', ' ', $key));
+
+    // category_distribution dari API berbentuk [{"web": 2}, ...] → ratakan lalu jumlahkan per kategori.
+    $categoryCounts = [];
+    foreach (($dash['category_distribution'] ?? []) as $entry) {
+        if (is_array($entry)) {
+            foreach ($entry as $key => $count) {
+                $key = strtolower((string) $key);
+                $categoryCounts[$key] = ($categoryCounts[$key] ?? 0) + (int) $count;
+            }
+        }
+    }
+
+    $categoryChart = [];
+    foreach ($categoryCounts as $key => $count) {
+        $categoryChart[] = [
+            'label' => $categoryLabel($key),
+            'color' => $categoryColors[$key] ?? $extraCategoryColors[count($categoryChart) % count($extraCategoryColors)],
+            'count' => $count,
+        ];
+    }
+
+    $categoryTotal = array_sum(array_column($categoryChart, 'count'));
+    $donutSegments = [];
+    $donutOffset = 0;
+    if ($categoryTotal > 0) {
+        foreach ($categoryChart as $category) {
+            $length = ($category['count'] / $categoryTotal) * 251.2;
+            $donutSegments[] = [
+                'color'     => $category['color'],
+                'dasharray' => round($length, 2) . ' ' . round(251.2 - $length, 2),
+                'offset'    => -round($donutOffset, 2),
+            ];
+            $donutOffset += $length;
+        }
+    }
+
+    // status_distribution dari API berbentuk [{"active": 2}, ...].
+    $statusCounts = [];
+    foreach (($dash['status_distribution'] ?? []) as $entry) {
+        if (is_array($entry)) {
+            foreach ($entry as $key => $count) {
+                $key = strtolower((string) $key);
+                $statusCounts[$key] = ($statusCounts[$key] ?? 0) + (int) $count;
+            }
+        }
+    }
+
+    $statusColors = [
+        'active' => '#0B3B82',
+        'testing' => '#F59E0B',
+        'completed' => '#16A34A',
+        'handover' => '#10B981',
+        'rejected' => '#DC2626',
+        'cancelled' => '#DC2626',
+        'proposal' => '#6366F1',
+        'review' => '#F59E0B',
+    ];
+
+    $statusChart = [];
+    foreach ($statusCounts as $key => $count) {
+        $statusChart[] = [
+            'label' => ucfirst($key),
+            'color' => $statusColors[$key] ?? '#94A3B8',
+            'count' => $count,
+        ];
+    }
+    $statusTotal = array_sum(array_column($statusChart, 'count')) ?: 1;
+
+    // Warna pill status pada tabel.
+    $statusStyle = function (string $status): string {
+        $s = strtolower($status);
+
+        if (str_contains($s, 'reject') || str_contains($s, 'cancel')) {
+            return 'bg-red-50 text-red-700';
+        }
+        if (str_contains($s, 'testing') || str_contains($s, 'review')) {
+            return 'bg-amber-50 text-amber-700';
+        }
+        if (str_contains($s, 'complete') || str_contains($s, 'handover')) {
+            return 'bg-green-50 text-green-700';
+        }
+        if (str_contains($s, 'active') || str_contains($s, 'progress')) {
+            return 'bg-blue-50 text-blue-700';
+        }
+
+        return 'bg-slate-100 text-slate-600';
+    };
+
+    $progressColor = fn ($p) => $p >= 100 ? '#16A34A' : ($p >= 60 ? '#0B3B82' : ($p >= 30 ? '#F59E0B' : '#DC2626'));
 @endphp
 
 <div class="flex min-h-screen">
@@ -51,11 +168,12 @@
             {{-- ── 4 STAT CARDS ── --}}
             <div class="grid grid-cols-4 gap-4">
                 @php
+                // Urutan kartu mengikuti urutan field pada BE: total_projects, running_projects, total_clients, total_students.
                 $stats = [
-                    ['label' => 'Total Project',      'value' => '28',  'sub' => '+4 dari bulan lalu', 'up' => true,  'color' => '#0B3B82', 'icon' => 'folder'],
-                    ['label' => 'Total Klien / Mitra','value' => '12',  'sub' => '+2 dari bulan lalu', 'up' => true,  'color' => '#F59E0B', 'icon' => 'users'],
-                    ['label' => 'Mahasiswa Terlibat', 'value' => '142', 'sub' => '+18 dari bulan lalu','up' => true,  'color' => '#6366F1', 'icon' => 'academic'],
-                    ['label' => 'Project Berjalan',   'value' => '17',  'sub' => '+3 dari bulan lalu', 'up' => true,  'color' => '#16A34A', 'icon' => 'play'],
+                    ['label' => 'Total Project',       'value' => $totalProjects,   'sub' => 'Seluruh project',    'color' => '#0B3B82', 'icon' => 'folder'],
+                    ['label' => 'Project Berjalan',    'value' => $runningProjects, 'sub' => 'Sedang berjalan',    'color' => '#16A34A', 'icon' => 'play'],
+                    ['label' => 'Total Klien / Mitra', 'value' => $totalClients,    'sub' => 'Terdaftar',          'color' => '#F59E0B', 'icon' => 'users'],
+                    ['label' => 'Mahasiswa Terlibat',  'value' => $totalStudents,   'sub' => 'Aktif berkontribusi', 'color' => '#6366F1', 'icon' => 'academic'],
                 ];
                 @endphp
 
@@ -76,9 +194,6 @@
                                 @endif
                             </span>
                         </div>
-                        @if($stat['up'] === true)
-                        <span class="text-[10px] font-semibold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">↑</span>
-                        @endif
                     </div>
                     <p class="text-3xl font-bold text-[#1E293B] leading-none">{{ $stat['value'] }}</p>
                     <p class="text-xs text-slate-400 mt-1.5 font-medium">{{ $stat['label'] }}</p>
@@ -95,7 +210,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/>
                     </svg>
                     Validasi Proposal
-                    <span class="ml-auto bg-[#FFB800] text-[#1E293B] text-[10px] font-bold px-1.5 py-0.5 rounded-full">7</span>
                 </a>
                 <a href="#"
                    class="flex items-center gap-3.5 bg-white border border-slate-200 text-[#1E293B] rounded-xl px-5 py-4 font-semibold text-sm hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors shadow-sm">
@@ -103,13 +217,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                     </svg>
                     Tambah Project
-                </a>
-                <a href="#"
-                   class="flex items-center gap-3.5 bg-white border border-slate-200 text-[#1E293B] rounded-xl px-5 py-4 font-semibold text-sm hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors shadow-sm">
-                    <svg class="w-5 h-5 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
-                    </svg>
-                    Lihat Laporan
                 </a>
             </div>
 
@@ -143,56 +250,45 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
+                                @forelse($projectsList as $project)
                                 @php
-                                $projects = [
-                                    ['name' => 'Sistem Informasi UMKM',    'client' => 'PT. ABC Indonesia',  'pm' => 'Dimas Setiawan', 'category' => 'Website',  'status' => 'Berjalan', 'progress' => 75,  'deadline' => '12 Okt 2026'],
-                                    ['name' => 'Smart Farming IoT',        'client' => 'CV. Tani Maju',      'pm' => 'Rizky Pratama',  'category' => 'IoT',      'status' => 'Review',   'progress' => 60,  'deadline' => '5 Okt 2026'],
-                                    ['name' => 'Website Company Profile',  'client' => 'PT. DEF Solusi',     'pm' => 'Nadia Putri',    'category' => 'Website',  'status' => 'Selesai',  'progress' => 100, 'deadline' => '—'],
-                                    ['name' => 'Aplikasi Inventori',       'client' => 'PT. Maju Sentosa',   'pm' => 'Thomas Elang',   'category' => 'Aplikasi', 'status' => 'Proposal', 'progress' => 25,  'deadline' => '18 Okt 2026'],
-                                    ['name' => 'Monitoring Produksi',      'client' => 'CV. Tani Maju',      'pm' => 'Dimas Setiawan', 'category' => 'Aplikasi', 'status' => 'Berjalan', 'progress' => 40,  'deadline' => '25 Okt 2026'],
-                                ];
-
-                                $statusStyle = [
-                                    'Berjalan' => 'bg-blue-50 text-blue-700',
-                                    'Review'   => 'bg-amber-50 text-amber-700',
-                                    'Selesai'  => 'bg-green-50 text-green-700',
-                                    'Proposal' => 'bg-purple-50 text-purple-700',
-                                ];
-
-                                $progressColor = fn($p) => $p >= 100 ? '#16A34A' : ($p >= 60 ? '#0B3B82' : ($p >= 30 ? '#F59E0B' : '#DC2626'));
+                                    $projectStatus = (string) ($project['status'] ?? '-');
+                                    $projectProgress = max(0, min(100, (int) ($project['progress'] ?? 0)));
+                                    $projectCategory = $categoryLabel((string) ($project['category'] ?? ''));
+                                    $projectDeadline = !empty($project['deadline'])
+                                        ? \Carbon\Carbon::parse($project['deadline'])->translatedFormat('d M Y')
+                                        : '—';
                                 @endphp
-
-                                @foreach($projects as $project)
                                 <tr class="hover:bg-slate-50/60 transition-colors">
                                     <td class="px-6 py-3.5">
                                         <div>
-                                            <p class="font-semibold text-[#1E293B] text-[13px] leading-tight">{{ $project['name'] }}</p>
-                                            <p class="text-[11px] text-slate-400 mt-0.5">{{ $project['category'] }}</p>
+                                            <p class="font-semibold text-[#1E293B] text-[13px] leading-tight">{{ $project['title'] ?? '-' }}</p>
+                                            <p class="text-[11px] text-slate-400 mt-0.5">{{ $projectCategory }}</p>
                                         </div>
                                     </td>
                                     <td class="px-3 py-3.5">
-                                        <span class="text-[12px] text-slate-600">{{ $project['client'] }}</span>
+                                        <span class="text-[12px] text-slate-600">{{ $project['client_name'] ?? '-' }}</span>
                                     </td>
                                     <td class="px-3 py-3.5">
-                                        <span class="text-[12px] text-slate-600">{{ $project['pm'] }}</span>
+                                        <span class="text-[12px] text-slate-600">{{ $project['pm_name'] ?? '—' }}</span>
                                     </td>
                                     <td class="px-3 py-3.5">
-                                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full {{ $statusStyle[$project['status']] ?? 'bg-slate-100 text-slate-600' }}">
-                                            {{ $project['status'] }}
+                                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full {{ $statusStyle($projectStatus) }}">
+                                            {{ $projectStatus }}
                                         </span>
                                     </td>
                                     <td class="px-3 py-3.5 w-32">
                                         <div class="flex items-center gap-2">
                                             <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                                 <div class="h-full rounded-full"
-                                                     style="width: {{ $project['progress'] }}%; background-color: {{ $progressColor($project['progress']) }}">
+                                                     style="width: {{ $projectProgress }}%; background-color: {{ $progressColor($projectProgress) }}">
                                                 </div>
                                             </div>
-                                            <span class="text-[11px] font-semibold text-slate-500 w-7 text-right">{{ $project['progress'] }}%</span>
+                                            <span class="text-[11px] font-semibold text-slate-500 w-7 text-right">{{ $projectProgress }}%</span>
                                         </div>
                                     </td>
                                     <td class="px-3 py-3.5">
-                                        <span class="text-[12px] text-slate-500">{{ $project['deadline'] }}</span>
+                                        <span class="text-[12px] text-slate-500">{{ $projectDeadline }}</span>
                                     </td>
                                     <td class="px-3 py-3.5">
                                         <button class="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
@@ -200,7 +296,11 @@
                                         </button>
                                     </td>
                                 </tr>
-                                @endforeach
+                                @empty
+                                <tr>
+                                    <td colspan="7" class="px-6 py-10 text-center text-sm text-slate-400">Belum ada project.</td>
+                                </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -216,55 +316,26 @@
                             <p class="text-xs text-slate-400 mt-0.5">Project per kategori</p>
                         </div>
 
-                        <div class="flex items-center justify-center" x-data="{
-                            segments: [
-                                { label: 'Website',         pct: 28.6, color: '#0B3B82' },
-                                { label: 'IoT & Embedded',  pct: 21.4, color: '#FFB800' },
-                                { label: 'Aplikasi',        pct: 17.9, color: '#6366F1' },
-                                { label: 'Sistem Informasi',pct: 14.3, color: '#16A34A' },
-                                { label: 'Desain',          pct: 10.7, color: '#EC4899' },
-                                { label: 'Lainnya',         pct: 7.1,  color: '#94A3B8' },
-                            ],
-                            total: 28,
-                            get arcs() {
-                                let offset = 0;
-                                return this.segments.map(s => {
-                                    const da = (s.pct / 100) * 251.2;
-                                    const off = -(offset / 100) * 251.2;
-                                    offset += s.pct;
-                                    return { ...s, da, off };
-                                });
-                            }
-                        }">
+                        <div class="flex items-center justify-center">
                             <div class="relative w-36 h-36">
                                 <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
                                     <circle cx="50" cy="50" r="40" fill="none" stroke="#F1F5F9" stroke-width="16"/>
-                                    <template x-for="arc in arcs" :key="arc.label">
+                                    @foreach($donutSegments as $segment)
                                         <circle cx="50" cy="50" r="40" fill="none"
-                                            :stroke="arc.color" stroke-width="16"
-                                            :stroke-dasharray="`${arc.da} ${251.2 - arc.da}`"
-                                            :stroke-dashoffset="arc.off"/>
-                                    </template>
+                                            stroke="{{ $segment['color'] }}" stroke-width="16"
+                                            stroke-dasharray="{{ $segment['dasharray'] }}"
+                                            stroke-dashoffset="{{ $segment['offset'] }}"/>
+                                    @endforeach
                                 </svg>
                                 <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                    <p class="text-2xl font-bold text-[#1E293B]">28</p>
+                                    <p class="text-2xl font-bold text-[#1E293B]">{{ $totalProjects }}</p>
                                     <p class="text-[10px] text-slate-400 font-medium">Project</p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mt-4 space-y-2">
-                            @php
-                            $donut = [
-                                ['label' => 'Website',          'count' => 8,  'color' => '#0B3B82'],
-                                ['label' => 'IoT & Embedded',   'count' => 6,  'color' => '#FFB800'],
-                                ['label' => 'Aplikasi',         'count' => 5,  'color' => '#6366F1'],
-                                ['label' => 'Sistem Informasi', 'count' => 4,  'color' => '#16A34A'],
-                                ['label' => 'Desain & Kreatif', 'count' => 3,  'color' => '#EC4899'],
-                                ['label' => 'Lainnya',          'count' => 2,  'color' => '#94A3B8'],
-                            ];
-                            @endphp
-                            @foreach($donut as $d)
+                            @forelse($categoryChart as $d)
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background-color: {{ $d['color'] }}"></span>
@@ -272,7 +343,9 @@
                                 </div>
                                 <span class="text-[11.5px] font-semibold text-[#1E293B]">{{ $d['count'] }}</span>
                             </div>
-                            @endforeach
+                            @empty
+                            <p class="text-[11.5px] text-slate-400">Belum ada data kategori.</p>
+                            @endforelse
                         </div>
                     </div>
 
@@ -283,18 +356,8 @@
                             <p class="text-xs text-slate-400 mt-0.5">Distribusi berdasarkan status</p>
                         </div>
 
-                        @php
-                        $statuses = [
-                            ['label' => 'Proposal',   'count' => 5,  'color' => '#6366F1', 'total' => 28],
-                            ['label' => 'Review',     'count' => 4,  'color' => '#F59E0B', 'total' => 28],
-                            ['label' => 'Berjalan',   'count' => 17, 'color' => '#0B3B82', 'total' => 28],
-                            ['label' => 'Selesai',    'count' => 16, 'color' => '#16A34A', 'total' => 28],
-                            ['label' => 'Dibatalkan', 'count' => 2,  'color' => '#DC2626', 'total' => 28],
-                        ];
-                        @endphp
-
                         <div class="space-y-3">
-                            @foreach($statuses as $s)
+                            @forelse($statusChart as $s)
                             <div>
                                 <div class="flex items-center justify-between mb-1">
                                     <div class="flex items-center gap-2">
@@ -305,11 +368,13 @@
                                 </div>
                                 <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                     <div class="h-full rounded-full transition-all duration-500"
-                                         style="width: {{ round($s['count'] / $s['total'] * 100) }}%; background-color: {{ $s['color'] }}">
+                                         style="width: {{ round($s['count'] / $statusTotal * 100) }}%; background-color: {{ $s['color'] }}">
                                     </div>
                                 </div>
                             </div>
-                            @endforeach
+                            @empty
+                            <p class="text-[11.5px] text-slate-400">Belum ada data status.</p>
+                            @endforelse
                         </div>
                     </div>
 

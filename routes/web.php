@@ -49,7 +49,7 @@ Route::prefix('auth')->group(function () {
             if ($response->successful() && $response->json('success')) {
                 $data = $response->json('data');
                 $user = $data['user'];
-                $allowedRoles = ApiService::getUserRoles($user);
+                $allowedRoles = ApiService::getEffectiveRoles($user);
 
                 if (empty($allowedRoles)) {
                     return back()->withErrors(['email' => 'Akun tidak memiliki hak akses role.'])->withInput();
@@ -92,9 +92,9 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth.api')->group(function () {
 
     // Main dashboard router
-    Route::get('/dashboard', function () {
+    Route::get('/dashboard', function (ApiService $api) {
         $user = session('user');
-        $allowedRoles = ApiService::getUserRoles($user);
+        $allowedRoles = ApiService::getEffectiveRoles($user);
 
         if (empty($allowedRoles)) {
             abort(403, 'Akun Anda tidak memiliki hak akses role.');
@@ -106,23 +106,47 @@ Route::middleware('auth.api')->group(function () {
             session(['active_role' => $activeRole]);
         }
 
+        // Endpoint dashboard per role. Dosen & PM memakai endpoint dosen/dashboard.
+        $dashboardEndpoint = match ($activeRole) {
+            'klien'         => 'klien/dashboard',
+            'mahasiswa'     => 'mahasiswa/dashboard',
+            'pm'            => 'dosen/dashboard',
+            'dosen'         => 'dosen/dashboard',
+            'pengurus_tefa' => 'tefa/dashboard',
+            'jurusan'       => 'jurusan/dashboard',
+            default         => null,
+        };
+
+        $dashboardData = [];
+        if ($dashboardEndpoint) {
+            try {
+                $res = $api->get($dashboardEndpoint);
+                if ($res->successful()) {
+                    $dashboardData = $res->json('data', []);
+                }
+            } catch (\Throwable $e) {
+                // Biarkan halaman tetap tampil dengan nilai default bila backend tidak tersedia.
+                $dashboardData = [];
+            }
+        }
+
         $viewMap = [
             'klien'         => 'klien.dashboard',
             'pengurus_tefa' => 'pengurus-tefa.dashboard',
             'pm'            => 'pm.dashboard',
-            'dosen'         => 'dosen.dashboard',
+            'dosen'         => 'pm.dashboard',
             'mahasiswa'     => 'mahasiswa.dashboard',
             'jurusan'       => 'jurusan.dashboard',
         ];
 
         $view = $viewMap[$activeRole] ?? 'dashboard';
-        return view($view, ['user' => $user, 'currentRole' => $activeRole]);
+        return view($view, ['user' => $user, 'currentRole' => $activeRole, 'dashboard' => $dashboardData]);
     })->name('dashboard');
 
     // Switch Role handlers (Strictly validated against allowed roles)
     Route::get('/switch-role/{role}', function ($role) {
         $user = session('user');
-        $allowedRoles = ApiService::getUserRoles($user);
+        $allowedRoles = ApiService::getEffectiveRoles($user);
 
         if (!in_array($role, $allowedRoles, true)) {
             abort(403, 'Akses ditolak: Anda tidak memiliki role ' . $role);
@@ -135,7 +159,7 @@ Route::middleware('auth.api')->group(function () {
     Route::post('/switch-role', function (Request $request) {
         $role = $request->input('role');
         $user = session('user');
-        $allowedRoles = ApiService::getUserRoles($user);
+        $allowedRoles = ApiService::getEffectiveRoles($user);
 
         if (!in_array($role, $allowedRoles, true)) {
             abort(403, 'Akses ditolak: Anda tidak memiliki role ' . $role);
@@ -147,8 +171,13 @@ Route::middleware('auth.api')->group(function () {
 
     // Klien: Ajukan Proyek Baru
     Route::middleware('auth.api:klien')->prefix('klien')->name('klien.')->group(function () {
-        Route::get('/ajukan-proyek', fn () => view('klien.ajukan-proyek', ['user' => session('user')]))
-            ->name('ajukan-proyek');
+        Route::get('/ajukan-proyek', function (ApiService $api) {
+            return view('klien.ajukan-proyek', [
+                'user'       => session('user'),
+                'company'    => $api->getCompanyProfile(),
+                'categories' => $api->getCategories(),
+            ]);
+        })->name('ajukan-proyek');
 
         Route::post('/ajukan-proyek', function (Request $request, ApiService $api) {
             // Modul dikirim sebagai JSON string dari repeater Alpine, decode dulu agar rule array berlaku.
@@ -162,52 +191,38 @@ Route::middleware('auth.api')->group(function () {
                 'kontak_nomor'      => ['nullable', 'string', 'max:30'],
                 'kontak_email'      => ['required', 'email', 'max:255'],
                 'judul_proyek'      => ['required', 'string', 'max:255'],
-                // ponytail: id kategori di-hardcode karena backend belum menyediakan endpoint master data.
-                // Ganti dengan fetch dari /master/proposal-categories saat endpoint tersedia.
-                'kategori_id'       => ['required', 'integer', 'in:1,2,3,4,5'],
+                // ID kategori mengikuti master data /categories; validitas akhir dicek backend.
+                'kategori_id'       => ['required', 'integer', 'min:1'],
                 'ringkasan'         => ['required', 'string', 'min:100', 'max:500'],
-                'deskripsi'         => ['nullable', 'string', 'max:2000'],
-                'target_pengguna'   => ['nullable', 'string', 'max:1000'],
+                'target_pengguna'   => ['required', 'string', 'max:1000'],
                 'deadline'          => ['required', 'date', 'after_or_equal:' . now()->addDays(30)->toDateString()],
-                'anggaran'          => ['nullable', 'numeric', 'min:0'],
+                'anggaran'          => ['required', 'numeric', 'min:0'],
                 'modul'             => ['required', 'array', 'min:1'],
                 'modul.*.judul'     => ['required', 'string', 'max:255'],
                 'modul.*.deskripsi' => ['nullable', 'string', 'max:1000'],
             ]);
 
-            // ponytail: backend POST /proposals hanya menyimpan field resmi (title/background/destination).
-            // Data kontak & modul digabung ke background supaya tidak hilang; pisahkan ke kolom sendiri
-            // (scope_of_work / tabel modules) begitu endpoint modul & profil klien tersedia di backend.
-            $modul = collect($validated['modul'] ?? [])
+            // Modul dipisah ke field modules sesuai kontrak POST /proposals.
+            $modules = collect($validated['modul'] ?? [])
                 ->filter(fn ($m) => !empty($m['judul']))
-                ->values();
+                ->map(fn ($m) => [
+                    'title'       => $m['judul'],
+                    'description' => $m['deskripsi'] ?? null,
+                ])
+                ->values()
+                ->all();
 
-            $background = sprintf(
-                "Kontak: %s | PIC: %s | %s%s\n\n%s",
-                $validated['nama_instansi'],
-                $validated['pic_nama'],
-                $validated['kontak_email'],
-                !empty($validated['kontak_nomor']) ? ' | ' . $validated['kontak_nomor'] : '',
-                $validated['ringkasan']
-            );
-
-            if (!empty($validated['deskripsi'])) {
-                $background .= "\n\nDetail kebutuhan:\n" . $validated['deskripsi'];
-            }
-
-            if ($modul->isNotEmpty()) {
-                $background .= "\n\nModul yang diminta:\n" . $modul
-                    ->map(fn ($m, $i) => ($i + 1) . '. ' . $m['judul'] . (!empty($m['deskripsi']) ? ' — ' . $m['deskripsi'] : ''))
-                    ->implode("\n");
-            }
+            $user = session('user', []);
 
             $response = $api->post('proposals', [
+                'client_id'        => (int) ($user['id'] ?? 0),
                 'title'            => $validated['judul_proyek'],
-                'background'       => $background,
+                'background'       => $validated['ringkasan'],
+                'target_audience'  => $validated['target_pengguna'],
                 'category_id'      => (int) $validated['kategori_id'],
                 'desired_deadline' => $validated['deadline'],
-                'target_audience'  => $validated['target_pengguna'] ?? null,
-                'estimated_budget' => $validated['anggaran'] ?? null,
+                'estimated_budget' => (int) $validated['anggaran'],
+                'modules'          => $modules,
             ]);
 
             if ($response->successful()) {

@@ -12,20 +12,30 @@
 
 @php
     $user = $user ?? session('user', []);
+    $company = $company ?? [];
+
+    // Profil diambil dari GET /users/company (prioritas), lalu fallback ke session user.
     $profile = [
-        'instansi' => $user['name'] ?? '',
-        'pic'      => $user['name'] ?? '',
-        'telepon'  => $user['phone_number'] ?? '',
-        'email'    => $user['email'] ?? '',
+        'instansi' => $company['company_name'] ?? ($user['company_name'] ?? ($user['name'] ?? '')),
+        'pic'      => $company['name'] ?? ($user['name'] ?? ''),
+        'jabatan'  => $user['position'] ?? '',
+        'telepon'  => $company['no_hp'] ?? ($user['phone_number'] ?? ''),
+        'email'    => $company['email'] ?? ($user['email'] ?? ''),
     ];
     $deadlineMin = now()->addDays(30)->toDateString();
-    $categories = [
-        1 => ['name' => 'Web',     'icon' => 'web'],
-        2 => ['name' => 'Mobile',  'icon' => 'mobile'],
-        3 => ['name' => 'Desktop', 'icon' => 'desktop'],
-        4 => ['name' => 'IoT',     'icon' => 'signal'],
-        5 => ['name' => 'Other',   'icon' => 'other'],
-    ];
+
+    // Master kategori dari GET /categories. Fallback agar form tetap bisa dipakai bila API gagal.
+    $categories = $categories ?? [];
+    if (empty($categories)) {
+        $categories = [
+            ['id' => 1, 'name' => 'Web'],
+            ['id' => 2, 'name' => 'Mobile'],
+            ['id' => 3, 'name' => 'Desktop'],
+            ['id' => 4, 'name' => 'IoT'],
+            ['id' => 5, 'name' => 'Other'],
+        ];
+    }
+    $selectedKategori = old('kategori_id', $categories[0]['id'] ?? '');
 
     // Modul dikirim sebagai JSON string dari repeater Alpine (hidden input) atau sudah array (flash old()).
     $oldModul = old('modul');
@@ -57,19 +67,19 @@
             </div>
         @endif
 
-        {{-- == ( form utama : alpine scope untuk kategori + modul ) == --}}
+        {{-- == ( form utama : alpine scope untuk ringkasan + modul ) == --}}
         <form id="form-ajukan-proyek"
               method="POST"
               action="{{ route('klien.ajukan-proyek.store') }}"
               enctype="multipart/form-data"
               x-data="{
-                  kategori: {{ (int) old('kategori_id', 1) }},
                   ringkasan: @js(old('ringkasan') ?: ''),
                   modules: @js($modulesDefault),
                   addModule() { this.modules.push({ judul: '', deskripsi: '' }) },
                   removeModule(i) { if (this.modules.length > 1) this.modules.splice(i, 1) }
               }"
               class="flex-1 flex flex-col">
+            @csrf
 
             <main class="flex-1 px-8 py-7 flex flex-col">
 
@@ -108,7 +118,7 @@
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-5">
                             {{-- Nama klien / instansi --}}
                             <div class="lg:col-span-2">
-                                <label for="nama_instansi" class="{{ $label }}">Nama Klien / Instansi <span class="text-red-500">*</span></label>
+                                <label for="nama_instansi" class="{{ $label }}">Nama Perusahaan / Instansi <span class="text-red-500">*</span></label>
                                 <input id="nama_instansi" name="nama_instansi" type="text" required
                                        placeholder="Contoh: PT. Maju Bersama Sentosa"
                                        value="{{ old('nama_instansi') ?: $profile['instansi'] }}"
@@ -124,7 +134,7 @@
                                        value="{{ old('pic_nama') ?: $profile['pic'] }}"
                                        class="{{ $errors->has('pic_nama') ? $inputErr : $inputOk }}">
                                 @error('pic_nama') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
-                                @if ($profile['jabatan'])
+                                @if (!empty($profile['jabatan']))
                                     <p class="mt-1.5 text-xs text-slate-400">Jabatan PIC: {{ $profile['jabatan'] }}</p>
                                 @endif
                             </div>
@@ -180,39 +190,24 @@
                                 @error('judul_proyek') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                             </div>
 
-                            {{-- Kategori proyek --}}
+                            {{-- Kategori proyek (dropdown dari master data /categories) --}}
                             <div>
-                                <span class="{{ $label }}">Kategori Proyek <span class="text-red-500">*</span></span>
-                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                                    @foreach ($categories as $id => $cat)
-                                        <label id="kategori-{{ $cat['name'] }}"
-                                               class="cursor-pointer rounded-xl border px-3 py-3 flex flex-col items-center gap-2 text-xs font-semibold transition"
-                                               :class="kategori === {{ $id }}
-                                                    ? 'border-[#0B3B82] bg-[#EAF3FF] text-[#0B3B82] shadow-sm'
-                                                    : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700'">
-                                            <input type="radio" name="kategori_id" value="{{ $id }}" class="sr-only" x-model.number="kategori" required>
-                                            <span class="w-6 h-6" :class="kategori === {{ $id }} ? 'text-[#0B3B82]' : 'text-slate-400'">
-                                                @if ($cat['icon'] === 'web')
-                                                    {{-- Browser window --}}
-                                                    <svg class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><rect x="3" y="4.5" width="18" height="15" rx="2.25"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 9h18"/><path stroke-linecap="round" d="M6.25 6.75h.007M8.75 6.75h.007"/></svg>
-                                                @elseif ($cat['icon'] === 'mobile')
-                                                    {{-- Smartphone --}}
-                                                    <svg class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><rect x="7" y="2.5" width="10" height="19" rx="2.25"/><path stroke-linecap="round" d="M11 18.75h2"/></svg>
-                                                @elseif ($cat['icon'] === 'desktop')
-                                                    {{-- Desktop monitor --}}
-                                                    <svg class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><rect x="2.75" y="4" width="18.5" height="12.5" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 20.25h6M12 16.5v3.75"/></svg>
-                                                @elseif ($cat['icon'] === 'signal')
-                                                    {{-- Wireless signal --}}
-                                                    <svg class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 6.75a10.5 10.5 0 0 1 13.5 0M8.25 10.25a6 6 0 0 1 7.5 0M11 13.75a1.75 1.75 0 0 1 2 0M12 17.25h.007"/></svg>
-                                                @else
-                                                    {{-- Ellipsis --}}
-                                                    <svg class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/></svg>
-                                                @endif
-                                            </span>
-                                            <span>{{ $cat['name'] }}</span>
-                                        </label>
-                                    @endforeach
+                                <label for="kategori_id" class="{{ $label }}">Kategori Proyek <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <select id="kategori_id" name="kategori_id" required
+                                            class="{{ $errors->has('kategori_id') ? $inputErr : $inputOk }} appearance-none pr-10 cursor-pointer">
+                                        @foreach ($categories as $cat)
+                                            <option value="{{ $cat['id'] }}" @selected((string) $selectedKategori === (string) $cat['id'])>
+                                                {{ $cat['name'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <svg class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                                         fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                                    </svg>
                                 </div>
+                                <p class="mt-1.5 text-[11px] text-slate-400">Daftar kategori mengikuti master data TEVARA.</p>
                                 @error('kategori_id') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                             </div>
 
@@ -231,19 +226,10 @@
                                 @error('ringkasan') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                             </div>
 
-                            {{-- Detail kebutuhan --}}
-                            <div>
-                                <label for="deskripsi" class="{{ $label }}">Detail Kebutuhan Proyek <span class="text-slate-300 normal-case tracking-normal font-medium">(opsional)</span></label>
-                                <textarea id="deskripsi" name="deskripsi" rows="3"
-                                          placeholder="Spesifikasi tambahan, fitur wajib, atau referensi sistem yang sudah dipakai perusahaan."
-                                          class="{{ $errors->has('deskripsi') ? $inputErr : $inputOk }}">{{ old('deskripsi') }}</textarea>
-                                @error('deskripsi') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
-                            </div>
-
                             {{-- Target pengguna --}}
                             <div>
-                                <label for="target_pengguna" class="{{ $label }}">Target Pengguna <span class="text-slate-300 normal-case tracking-normal font-medium">(opsional)</span></label>
-                                <textarea id="target_pengguna" name="target_pengguna" rows="2"
+                                <label for="target_pengguna" class="{{ $label }}">Target Pengguna <span class="text-red-500">*</span></label>
+                                <textarea id="target_pengguna" name="target_pengguna" rows="2" required
                                           placeholder="Siapa yang akan memakai hasil proyek, misalnya: staff operasional, pelanggan, atau siswa."
                                           class="{{ $errors->has('target_pengguna') ? $inputErr : $inputOk }}">{{ old('target_pengguna') }}</textarea>
                                 @error('target_pengguna') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
@@ -277,10 +263,10 @@
 
                             {{-- Anggaran --}}
                             <div>
-                                <label for="anggaran" class="{{ $label }}">Estimasi Anggaran <span class="text-slate-300 normal-case tracking-normal font-medium">(opsional)</span></label>
+                                <label for="anggaran" class="{{ $label }}">Estimasi Anggaran <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">Rp</span>
-                                    <input id="anggaran" name="anggaran" type="number" min="0" step="100000"
+                                    <input id="anggaran" name="anggaran" type="number" min="0" step="100000" required
                                            value="{{ old('anggaran') }}"
                                            placeholder="0"
                                            class="{{ $errors->has('anggaran') ? $inputErr : $inputOk }} pl-11">
@@ -327,7 +313,7 @@
                                                 </div>
                                             </div>
                                             <button type="button" @click="removeModule(i)"
-                                                    class="shrink-0 mt-1 p-2 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition cursor-pointer"
+                                                    class="shrink-0 mt-1 p-2 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
                                                     :aria-label="'Hapus modul ' + (i + 1)">
                                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
                                             </button>
