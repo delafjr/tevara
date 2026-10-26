@@ -132,7 +132,7 @@
     <x-sidebar active="anggota-tim" />
 
     {{-- ===== MAIN CONTENT ===== --}}
-    <main class="flex-1 ml-64 p-8 min-h-screen flex flex-col gap-6">
+        <main class="flex-1 ml-64 p-8 min-h-screen flex flex-col gap-6" x-data="{ query: '', role: '', sort: 'members' }">
 
         {{-- ── 1. PAGE HEADER ── --}}
         <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
@@ -248,21 +248,22 @@
                 <input
                     type="text"
                     id="search-anggota"
+                    x-model.debounce.200ms="query"
                     placeholder="Cari nama mahasiswa, NIM, peran, atau proyek..."
                     class="w-full pl-9 pr-4 py-2.5 text-xs text-slate-600 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/20 placeholder:text-slate-400 transition"
                 >
             </div>
             {{-- Filter Role --}}
             <div class="relative">
-                <select id="filter-role" class="appearance-none pl-3 pr-8 py-2.5 text-xs text-slate-600 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#2563EB] cursor-pointer font-medium">
-                    <option>Filter Role: Semua Role</option>
-                    <option>Fullstack Lead</option>
-                    <option>Backend Lead</option>
-                    <option>Frontend Lead</option>
-                    <option>UI/UX Designer</option>
-                    <option>QA Tester</option>
-                    <option>Mobile Dev</option>
-                    <option>DevOps</option>
+                <select id="filter-role" x-model="role" class="appearance-none pl-3 pr-8 py-2.5 text-xs text-slate-600 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#2563EB] cursor-pointer font-medium">
+                    <option value="">Filter Role: Semua Role</option>
+                    <option value="Fullstack Lead">Fullstack Lead</option>
+                    <option value="Backend Lead">Backend Lead</option>
+                    <option value="Frontend Lead">Frontend Lead</option>
+                    <option value="UI/UX Designer">UI/UX Designer</option>
+                    <option value="QA Tester">QA Tester</option>
+                    <option value="Mobile Dev">Mobile Dev</option>
+                    <option value="DevOps">DevOps</option>
                 </select>
                 <span class="absolute inset-y-0 right-2.5 flex items-center pointer-events-none text-slate-400">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -272,7 +273,7 @@
             </div>
             {{-- Sort --}}
             <div class="relative">
-                <select id="sort-anggota" class="appearance-none pl-3 pr-8 py-2.5 text-xs text-slate-600 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#2563EB] cursor-pointer font-medium">
+                <select id="sort-anggota" x-model="sort" class="appearance-none pl-3 pr-8 py-2.5 text-xs text-slate-600 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#2563EB] cursor-pointer font-medium">
                     <option>Urutkan: Jumlah Anggota Terbanyak</option>
                     <option>Urutkan: Nama Proyek A-Z</option>
                     <option>Urutkan: Status Aktif Dulu</option>
@@ -295,7 +296,13 @@
                 // Avatar background warna bergilir
                 $avBg = $avatarColors[$idx % count($avatarColors)];
             @endphp
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs overflow-hidden">
+            <div
+                class="bg-white rounded-2xl border border-slate-100 shadow-2xs overflow-hidden"
+                data-search="{{ strtolower($tim['judul'] . ' ' . $tim['id'] . ' ' . $tim['klien'] . ' ' . implode(' ', array_column($tim['anggota'], 'nama'))) }}"
+                data-roles="{{ strtolower(implode('|', array_column($tim['anggota'], 'peran'))) }}"
+                x-show="(!query || $el.dataset.search.includes(query.toLowerCase())) && (!role || $el.dataset.roles.includes(role.toLowerCase()))"
+                x-transition
+            >
 
                 {{-- Card Header --}}
                 <div class="px-6 py-4 flex items-center gap-4">
@@ -417,13 +424,13 @@
             <div class="flex items-center justify-between pt-2">
                 <p class="text-xs text-slate-400">Menampilkan 1-5 dari 5 Tim Proyek Mahasiswa</p>
                 <div class="flex items-center gap-1.5">
-                    <button class="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-400 flex items-center justify-center hover:bg-slate-50 cursor-pointer transition-colors">
+                    <button type="button" @click="window.scrollTo({ top: 0, behavior: 'smooth' })" class="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-400 flex items-center justify-center hover:bg-slate-50 cursor-pointer transition-colors">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/>
                         </svg>
                     </button>
-                    <button class="w-7 h-7 rounded-lg bg-[#0B254A] text-white text-xs font-bold flex items-center justify-center cursor-pointer">1</button>
-                    <button class="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-400 flex items-center justify-center hover:bg-slate-50 cursor-pointer transition-colors">
+                    <button type="button" @click="window.scrollTo({ top: 0, behavior: 'smooth' })" class="w-7 h-7 rounded-lg bg-[#0B254A] text-white text-xs font-bold flex items-center justify-center cursor-pointer">1</button>
+                    <button type="button" @click="window.scrollTo({ top: 0, behavior: 'smooth' })" class="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-400 flex items-center justify-center hover:bg-slate-50 cursor-pointer transition-colors">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
                         </svg>

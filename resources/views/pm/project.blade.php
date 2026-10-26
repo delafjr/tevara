@@ -342,6 +342,12 @@
         ],
     ];
 
+    $projectData = is_array($projectData ?? null) ? $projectData : [];
+    $totalProjectCount = (int) ($projectData['total_projects'] ?? 9);
+    $runningProjectCount = (int) ($projectData['active_projects'] ?? 5);
+    $completedProjectCount = (int) ($projectData['completed_projects'] ?? 4);
+    $reviewProjectCount = (int) ($projectData['waiting_review'] ?? 2);
+
     $statusMap = [
         'berjalan' => ['bg'=>'bg-[#DBEAFE]','text'=>'text-[#1D4ED8]','dot'=>'bg-[#2563EB]'],
         'review'   => ['bg'=>'bg-[#FEF3C7]','text'=>'text-[#B45309]','dot'=>'bg-[#F59E0B]'],
@@ -415,7 +421,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">9</p>
+                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">{{ $totalProjectCount }}</p>
                 <p class="text-[10px] text-slate-400 mt-1">Aktif dimonitor</p>
             </div>
 
@@ -432,7 +438,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">5</p>
+                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">{{ $runningProjectCount }}</p>
                 <p class="text-[10px] text-slate-400 mt-1">Sesuai timeline</p>
             </div>
 
@@ -449,7 +455,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">4</p>
+                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">{{ $completedProjectCount }}</p>
                 <p class="text-[10px] text-slate-400 mt-1">Tervalidasi 36%</p>
             </div>
 
@@ -466,7 +472,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">2</p>
+                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">{{ $reviewProjectCount }}</p>
                 <p class="text-[10px] text-[#EF4444] font-semibold mt-1">~ 20 hari lagi</p>
             </div>
 
@@ -478,9 +484,9 @@
             {{-- Filter Tabs --}}
             <div class="flex items-center gap-2 flex-wrap">
                 @foreach([
-                    ['key'=>'semua',   'label'=>'Semua (9)'],
-                    ['key'=>'berjalan','label'=>'Berjalan (6)'],
-                    ['key'=>'review',  'label'=>'Review / Testing (2)'],
+                    ['key'=>'semua',   'label'=>'Semua (' . $totalProjectCount . ')'],
+                    ['key'=>'berjalan','label'=>'Berjalan (' . $runningProjectCount . ')'],
+                    ['key'=>'review',  'label'=>'Review / Testing (' . $reviewProjectCount . ')'],
                     ['key'=>'proposal','label'=>'Proposal F. 02 (1)'],
                 ] as $tab)
                 <button
@@ -601,11 +607,11 @@
                                     </svg>
                                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Informasi Klien & Kontrak</span>
                                 </div>
-                                <button class="text-slate-300 hover:text-slate-400 transition-colors cursor-pointer">
+                                <a href="{{ route('pm.project') }}?edit={{ urlencode($proj['id']) }}" class="text-slate-300 hover:text-slate-400 transition-colors cursor-pointer" aria-label="Edit informasi klien dan kontrak">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/>
                                     </svg>
-                                </button>
+                                </a>
                             </div>
                             <p class="text-sm font-bold text-[#0B254A] mb-0.5">{{ $proj['klien_detail'] }}</p>
                             @if($proj['klien_email'])<p class="text-[11px] text-slate-400">{{ $proj['klien_email'] }}</p>@endif
@@ -635,11 +641,11 @@
                                     </svg>
                                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lingkup Pekerjaan</span>
                                 </div>
-                                <button class="text-slate-300 hover:text-slate-400 transition-colors cursor-pointer">
+                                <a href="{{ route('pm.project') }}?edit={{ urlencode($proj['id']) }}" class="text-slate-300 hover:text-slate-400 transition-colors cursor-pointer" aria-label="Edit lingkup pekerjaan">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
                                     </svg>
-                                </button>
+                                </a>
                             </div>
                             @if($proj['lingkup'])
                             <p class="text-xs text-slate-500 leading-relaxed mb-4">{{ $proj['lingkup'] }}</p>
@@ -672,7 +678,7 @@
                                 <span class="bg-[#EBF3FE] text-[#2563EB] text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $proj['modul_count'] }} Paket Fitur</span>
                             </div>
                             @if($proj['modul_selesai'] !== null)
-                            <a href="#" class="text-[11px] text-[#2563EB] font-semibold hover:underline flex items-center gap-1">
+                            <a href="{{ route('pm.task-timeline') }}?project={{ urlencode($proj['id']) }}" class="text-[11px] text-[#2563EB] font-semibold hover:underline flex items-center gap-1">
                                 Super task ({{ $proj['modul_selesai'] }}/{{ $proj['modul_total'] }} Selesai)
                                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
@@ -699,12 +705,12 @@
                     <div class="px-6 py-5 border-t border-slate-100">
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tim Mahasiswa Pelaksana</span>
-                            <button type="button" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#2563EB] hover:text-[#1D4ED8] transition-colors cursor-pointer">
+                            <a href="{{ route('pm.anggota-tim') }}?project={{ urlencode($proj['id']) }}" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#2563EB] hover:text-[#1D4ED8] transition-colors cursor-pointer">
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                                 </svg>
                                 + Kelola Anggota
-                            </button>
+                            </a>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             @foreach($proj['tim'] as $member)
@@ -728,10 +734,10 @@
 
             {{-- Pagination --}}
             <div class="flex items-center justify-between pt-2">
-                <p class="text-xs text-slate-400">Menampilkan 5 dari 9 Proyek. Total 9 proyek</p>
+                <p class="text-xs text-slate-400">Menampilkan {{ min(5, count($projects)) }} dari {{ $totalProjectCount }} Proyek. Total {{ $totalProjectCount }} proyek</p>
                 <div class="flex items-center gap-1.5">
-                    <button class="w-7 h-7 rounded-lg bg-[#0B254A] text-white text-xs font-bold flex items-center justify-center cursor-pointer">1</button>
-                    <button class="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 text-xs font-semibold flex items-center justify-center hover:bg-slate-50 cursor-pointer">2</button>
+                    <button type="button" @click="window.scrollTo({ top: 0, behavior: 'smooth' })" class="w-7 h-7 rounded-lg bg-[#0B254A] text-white text-xs font-bold flex items-center justify-center cursor-pointer">1</button>
+                    <button type="button" @click="window.scrollTo({ top: 0, behavior: 'smooth' })" class="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 text-xs font-semibold flex items-center justify-center hover:bg-slate-50 cursor-pointer">2</button>
                 </div>
             </div>
 
