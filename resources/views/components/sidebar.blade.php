@@ -66,8 +66,8 @@
         'klien' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
             ['id' => 'ajukan-projek','label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => route('klien.ajukan-proyek')],
-            ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => '#'],
-            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => '#'],
+            ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => route('klien.projek-saya')],
+            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => route('klien.tagihan')],
         ],
         'mahasiswa' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
@@ -263,19 +263,28 @@
             <button
                 @click="openRoleMenu = !openRoleMenu"
                 type="button"
-                class="w-full bg-white rounded-2xl p-3 flex items-center gap-3 shadow-xs border border-slate-100 hover:border-slate-200 transition-all duration-150 text-left cursor-pointer group"
+                class="w-full bg-white rounded-2xl p-3 flex items-center justify-between gap-3 shadow-xs border border-slate-100 hover:border-slate-200 transition-all duration-150 text-left cursor-pointer group"
                 title="Klik untuk ganti role"
             >
                 <div class="flex items-center gap-3 min-w-0 flex-1">
-                    {{-- Initials Badge --}}
-                    <div class="w-10 h-10 rounded-xl bg-[#0B1E3F] flex items-center justify-center text-white font-bold text-xs tracking-wider flex-shrink-0 shadow-xs">
-                        {{ $initials }}
+                    {{-- Avatar with user icon --}}
+                    <div class="w-9 h-9 rounded-full bg-[#0E1F40] flex items-center justify-center text-white flex-shrink-0 shadow-xs">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+                        </svg>
                     </div>
                     <div class="min-w-0 flex-1">
                         <p class="text-[13px] font-bold text-[#0F172A] leading-tight truncate">{{ $userName }}</p>
-                        <p class="text-[11px] text-slate-400 font-normal leading-tight mt-0.5 truncate">{{ $roleLabel }}</p>
+                        <span class="inline-block bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold px-2 py-0.5 rounded-md mt-0.5 leading-none">
+                            {{ $roleLabel }}
+                        </span>
                     </div>
                 </div>
+                <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 transition-transform flex-shrink-0"
+                     :class="openRoleMenu ? 'rotate-180' : ''"
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"/>
+                </svg>
             </button>
 
         </div>

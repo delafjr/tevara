@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard Jurusan - Tevara</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased">
+<body class="bg-[#F8F9FB] font-['Inter'] text-[#1E293B] antialiased">
 
 @php
     $user = $user ?? session('user');
@@ -195,11 +196,26 @@
                             </span>
                         </div>
                     </div>
-                    <p class="text-3xl font-bold text-[#1E293B] leading-none">{{ $stat['value'] }}</p>
-                    <p class="text-xs text-slate-400 mt-1.5 font-medium">{{ $stat['label'] }}</p>
-                    <p class="text-[11px] mt-1" style="color: {{ $stat['color'] }}">{{ $stat['sub'] }}</p>
                 </div>
-                @endforeach
+
+                <div class="grid grid-cols-2 gap-y-4 gap-x-2 mt-8 text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-[#0B3B82]"></span>
+                        <span class="text-slate-600">Website <span class="font-semibold text-[#1E293B]">(6)</span></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-[#F59E0B]"></span>
+                        <span class="text-slate-600">IoT & Emb. <span class="font-semibold text-[#1E293B]">(4)</span></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                        <span class="text-slate-600">Aplikasi <span class="font-semibold text-[#1E293B]">(3)</span></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-slate-300"></span>
+                        <span class="text-slate-600">Sistem <span class="font-semibold text-[#1E293B]">(2)</span></span>
+                    </div>
+                </div>
             </div>
 
             {{-- ── QUICK ACTIONS (tanpa Validasi Proposal) ── --}}
