@@ -92,7 +92,9 @@
         ->values()
         ->map(function (array $project, int $idx) use ($readValue) {
             $rawMembers = $readValue($project, ['team', 'members', 'tim', 'students'], []);
-            $members = is_array($rawMembers) ? collect($rawMembers)->filter('is_array')->values() : collect();
+            $members = is_array($rawMembers)
+                ? collect($rawMembers)->filter(fn ($member) => is_array($member))->values()
+                : collect();
             $status = (string) $readValue($project, ['status', 'project_status'], '—');
             $statusRaw = strtolower($status);
             $statusType = in_array($statusRaw, ['completed', 'complete', 'selesai', 'done'], true)
