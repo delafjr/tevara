@@ -50,6 +50,57 @@ class ApiService
     }
 
     /**
+     * Send GET request to a public endpoint (without Bearer token).
+     */
+    public function getPublic(string $endpoint, array $query = []): Response
+    {
+        $url = $this->baseUrl . '/' . ltrim($endpoint, '/');
+        return Http::timeout(15)->get($url, $query);
+    }
+
+    /**
+     * Company profile milik user klien yang sedang login.
+     * Mengembalikan array kosong bila API gagal agar halaman tetap bisa dirender.
+     */
+    public function getCompanyProfile(): array
+    {
+        try {
+            $response = $this->get('users/company');
+            $data = $response->json('data');
+
+            return $response->successful() && is_array($data) ? $data : [];
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /**
+     * Master kategori proyek (public) dengan bentuk [{id, name}, ...].
+     */
+    public function getCategories(): array
+    {
+        try {
+            $response = $this->getPublic('categories');
+            $data = $response->json('data');
+
+            if (!$response->successful() || !is_array($data)) {
+                return [];
+            }
+
+            return collect($data)
+                ->filter(fn ($item) => is_array($item) && isset($item['id'], $item['name']))
+                ->map(fn ($item) => [
+                    'id'   => (int) $item['id'],
+                    'name' => (string) $item['name'],
+                ])
+                ->values()
+                ->all();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /**
      * Send POST request to backend API.
      */
     public function post(string $endpoint, array $data = []): Response

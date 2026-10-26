@@ -171,8 +171,13 @@ Route::middleware('auth.api')->group(function () {
 
     // Klien: Ajukan Proyek Baru
     Route::middleware('auth.api:klien')->prefix('klien')->name('klien.')->group(function () {
-        Route::get('/ajukan-proyek', fn () => view('klien.ajukan-proyek', ['user' => session('user')]))
-            ->name('ajukan-proyek');
+        Route::get('/ajukan-proyek', function (ApiService $api) {
+            return view('klien.ajukan-proyek', [
+                'user'       => session('user'),
+                'company'    => $api->getCompanyProfile(),
+                'categories' => $api->getCategories(),
+            ]);
+        })->name('ajukan-proyek');
 
         Route::post('/ajukan-proyek', function (Request $request, ApiService $api) {
             // Modul dikirim sebagai JSON string dari repeater Alpine, decode dulu agar rule array berlaku.
@@ -186,9 +191,8 @@ Route::middleware('auth.api')->group(function () {
                 'kontak_nomor'      => ['nullable', 'string', 'max:30'],
                 'kontak_email'      => ['required', 'email', 'max:255'],
                 'judul_proyek'      => ['required', 'string', 'max:255'],
-                // ponytail: id kategori di-hardcode karena backend belum menyediakan endpoint master data.
-                // Ganti dengan fetch dari /master/proposal-categories saat endpoint tersedia.
-                'kategori_id'       => ['required', 'integer', 'in:1,2,3,4,5'],
+                // ID kategori mengikuti master data /categories; validitas akhir dicek backend.
+                'kategori_id'       => ['required', 'integer', 'min:1'],
                 'ringkasan'         => ['required', 'string', 'min:100', 'max:500'],
                 'deskripsi'         => ['nullable', 'string', 'max:2000'],
                 'target_pengguna'   => ['nullable', 'string', 'max:1000'],

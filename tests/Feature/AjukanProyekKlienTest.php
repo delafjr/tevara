@@ -7,6 +7,38 @@ use Tests\TestCase;
 
 class AjukanProyekKlienTest extends TestCase
 {
+    /**
+     * Fake dua endpoint yang dipanggil halaman ajukan proyek.
+     *
+     * @return array<string, \Illuminate\Http\Client\Response>
+     */
+    private function profileFakes(array $company = [], array $categories = []): array
+    {
+        return [
+            '*/api/v1/users/company' => Http::response([
+                'success' => true,
+                'message' => 'Company profile retrieved successfully',
+                'data'    => $company ?: [
+                    'name'         => 'Budi Santoso',
+                    'email'        => 'budi.santoso@majubersamasentosa.co.id',
+                    'no_hp'        => '6281234567890',
+                    'company_name' => 'PT. Maju Bersama Sentosa',
+                    'role'         => 'klien',
+                ],
+            ]),
+            '*/api/v1/categories' => Http::response([
+                'success' => true,
+                'data'    => $categories ?: [
+                    ['id' => 1, 'name' => 'Web'],
+                    ['id' => 2, 'name' => 'Mobile'],
+                    ['id' => 3, 'name' => 'Desktop'],
+                    ['id' => 4, 'name' => 'IoT'],
+                    ['id' => 5, 'name' => 'Other'],
+                ],
+            ]),
+        ];
+    }
+
     private function sessionKlien(): array
     {
         return [
@@ -27,6 +59,8 @@ class AjukanProyekKlienTest extends TestCase
 
     public function test_halaman_ajukan_proyek_hanya_untuk_klien(): void
     {
+        Http::fake($this->profileFakes());
+
         $this->withSession($this->sessionKlien())
             ->get('/klien/ajukan-proyek')
             ->assertStatus(200)
@@ -41,6 +75,8 @@ class AjukanProyekKlienTest extends TestCase
 
     public function test_halaman_ajukan_proyek_menampilkan_data_profil(): void
     {
+        Http::fake($this->profileFakes());
+
         $this->withSession($this->sessionKlien())
             ->get('/klien/ajukan-proyek')
             ->assertStatus(200)
@@ -51,6 +87,8 @@ class AjukanProyekKlienTest extends TestCase
 
     public function test_nama_instansi_diisi_dengan_nama_perusahaan_bukan_nama_pic(): void
     {
+        Http::fake($this->profileFakes());
+
         $response = $this->withSession($this->sessionKlien())
             ->get('/klien/ajukan-proyek')
             ->assertStatus(200);
@@ -64,7 +102,7 @@ class AjukanProyekKlienTest extends TestCase
 
     public function test_setelah_login_field_instansi_terisi_nama_perusahaan(): void
     {
-        Http::fake([
+        Http::fake($this->profileFakes() + [
             '*/api/v1/auth/login' => Http::response([
                 'success' => true,
                 'message' => 'Login berhasil',
@@ -97,12 +135,50 @@ class AjukanProyekKlienTest extends TestCase
 
     public function test_field_kosong_setelah_submit_gagal_jatuh_ke_profil(): void
     {
+        Http::fake($this->profileFakes());
+
         // Simulasikan submit gagal: old input berisi string kosong.
         $this->withSession($this->sessionKlien() + ['_old_input' => ['nama_instansi' => '', 'kontak_nomor' => '']])
             ->get('/klien/ajukan-proyek')
             ->assertStatus(200)
             ->assertSee('value="Budi Santoso"', false)
             ->assertSee('value="6281234567890"', false);
+    }
+
+    public function test_halaman_ajukan_proyek_mengambil_company_dan_categories_dari_api(): void
+    {
+        Http::fake($this->profileFakes(
+            [
+                'name'         => 'Siti Aminah',
+                'email'        => 'siti@perusahaan-baru.co.id',
+                'no_hp'        => '6289999999999',
+                'company_name' => 'PT. Perusahaan Baru',
+                'role'         => 'klien',
+            ],
+            [
+                ['id' => 10, 'name' => 'Web'],
+                ['id' => 11, 'name' => 'Artificial Intelligence'],
+                ['id' => 12, 'name' => 'Blockchain'],
+            ],
+        ));
+
+        $response = $this->withSession($this->sessionKlien())->get('/klien/ajukan-proyek');
+
+        $response->assertOk();
+        // Nilai dari /users/company harus menimpa data session.
+        $response->assertSee('value="PT. Perusahaan Baru"', false);
+        $response->assertSee('value="Siti Aminah"', false);
+        $response->assertSee('value="6289999999999"', false);
+        $response->assertSee('value="siti@perusahaan-baru.co.id"', false);
+        // Kategori baru dari /categories ikut tampil di dropdown.
+        $response->assertSee('<option value="11"', false);
+        $response->assertSee('Artificial Intelligence');
+        $response->assertSee('Blockchain');
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/api/v1/users/company')
+            && $request->hasHeader('Authorization'));
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/api/v1/categories')
+            && !$request->hasHeader('Authorization'));
     }
 
     public function test_pengajuan_valid_dikirim_ke_backend(): void
