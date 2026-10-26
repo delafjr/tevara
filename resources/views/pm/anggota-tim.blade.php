@@ -233,22 +233,13 @@
             <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
 
             <div class="relative z-10">
-                <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                    Manajemen Anggota
-                </span>
-                <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
-                    Tim <span class="text-[#FFB800]">Mahasiswa</span>
+                <h1 class="text-2xl font-bold leading-tight text-[#1E293B]">
+                    Manajemen Anggota<br>
+                    <span class="text-[#FFB800]">Tim Mahasiswa</span>
                 </h1>
                 <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
                     Pantau alokasi mahasiswa pelaksana Teaching Factory, distribusi role/peran, susunan struktur tim, serta status keaktifan anggota per proyek binaan Anda.
                 </p>
-                @if($usingDemoData)
-                    <span class="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-lg bg-[#FFF7ED] text-[#C2410C] text-[10px] font-bold">
-                        <span class="w-1.5 h-1.5 rounded-full bg-[#F97316]"></span>
-                        Mode demo — data contoh sementara
-                    </span>
-                @endif
             </div>
         </div>
 

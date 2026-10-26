@@ -386,12 +386,8 @@
             <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
 
             <div class="relative z-10">
-                <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                    Daftar &amp; Kelola
-                </span>
                 <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
-                    Kelola <span class="text-[#FFB800]">Proyek</span>
+                    Daftar &amp; Kelola <br><span class="text-[#FFB800]">Proyek</span>
                 </h1>
                 <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
                     Kelola progress, ambil keputusan eksekusi, dan validasi milestone proyek Teaching Factory secara terpadu.
@@ -600,18 +596,13 @@
 
                         {{-- Informasi Klien & Kontrak --}}
                         <div class="px-6 py-5">
-                            <div class="flex items-center justify-between mb-4">
+                            <div class="mb-4">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-3.5 h-3.5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z"/>
                                     </svg>
                                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Informasi Klien & Kontrak</span>
                                 </div>
-                                <a href="{{ route('pm.project') }}?edit={{ urlencode($proj['id']) }}" class="text-slate-300 hover:text-slate-400 transition-colors cursor-pointer" aria-label="Edit informasi klien dan kontrak">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/>
-                                    </svg>
-                                </a>
                             </div>
                             <p class="text-sm font-bold text-[#0B254A] mb-0.5">{{ $proj['klien_detail'] }}</p>
                             @if($proj['klien_email'])<p class="text-[11px] text-slate-400">{{ $proj['klien_email'] }}</p>@endif
@@ -634,18 +625,13 @@
 
                         {{-- Lingkup Pekerjaan --}}
                         <div class="px-6 py-5">
-                            <div class="flex items-center justify-between mb-4">
+                            <div class="mb-4">
                                 <div class="flex items-center gap-2">
                                     <svg class="w-3.5 h-3.5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/>
                                     </svg>
                                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lingkup Pekerjaan</span>
                                 </div>
-                                <a href="{{ route('pm.project') }}?edit={{ urlencode($proj['id']) }}" class="text-slate-300 hover:text-slate-400 transition-colors cursor-pointer" aria-label="Edit lingkup pekerjaan">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
-                                    </svg>
-                                </a>
                             </div>
                             @if($proj['lingkup'])
                             <p class="text-xs text-slate-500 leading-relaxed mb-4">{{ $proj['lingkup'] }}</p>
@@ -679,7 +665,7 @@
                             </div>
                             @if($proj['modul_selesai'] !== null)
                             <a href="{{ route('pm.task-timeline') }}?project={{ urlencode($proj['id']) }}" class="text-[11px] text-[#2563EB] font-semibold hover:underline flex items-center gap-1">
-                                Super task ({{ $proj['modul_selesai'] }}/{{ $proj['modul_total'] }} Selesai)
+                                Papan Task ({{ $proj['modul_selesai'] }}/{{ $proj['modul_total'] }} Selesai)
                                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
                                 </svg>
@@ -709,7 +695,7 @@
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                                 </svg>
-                                + Kelola Anggota
+                                Kelola Anggota
                             </a>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
