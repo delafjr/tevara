@@ -200,7 +200,7 @@
                         </svg>
                         Ajukan Proyek Baru
                     </a>
-                    <a href="#"
+                    <a href="{{ route('klien.projek-saya') }}"
                        class="flex items-center gap-2 bg-white border border-slate-200 text-[#1E293B] rounded-full px-5 py-3 font-semibold text-sm hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors shadow-sm">
                         <svg class="w-4 h-4 flex-shrink-0 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
@@ -229,7 +229,7 @@
                             <p class="font-bold text-[#1E293B] text-[16px]">Proyek Saya</p>
                             <p class="text-xs text-slate-400 mt-0.5">Semua project yang ditugaskan ke Anda</p>
                         </div>
-                        <a href="#" class="text-xs font-bold text-[#0B3B82] hover:underline flex items-center gap-1.5">
+                        <a href="{{ route('klien.projek-saya') }}" class="text-xs font-bold text-[#0B3B82] hover:underline flex items-center gap-1.5">
                             Lihat Semua
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                         </a>
