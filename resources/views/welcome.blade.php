@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Users - Tevara API Client</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-full bg-slate-50/60 text-text-primary antialiased selection:bg-accent selection:text-text-primary"
@@ -25,18 +27,10 @@
     <header class="border-b border-primary/10 bg-white/85 backdrop-blur-md sticky top-0 z-40 shadow-xs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/25">
-                    <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <div class="flex items-center space-x-2">
-                        <span class="font-extrabold text-xl tracking-tight text-primary">Tevara</span>
-                        <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-section text-primary border border-primary/20">API Client</span>
-                    </div>
-                    <p class="text-xs text-text-secondary hidden sm:block">User Management Dashboard</p>
-                </div>
+                <a href="{{ url('/') }}" class="flex items-center">
+                    <img src="{{ asset('images/tevara-logo.png') }}" alt="TEVARA Knowledge into Action" class="h-8 w-auto max-w-[170px] object-contain">
+                </a>
+                <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-section text-primary border border-primary/20">API Client</span>
             </div>
 
             <!-- API Endpoint Pill & Refresh button -->
