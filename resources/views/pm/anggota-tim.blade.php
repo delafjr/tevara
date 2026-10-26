@@ -143,7 +143,8 @@
     $totalTeamCount = count($timProyek);
     $totalStudentCount = array_sum(array_column($timProyek, 'jml'));
     $activeTeamCount = count(array_filter($timProyek, fn ($team) => $team['status_type'] === 'aktif'));
-    $averageMembers = $totalTeamCount > 0 ? round($totalStudentCount / $totalTeamCount, 1) : 0;
+    // Rata-rata ditampilkan sebagai jumlah orang utuh di kartu ringkasan.
+    $averageMembers = $totalTeamCount > 0 ? (int) round($totalStudentCount / $totalTeamCount) : 0;
     $availableRoles = collect($timProyek)
         ->flatMap(fn ($team) => array_column($team['anggota'], 'peran'))
         ->filter()

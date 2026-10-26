@@ -12,6 +12,10 @@
     $user     = $user ?? session('user');
     $userName = $user['name'] ?? 'Project Manager';
     $hasProject = true;
+    $demoReview = session('demo_task_review', []);
+    $demoDecision = is_array($demoReview) ? ($demoReview['decision'] ?? null) : null;
+    $demoTask = session('demo_task_created', []);
+    $demoTask = is_array($demoTask) ? $demoTask : [];
 @endphp
 
 <div class="flex min-h-screen">
@@ -25,6 +29,10 @@
             reviewOpen: true,
             reviewTask: 'Integrasi Payment Gateway QRIS Midtrans',
             revisiNote: '',
+            demoDecision: @js($demoDecision),
+            demoTaskTitle: @js($demoTask['title'] ?? null),
+            demoTaskAssignee: @js($demoTask['assignee'] ?? 'Belum ditentukan'),
+            demoTaskDueDate: @js($demoTask['due_date'] ?? null),
             taskModal: false,
             projectMenu: false
           }">
@@ -195,6 +203,14 @@
                 </div>
 
                 {{-- Task 1 --}}
+                <div x-show="demoTaskTitle" class="bg-white rounded-xl border-2 border-[#2563EB] shadow-2xs p-4">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="text-[10px] font-bold text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded-full">Baru · Demo</span>
+                        <span class="text-[10px] text-slate-400" x-text="demoTaskDueDate"></span>
+                    </div>
+                    <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-3" x-text="demoTaskTitle"></p>
+                    <span class="text-[11px] text-slate-500" x-text="demoTaskAssignee"></span>
+                </div>
                 <div class="bg-white rounded-xl border border-slate-100 shadow-2xs p-4 hover:shadow-sm transition-shadow cursor-pointer">
                     <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-3">Konfigurasi Mail Server Notifikasi Transaksi...</p>
                     <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mb-3">
@@ -378,6 +394,7 @@
 
                 {{-- Review Card 1 (active — amber border) --}}
                 <div
+                    x-show="demoDecision !== 'approve'"
                     @click="reviewOpen = true; reviewTask = 'Integrasi Payment Gateway QRIS Midtrans'"
                     class="rounded-xl border-2 border-[#F59E0B] bg-white shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
                 >
@@ -389,7 +406,8 @@
                             </svg>
                             Butuh Review
                         </span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#0B254A] text-white text-[10px] font-bold">Sedang Direview</span>
+                        <span x-show="demoDecision !== 'revision'" class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#0B254A] text-white text-[10px] font-bold">Sedang Direview</span>
+                        <span x-show="demoDecision === 'revision'" class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FEE2E2] text-[#B91C1C] text-[10px] font-bold">Revisi Diminta · Demo</span>
                     </div>
                     <p class="text-[13px] font-extrabold text-[#0B254A] leading-tight mb-3">Integrasi Payment Gateway QRIS Midtrans</p>
                     <button
@@ -414,6 +432,7 @@
 
                 {{-- Review Card 2 --}}
                 <div
+                    x-show="demoDecision !== 'approve'"
                     @click="reviewOpen = true; reviewTask = 'Integrasi Payment Gateway QRIS Midtrans'"
                     class="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-4 cursor-pointer hover:border-[#F59E0B] hover:shadow-sm transition-all"
                 >
@@ -457,6 +476,17 @@
                 </div>
 
                 {{-- Done Card 1 --}}
+                <div x-show="demoDecision === 'approve'" class="bg-white rounded-xl border-2 border-[#16A34A] shadow-2xs p-4">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">High</span>
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-[#16A34A]">Approved · Demo</span>
+                    </div>
+                    <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-3">Integrasi Payment Gateway QRIS Midtrans</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] text-slate-500 font-medium">Ahmad R.</span>
+                        <span class="text-[10px] text-slate-400">Baru saja</span>
+                    </div>
+                </div>
                 <div class="bg-white rounded-xl border border-slate-100 shadow-2xs p-4 hover:shadow-sm transition-shadow cursor-pointer">
                     <div class="flex items-center gap-2 mb-2 flex-wrap">
                         <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Low</span>

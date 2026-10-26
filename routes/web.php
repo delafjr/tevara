@@ -318,6 +318,14 @@ Route::middleware('auth.api')->group(function () {
                 'assignee'   => ['nullable', 'string', 'max:100'],
             ]);
 
+            // Project demo belum memiliki endpoint/task record di backend.
+            // Simpan sementara di flash session agar bisa dipresentasikan.
+            if (str_starts_with($validated['project_id'], 'PRJ-2026/')) {
+                return back()
+                    ->with('demo_task_created', $validated)
+                    ->with('success', 'Task demo berhasil ditambahkan ke kolom Todo.');
+            }
+
             try {
                 $response = $api->post('dosen/tasks', $validated);
                 return $response->successful()
@@ -333,6 +341,20 @@ Route::middleware('auth.api')->group(function () {
                 'decision' => ['required', 'in:revision,approve'],
                 'note'     => ['nullable', 'string', 'max:500'],
             ]);
+
+            // Task pada halaman demo belum memiliki record di backend. Simpan
+            // keputusan di flash session agar alur review tetap bisa dipresentasikan.
+            if (str_starts_with($task, 'PRJ-2026-001-')) {
+                return back()
+                    ->with('demo_task_review', [
+                        'task'     => $task,
+                        'decision' => $validated['decision'],
+                        'note'     => $validated['note'] ?? null,
+                    ])
+                    ->with('success', $validated['decision'] === 'approve'
+                        ? 'Task demo berhasil disetujui dan ditandai selesai.'
+                        : 'Permintaan revisi demo berhasil dikirim ke mahasiswa.');
+            }
 
             try {
                 $response = $api->post('dosen/tasks/' . rawurlencode($task) . '/review', $validated);
