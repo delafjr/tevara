@@ -13,10 +13,11 @@
 @php
     $user = $user ?? session('user', []);
     $profile = [
-        'instansi' => $user['name'] ?? '',
+        'instansi' => $user['company_name'] ?? $user['name'] ?? '',
         'pic'      => $user['name'] ?? '',
         'telepon'  => $user['phone_number'] ?? '',
         'email'    => $user['email'] ?? '',
+        'jabatan'  => $user['position'] ?? '',
     ];
     $deadlineMin = now()->addDays(30)->toDateString();
     $categories = [

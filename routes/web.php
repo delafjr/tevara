@@ -145,8 +145,17 @@ Route::middleware('auth.api')->group(function () {
         return redirect()->route('dashboard');
     })->name('switch-role');
 
-    // Klien: Ajukan Proyek Baru
+    // Klien: Ajukan Proyek Baru & Projek Saya
     Route::middleware('auth.api:klien')->prefix('klien')->name('klien.')->group(function () {
+        Route::get('/projek-saya', fn () => view('klien.projek-saya', ['user' => session('user')]))
+            ->name('projek-saya');
+        Route::get('/proyek-saya', fn () => redirect()->route('klien.projek-saya'));
+
+        Route::get('/tagihan', fn () => view('klien.tagihan', ['user' => session('user')]))
+            ->name('tagihan');
+        Route::get('/tagihan-pembayaran', fn () => redirect()->route('klien.tagihan'));
+        Route::get('/pembayaran', fn () => redirect()->route('klien.tagihan'));
+
         Route::get('/ajukan-proyek', fn () => view('klien.ajukan-proyek', ['user' => session('user')]))
             ->name('ajukan-proyek');
 
