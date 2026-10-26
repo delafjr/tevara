@@ -52,68 +52,24 @@
     </div>
 
     {{-- ===== 4 STAT CARDS ===== --}}
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" aria-label="Ringkasan aktivitas">
-        {{-- Card 1: Project Aktif --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-500 text-sm font-medium">
-                <span>Project Aktif</span>
-                <span class="w-9 h-9 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                    </svg>
-                </span>
-            </div>
-            <strong class="text-3xl font-extrabold text-[#0F172A] mt-4 tracking-tight">{{ str_pad($activeProjects, 2, '0', STR_PAD_LEFT) }}</strong>
-        </div>
+    @php
+        $deadlineText = $daysRemaining === null ? 'Aman' : ($daysRemaining < 0 ? 'Terlewat' : ($daysRemaining === 0 ? 'Hari ini' : $daysRemaining . ' Hari'));
+        $deadlineSub = $daysRemaining === null ? 'Sisa Waktu' : ($daysRemaining < 0 ? 'Terlewat' : 'Sisa Waktu');
+        $isUrgentDeadline = ($daysRemaining !== null && $daysRemaining <= 3);
+        $deadlineColor = $isUrgentDeadline ? '#DC2626' : '#0B3B82';
 
-        {{-- Card 2: Menunggu Review --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-500 text-sm font-medium">
-                <span>Menunggu Review</span>
-                <span class="w-9 h-9 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
-                </span>
-            </div>
-            <strong class="text-3xl font-extrabold text-[#0F172A] mt-4 tracking-tight">{{ str_pad($pendingTasks, 2, '0', STR_PAD_LEFT) }}</strong>
-        </div>
+        $studentStats = [
+            ['label' => 'Project Aktif',     'value' => $activeProjects,    'sub' => 'Dalam Pengerjaan', 'color' => '#0B3B82', 'icon' => 'play'],
+            ['label' => 'Menunggu Review',   'value' => $pendingTasks,      'sub' => 'Perlu Review',     'color' => '#F59E0B', 'icon' => 'clock-file'],
+            ['label' => 'Project Selesai',   'value' => $completedProjects, 'sub' => 'Siap Produksi',    'color' => '#0B3B82', 'icon' => 'check'],
+            ['label' => 'Deadline Terdekat', 'value' => $deadlineText,      'sub' => $deadlineSub,       'color' => $deadlineColor, 'icon' => 'calendar'],
+        ];
+    @endphp
 
-        {{-- Card 3: Project Selesai --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-500 text-sm font-medium">
-                <span>Project Selesai</span>
-                <span class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </span>
-            </div>
-            <strong class="text-3xl font-extrabold text-[#0F172A] mt-4 tracking-tight">{{ str_pad($completedProjects, 2, '0', STR_PAD_LEFT) }}</strong>
-        </div>
-
-        {{-- Card 4: Deadline Terdekat --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-500 text-sm font-medium">
-                <span>Deadline Terdekat</span>
-                <span class="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                </span>
-            </div>
-            <strong class="text-3xl font-extrabold {{ $daysRemaining !== null && $daysRemaining <= 3 ? 'text-rose-600' : 'text-[#0F172A]' }} mt-4 tracking-tight">
-                @if($daysRemaining === null)
-                    Aman
-                @elseif($daysRemaining < 0)
-                    Terlewat
-                @elseif($daysRemaining === 0)
-                    Hari ini
-                @else
-                    {{ $daysRemaining }} hari
-                @endif
-            </strong>
-        </div>
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch" aria-label="Ringkasan aktivitas">
+        @foreach($studentStats as $stat)
+            <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
+        @endforeach
     </section>
 
     {{-- ===== PROJECT TERBARU TABLE ===== --}}
@@ -123,7 +79,7 @@
                 <h2 class="text-lg font-bold text-slate-900 tracking-tight">Project Terbaru</h2>
                 <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">{{ count($projectsList) }} Project</span>
             </div>
-            <a href="{{ route('mahasiswa.project') }}" class="text-sm font-semibold text-[#2563EB] hover:text-blue-700 inline-flex items-center gap-1 group transition">
+            <a href="{{ route('mahasiswa.project') }}" class="text-sm font-semibold text-[#0B3B82] hover:text-[#082a5c] inline-flex items-center gap-1 group transition">
                 <span>Lihat Semua</span>
                 <span class="group-hover:translate-x-0.5 transition-transform">→</span>
             </a>

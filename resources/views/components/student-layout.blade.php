@@ -9,7 +9,7 @@
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#F8FAFC] font-sans text-slate-800 antialiased min-h-screen">
+<body class="bg-surface-soft font-sans text-dark-text antialiased min-h-screen">
     <div class="flex min-h-screen">
         <x-sidebar :active="$active" />
         

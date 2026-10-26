@@ -6,10 +6,11 @@
     <title>Mahasiswa - Tevara</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased">
+<body class="bg-surface-soft font-sans text-dark-text antialiased min-h-screen">
 @php $user = $user ?? session('user'); $firstName = explode(' ', $user['name'] ?? 'Pengurus')[0]; @endphp
 <div class="flex min-h-screen">
     <x-sidebar active="mahasiswa" />
+    <div class="flex-1 ml-64 flex flex-col min-h-screen">
         <main class="flex-1 px-8 py-7 space-y-7">
 
             {{-- Hero Card --}}
@@ -25,27 +26,31 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Mahasiswa <span class="text-[#FFB800]">Peserta TeFa</span>
                     </h1>
-                    <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
+                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
                         Pantau keterlibatan mahasiswa dalam setiap projek Teaching Factory.
                     </p>
                 </div>
 
                 <div class="relative z-10 flex-shrink-0">
-                    <a href="#" class="flex items-center gap-2 bg-[#FFB800] text-[#1E293B] font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-yellow-300 transition-colors shadow-sm">
-                        <svg class="w-4 h-4 fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                    <a href="#" class="flex items-center gap-2 bg-[#0B3B82] text-white font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-[#082a5c] transition-colors shadow-sm">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                         Tambah Mahasiswa
                     </a>
                 </div>
             </div>
 
             {{-- Stats --}}
-            <div class="grid grid-cols-4 gap-4">
-                @foreach([['142','Total Mahasiswa','#0B3B82'],['118','Aktif di Projek','#16A34A'],['3','Angkatan','#F59E0B'],['24','Belum Terlibat','#EF4444']] as [$v,$l,$c])
-                <div class="bg-white rounded-xl px-5 py-5 border border-slate-100 shadow-sm">
-                    <p class="text-3xl font-bold text-[#1E293B] leading-none">{{ $v }}</p>
-                    <p class="text-xs text-slate-400 mt-1.5 font-medium">{{ $l }}</p>
-                    <div class="h-1 rounded-full mt-3" style="background:{{ $c }}30"><div class="h-full rounded-full w-3/4" style="background:{{ $c }}"></div></div>
-                </div>
+            <div class="grid grid-cols-4 gap-4 items-stretch">
+                @php
+                $mhsStats = [
+                    ['label' => 'Total Mahasiswa', 'value' => '142', 'sub' => 'Terdaftar',       'color' => '#0B3B82', 'icon' => 'academic'],
+                    ['label' => 'Aktif di Projek', 'value' => '118', 'sub' => 'Sedang Berjalan', 'color' => '#0B3B82', 'icon' => 'play'],
+                    ['label' => 'Angkatan',        'value' => '3',   'sub' => 'Tahun Berjalan',  'color' => '#F59E0B', 'icon' => 'folder'],
+                    ['label' => 'Belum Terlibat',  'value' => '24',  'sub' => 'Perlu Penugasan', 'color' => '#DC2626', 'icon' => 'users'],
+                ];
+                @endphp
+                @foreach($mhsStats as $stat)
+                    <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
                 @endforeach
             </div>
 
@@ -91,13 +96,13 @@
                                 ['name'=>'Irfan Maulana','nim'=>'4.31.22.0.05','prodi'=>'D4 TI','angkatan'=>2022,'projek'=>'E-Commerce UMKM Batik','peran'=>'Full Stack Dev','status'=>'Aktif'],
                                 ['name'=>'Jessica Amelia','nim'=>'4.31.23.0.03','prodi'=>'D4 TI','angkatan'=>2023,'projek'=>'Sistem Parkir Cerdas','peran'=>'Embedded Dev','status'=>'Aktif'],
                             ];
-                            $stStyle=['Aktif'=>'bg-blue-50 text-blue-700','Selesai'=>'bg-green-50 text-green-700','Belum Terlibat'=>'bg-slate-100 text-slate-500'];
+                            $stStyle = ['Aktif' => 'bg-emerald-50 text-emerald-700 font-semibold', 'Selesai' => 'bg-[#EAF3FF] text-[#0B3B82] font-semibold', 'Belum Terlibat' => 'bg-slate-100 text-[#64748B] font-medium'];
                             @endphp
                             @foreach($mahasiswas as $m)
                             <tr class="hover:bg-slate-50/60 transition-colors">
                                 <td class="px-6 py-3.5">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-[#6366F1]/10 flex items-center justify-center text-[11px] font-bold text-[#6366F1] flex-shrink-0">{{ strtoupper(substr($m['name'],0,1)).strtoupper(substr(explode(' ',$m['name'])[1]??'',0,1)) }}</div>
+                                        <div class="w-8 h-8 rounded-full bg-[#0B3B82]/10 flex items-center justify-center text-[11px] font-bold text-[#0B3B82] flex-shrink-0">{{ strtoupper(substr($m['name'],0,1)).strtoupper(substr(explode(' ',$m['name'])[1]??'',0,1)) }}</div>
                                         <p class="font-semibold text-[#1E293B] text-[13px]">{{ $m['name'] }}</p>
                                     </div>
                                 </td>
