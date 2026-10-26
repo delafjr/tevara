@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Masuk - Tevara</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-full bg-white font-sans antialiased text-[#1E293B]">
@@ -15,12 +17,12 @@
             
             <div class="relative z-10 max-w-lg flex flex-col items-center">
                 {{-- Logo --}}
-                <img src="{{ asset('images/tevara-logo.png') }}" 
+                <img src="{{ asset('images/tevara-logo-vertical.png') }}" 
                      alt="TEVARA Knowledge into Action" 
-                     class="h-14 xl:h-16 w-auto object-contain mb-8">
+                     class="w-52 xl:w-60 h-auto object-contain mb-8">
 
                 {{-- Yellow accent bar --}}
-                <div class="w-44 h-2 bg-[#F59E0B] rounded-full mb-8"></div>
+                <div class="w-44 h-1.5 bg-[#FFB800] rounded-full mb-8"></div>
 
                 {{-- Tagline Heading --}}
                 <h1 class="text-3xl xl:text-4xl font-extrabold text-[#0B254A] tracking-tight leading-snug">
@@ -28,7 +30,7 @@
                 </h1>
 
                 {{-- Subtext --}}
-                <p class="mt-6 text-sm xl:text-base text-slate-500 font-medium leading-relaxed max-w-md">
+                <p class="mt-6 text-sm xl:text-base text-slate-500 font-medium leading-relaxed max-w-sm">
                     TEVARA menghubungkan dunia akademik dengan kebutuhan industri melalui kolaborasi, proyek nyata, dan peningkatan kompetensi.
                 </p>
             </div>

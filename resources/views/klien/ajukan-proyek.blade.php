@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Ajukan proyek baru bersama TEVARA Teaching Factory Polines. Isi data klien, rincian kebutuhan proyek, dan estimasi deadline dalam satu formulir.">
     <title>Ajukan Proyek Baru - Tevara</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased">

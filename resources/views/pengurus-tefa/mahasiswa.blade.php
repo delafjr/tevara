@@ -10,7 +10,6 @@
 @php $user = $user ?? session('user'); $firstName = explode(' ', $user['name'] ?? 'Pengurus')[0]; @endphp
 <div class="flex min-h-screen">
     <x-sidebar active="mahasiswa" />
-    <div class="flex-1 ml-64 flex flex-col min-h-screen">
         <main class="flex-1 px-8 py-7 space-y-7">
 
             {{-- Hero Card --}}

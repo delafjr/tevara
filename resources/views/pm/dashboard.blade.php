@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard - Tevara</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-[#F4F7FB] font-sans text-[#1E293B] antialiased min-h-screen">
@@ -107,7 +109,7 @@
             <div class="relative z-10">
                 <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                    {{ $workspaceLabel }}
+                    Workspace Project Manager
                 </span>
                 <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                     Selamat Datang, <span class="text-[#FFB800]">{{ $userName }}</span>
