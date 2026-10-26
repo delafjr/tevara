@@ -190,6 +190,9 @@ class AjukanProyekKlienTest extends TestCase
             ], 201),
         ]);
 
+        $ringkasan = trim(str_repeat('Kami membutuhkan sistem digital untuk mengelola pengajuan proyek Teaching Factory. ', 3));
+        $deadline = now()->addDays(60)->toDateString();
+
         $response = $this->withSession($this->sessionKlien())->post('/klien/ajukan-proyek', [
             '_token'         => 'x',
             'nama_instansi'  => 'PT. Maju Bersama Sentosa',
@@ -198,9 +201,9 @@ class AjukanProyekKlienTest extends TestCase
             'kontak_email'   => 'budi@majubersamasentosa.co.id',
             'judul_proyek'   => 'Sistem Informasi Manajemen Teaching Factory',
             'kategori_id'    => 1,
-            'ringkasan'      => str_repeat('Kami membutuhkan sistem digital untuk mengelola pengajuan proyek Teaching Factory. ', 3),
+            'ringkasan'      => $ringkasan,
             'target_pengguna' => 'Staf IT perusahaan',
-            'deadline'       => now()->addDays(60)->toDateString(),
+            'deadline'       => $deadline,
             'anggaran'       => 45000000,
             'modul'          => json_encode([
                 ['judul' => 'Modul Auth', 'deskripsi' => 'Login dan role'],
@@ -211,11 +214,19 @@ class AjukanProyekKlienTest extends TestCase
         $response->assertRedirect('/klien/ajukan-proyek');
         $response->assertSessionHas('success');
 
-        Http::assertSent(function ($request) {
+        Http::assertSent(function ($request) use ($ringkasan, $deadline) {
             return $request->url() === 'http://127.0.0.1:8000/api/v1/proposals'
+                && $request['client_id'] === 106
                 && $request['title'] === 'Sistem Informasi Manajemen Teaching Factory'
+                && $request['background'] === $ringkasan
+                && $request['target_audience'] === 'Staf IT perusahaan'
                 && $request['category_id'] === 1
-                && str_contains($request['background'], 'Modul Auth');
+                && $request['desired_deadline'] === $deadline
+                && (int) $request['estimated_budget'] === 45000000
+                && $request['modules'] === [
+                    ['title' => 'Modul Auth', 'description' => 'Login dan role'],
+                    ['title' => 'Modul Proposal', 'description' => 'CRUD pengajuan'],
+                ];
         });
     }
 

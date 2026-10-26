@@ -79,6 +79,7 @@
                   removeModule(i) { if (this.modules.length > 1) this.modules.splice(i, 1) }
               }"
               class="flex-1 flex flex-col">
+            @csrf
 
             <main class="flex-1 px-8 py-7 flex flex-col">
 

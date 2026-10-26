@@ -202,35 +202,27 @@ Route::middleware('auth.api')->group(function () {
                 'modul.*.deskripsi' => ['nullable', 'string', 'max:1000'],
             ]);
 
-            // ponytail: backend POST /proposals hanya menyimpan field resmi (title/background/destination).
-            // Data kontak & modul digabung ke background supaya tidak hilang; pisahkan ke kolom sendiri
-            // (scope_of_work / tabel modules) begitu endpoint modul & profil klien tersedia di backend.
-            $modul = collect($validated['modul'] ?? [])
+            // Modul dipisah ke field modules sesuai kontrak POST /proposals.
+            $modules = collect($validated['modul'] ?? [])
                 ->filter(fn ($m) => !empty($m['judul']))
-                ->values();
+                ->map(fn ($m) => [
+                    'title'       => $m['judul'],
+                    'description' => $m['deskripsi'] ?? null,
+                ])
+                ->values()
+                ->all();
 
-            $background = sprintf(
-                "Kontak: %s | PIC: %s | %s%s\n\n%s",
-                $validated['nama_instansi'],
-                $validated['pic_nama'],
-                $validated['kontak_email'],
-                !empty($validated['kontak_nomor']) ? ' | ' . $validated['kontak_nomor'] : '',
-                $validated['ringkasan']
-            );
-
-            if ($modul->isNotEmpty()) {
-                $background .= "\n\nModul yang diminta:\n" . $modul
-                    ->map(fn ($m, $i) => ($i + 1) . '. ' . $m['judul'] . (!empty($m['deskripsi']) ? ' — ' . $m['deskripsi'] : ''))
-                    ->implode("\n");
-            }
+            $user = session('user', []);
 
             $response = $api->post('proposals', [
+                'client_id'        => (int) ($user['id'] ?? 0),
                 'title'            => $validated['judul_proyek'],
-                'background'       => $background,
+                'background'       => $validated['ringkasan'],
+                'target_audience'  => $validated['target_pengguna'],
                 'category_id'      => (int) $validated['kategori_id'],
                 'desired_deadline' => $validated['deadline'],
-                'target_audience'  => $validated['target_pengguna'] ?? null,
-                'estimated_budget' => $validated['anggaran'] ?? null,
+                'estimated_budget' => (int) $validated['anggaran'],
+                'modules'          => $modules,
             ]);
 
             if ($response->successful()) {
