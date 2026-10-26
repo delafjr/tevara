@@ -291,7 +291,23 @@ Route::middleware('auth.api')->group(function () {
                 'projectData' => is_array($projectData) ? $projectData : [],
             ]);
         })->name('project');
-        Route::get('/anggota-tim', fn () => view('pm.anggota-tim', ['user' => session('user')]))->name('anggota-tim');
+        Route::get('/anggota-tim', function (ApiService $api) {
+            $dashboard = [];
+
+            try {
+                $response = $api->get('dosen/dashboard');
+                if ($response->successful()) {
+                    $dashboard = $response->json('data', []);
+                }
+            } catch (\Throwable) {
+                $dashboard = [];
+            }
+
+            return view('pm.anggota-tim', [
+                'user'      => session('user'),
+                'dashboard' => is_array($dashboard) ? $dashboard : [],
+            ]);
+        })->name('anggota-tim');
         Route::get('/task-timeline', fn () => view('pm.task-timeline', ['user' => session('user')]))->name('task-timeline');
 
         Route::post('/tasks', function (Request $request, ApiService $api) {
