@@ -12,6 +12,10 @@
     $user     = $user ?? session('user');
     $userName = $user['name'] ?? 'Project Manager';
     $hasProject = true;
+    $demoReview = session('demo_task_review', []);
+    $demoDecision = is_array($demoReview) ? ($demoReview['decision'] ?? null) : null;
+    $demoTask = session('demo_task_created', []);
+    $demoTask = is_array($demoTask) ? $demoTask : [];
 @endphp
 
 <div class="flex min-h-screen">
@@ -24,10 +28,25 @@
           x-data="{
             reviewOpen: true,
             reviewTask: 'Integrasi Payment Gateway QRIS Midtrans',
-            revisiNote: ''
+            revisiNote: '',
+            demoDecision: @js($demoDecision),
+            demoTaskTitle: @js($demoTask['title'] ?? null),
+            demoTaskAssignee: @js($demoTask['assignee'] ?? 'Belum ditentukan'),
+            demoTaskDueDate: @js($demoTask['due_date'] ?? null),
+            taskModal: false,
+            projectMenu: false
           }">
 
         {{-- ── 1. PAGE HEADER ── --}}
+        @if(session('success') || session('error'))
+            <div class="rounded-xl border {{ session('success') ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700' }} px-4 py-3 text-xs font-semibold" x-data="{ visible: true }" x-show="visible">
+                <div class="flex items-center justify-between gap-3">
+                    <span>{{ session('success') ?? session('error') }}</span>
+                    <button type="button" @click="visible = false" class="text-current/60 hover:text-current">&times;</button>
+                </div>
+            </div>
+        @endif
+
         <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
             {{-- gradient dekoratif --}}
             <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
@@ -89,13 +108,13 @@
             </div>
             {{-- Actions --}}
             <div class="flex items-center gap-2 flex-shrink-0">
-                <button class="inline-flex items-center gap-1.5 bg-[#F59E0B] hover:bg-yellow-400 text-[#0B254A] text-xs font-extrabold px-4 py-2 rounded-xl transition-colors cursor-pointer">
+                <button type="button" @click="taskModal = true" class="inline-flex items-center gap-1.5 bg-[#F59E0B] hover:bg-yellow-400 text-[#0B254A] text-xs font-extrabold px-4 py-2 rounded-xl transition-colors cursor-pointer">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                     </svg>
                     Tambah Task Proyek
                 </button>
-                <button class="inline-flex items-center gap-1.5 border border-white/30 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors cursor-pointer">
+                <button type="button" @click="projectMenu = !projectMenu" class="inline-flex items-center gap-1.5 border border-white/30 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors cursor-pointer">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
                     </svg>
@@ -104,6 +123,10 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
                     </svg>
                 </button>
+                <div x-show="projectMenu" x-cloak @click.outside="projectMenu = false" class="absolute mt-12 right-8 z-20 w-64 rounded-xl bg-white p-2 shadow-xl ring-1 ring-slate-200">
+                    <a href="{{ route('pm.project') }}" class="block rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Buka daftar proyek</a>
+                    <button type="button" @click="projectMenu = false; reviewTask = 'Integrasi Payment Gateway QRIS Midtrans'" class="w-full rounded-lg px-3 py-2 text-left text-xs text-slate-600 hover:bg-slate-50">PRJ-2026/001 · Sistem Informasi UMKM</button>
+                </div>
             </div>
         </div>
 
@@ -180,6 +203,14 @@
                 </div>
 
                 {{-- Task 1 --}}
+                <div x-show="demoTaskTitle" class="bg-white rounded-xl border-2 border-[#2563EB] shadow-2xs p-4">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="text-[10px] font-bold text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded-full">Baru · Demo</span>
+                        <span class="text-[10px] text-slate-400" x-text="demoTaskDueDate"></span>
+                    </div>
+                    <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-3" x-text="demoTaskTitle"></p>
+                    <span class="text-[11px] text-slate-500" x-text="demoTaskAssignee"></span>
+                </div>
                 <div class="bg-white rounded-xl border border-slate-100 shadow-2xs p-4 hover:shadow-sm transition-shadow cursor-pointer">
                     <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-3">Konfigurasi Mail Server Notifikasi Transaksi...</p>
                     <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mb-3">
@@ -363,6 +394,7 @@
 
                 {{-- Review Card 1 (active — amber border) --}}
                 <div
+                    x-show="demoDecision !== 'approve'"
                     @click="reviewOpen = true; reviewTask = 'Integrasi Payment Gateway QRIS Midtrans'"
                     class="rounded-xl border-2 border-[#F59E0B] bg-white shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
                 >
@@ -374,7 +406,8 @@
                             </svg>
                             Butuh Review
                         </span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#0B254A] text-white text-[10px] font-bold">Sedang Direview</span>
+                        <span x-show="demoDecision !== 'revision'" class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#0B254A] text-white text-[10px] font-bold">Sedang Direview</span>
+                        <span x-show="demoDecision === 'revision'" class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FEE2E2] text-[#B91C1C] text-[10px] font-bold">Revisi Diminta · Demo</span>
                     </div>
                     <p class="text-[13px] font-extrabold text-[#0B254A] leading-tight mb-3">Integrasi Payment Gateway QRIS Midtrans</p>
                     <button
@@ -399,6 +432,7 @@
 
                 {{-- Review Card 2 --}}
                 <div
+                    x-show="demoDecision !== 'approve'"
                     @click="reviewOpen = true; reviewTask = 'Integrasi Payment Gateway QRIS Midtrans'"
                     class="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-4 cursor-pointer hover:border-[#F59E0B] hover:shadow-sm transition-all"
                 >
@@ -442,6 +476,17 @@
                 </div>
 
                 {{-- Done Card 1 --}}
+                <div x-show="demoDecision === 'approve'" class="bg-white rounded-xl border-2 border-[#16A34A] shadow-2xs p-4">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">High</span>
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-[#16A34A]">Approved · Demo</span>
+                    </div>
+                    <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-3">Integrasi Payment Gateway QRIS Midtrans</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] text-slate-500 font-medium">Ahmad R.</span>
+                        <span class="text-[10px] text-slate-400">Baru saja</span>
+                    </div>
+                </div>
                 <div class="bg-white rounded-xl border border-slate-100 shadow-2xs p-4 hover:shadow-sm transition-shadow cursor-pointer">
                     <div class="flex items-center gap-2 mb-2 flex-wrap">
                         <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Low</span>
@@ -618,7 +663,7 @@
 
                     {{-- Links --}}
                     <div class="flex flex-col gap-2">
-                        <a href="#" class="inline-flex items-center gap-2 text-[11px] text-[#2563EB] font-semibold hover:underline">
+                        <a href="{{ route('pm.task-timeline') }}?request=42" class="inline-flex items-center gap-2 text-[11px] text-[#2563EB] font-semibold hover:underline">
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/>
                             </svg>
@@ -627,7 +672,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
                             </svg>
                         </a>
-                        <a href="#" class="inline-flex items-center gap-2 text-[11px] text-[#2563EB] font-semibold hover:underline">
+                        <a href="{{ config('services.backend_api.url') }}/docs" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-[11px] text-[#2563EB] font-semibold hover:underline">
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
                             </svg>
@@ -663,27 +708,68 @@
 
                     {{-- Action Buttons --}}
                     <div class="flex flex-col gap-2.5">
-                        <button
-                            type="button"
-                            class="w-full flex items-center justify-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold py-2.5 rounded-xl transition-colors cursor-pointer"
-                        >
+                        <form method="POST" action="{{ route('pm.task.review', ['task' => 'PRJ-2026-001-42']) }}">
+                            @csrf
+                            <input type="hidden" name="decision" value="revision">
+                            <input type="hidden" name="note" x-bind:value="revisiNote">
+                            <button
+                                type="submit"
+                                class="w-full flex items-center justify-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold py-2.5 rounded-xl transition-colors cursor-pointer"
+                            >
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
                             </svg>
-                            Minta Revisi
-                        </button>
-                        <button
-                            type="button"
-                            class="w-full flex items-center justify-center gap-2 bg-[#0B254A] hover:bg-[#0d2f5e] text-white text-xs font-extrabold py-2.5 rounded-xl transition-colors cursor-pointer"
-                        >
+                                Minta Revisi
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('pm.task.review', ['task' => 'PRJ-2026-001-42']) }}">
+                            @csrf
+                            <input type="hidden" name="decision" value="approve">
+                            <input type="hidden" name="note" x-bind:value="revisiNote">
+                            <button
+                                type="submit"
+                                class="w-full flex items-center justify-center gap-2 bg-[#0B254A] hover:bg-[#0d2f5e] text-white text-xs font-extrabold py-2.5 rounded-xl transition-colors cursor-pointer"
+                            >
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                             </svg>
-                            Setujui &amp; Tandai Selesai (Approve)
-                        </button>
+                                Setujui &amp; Tandai Selesai (Approve)
+                            </button>
+                        </form>
                     </div>
                 </div>
 
+            </div>
+        </div>
+
+        <div x-show="taskModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-[#0B254A]/30 p-4" @keydown.escape.window="taskModal = false">
+            <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl" @click.outside="taskModal = false">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-[#2563EB]">Task baru</p>
+                        <h2 class="text-lg font-extrabold text-[#0B254A]">Tambah Task Proyek</h2>
+                    </div>
+                    <button type="button" @click="taskModal = false" class="rounded-lg p-2 text-slate-400 hover:bg-slate-50">&times;</button>
+                </div>
+                <form method="POST" action="{{ route('pm.task.store') }}" class="space-y-4">
+                    @csrf
+                    <input type="hidden" name="project_id" value="PRJ-2026/001">
+                    <label class="block text-xs font-bold text-slate-600">Nama task
+                        <input name="title" required class="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#2563EB] focus:outline-none" placeholder="Contoh: Integrasi API pembayaran">
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="block text-xs font-bold text-slate-600">Deadline
+                            <input type="date" name="due_date" required class="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#2563EB] focus:outline-none">
+                        </label>
+                        <label class="block text-xs font-bold text-slate-600">PIC
+                            <input name="assignee" class="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#2563EB] focus:outline-none" placeholder="Nama mahasiswa">
+                        </label>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" @click="taskModal = false" class="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="rounded-xl bg-[#0B254A] px-4 py-2.5 text-xs font-extrabold text-white hover:bg-[#123b6e]">Simpan Task</button>
+                    </div>
+                </form>
             </div>
         </div>
         @endif

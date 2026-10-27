@@ -279,9 +279,97 @@ Route::middleware('auth.api')->group(function () {
 
     // PM sub-pages (Protected by role pm)
     Route::middleware('auth.api:pm|dosen')->prefix('pm')->name('pm.')->group(function () {
-        Route::get('/project', fn () => view('pm.project', ['user' => session('user')]))->name('project');
-        Route::get('/anggota-tim', fn () => view('pm.anggota-tim', ['user' => session('user')]))->name('anggota-tim');
+        Route::get('/project', function (ApiService $api) {
+            $projectData = [];
+
+            try {
+                $response = $api->get('dosen/dashboard');
+                if ($response->successful()) {
+                    $projectData = $response->json('data', []);
+                }
+            } catch (\Throwable) {
+                $projectData = [];
+            }
+
+            return view('pm.project', [
+                'user'        => session('user'),
+                'projectData' => is_array($projectData) ? $projectData : [],
+            ]);
+        })->name('project');
+        Route::get('/anggota-tim', function (ApiService $api) {
+            $dashboard = [];
+
+            try {
+                $response = $api->get('dosen/dashboard');
+                if ($response->successful()) {
+                    $dashboard = $response->json('data', []);
+                }
+            } catch (\Throwable) {
+                $dashboard = [];
+            }
+
+            return view('pm.anggota-tim', [
+                'user'      => session('user'),
+                'dashboard' => is_array($dashboard) ? $dashboard : [],
+            ]);
+        })->name('anggota-tim');
         Route::get('/task-timeline', fn () => view('pm.task-timeline', ['user' => session('user')]))->name('task-timeline');
+
+        Route::post('/tasks', function (Request $request, ApiService $api) {
+            $validated = $request->validate([
+                'project_id' => ['required', 'string', 'max:50'],
+                'title'      => ['required', 'string', 'max:255'],
+                'due_date'   => ['required', 'date'],
+                'assignee'   => ['nullable', 'string', 'max:100'],
+            ]);
+
+            // Project demo belum memiliki endpoint/task record di backend.
+            // Simpan sementara di flash session agar bisa dipresentasikan.
+            if (str_starts_with($validated['project_id'], 'PRJ-2026/')) {
+                return back()
+                    ->with('demo_task_created', $validated)
+                    ->with('success', 'Task demo berhasil ditambahkan ke kolom Todo.');
+            }
+
+            try {
+                $response = $api->post('dosen/tasks', $validated);
+                return $response->successful()
+                    ? back()->with('success', 'Task baru berhasil ditambahkan.')
+                    : back()->with('error', $response->json('message') ?? 'Task gagal disimpan ke backend.');
+            } catch (\Throwable $e) {
+                return back()->with('error', 'Backend task tidak dapat dihubungi: ' . $e->getMessage());
+            }
+        })->name('task.store');
+
+        Route::post('/tasks/{task}/review', function (Request $request, ApiService $api, string $task) {
+            $validated = $request->validate([
+                'decision' => ['required', 'in:revision,approve'],
+                'note'     => ['nullable', 'string', 'max:500'],
+            ]);
+
+            // Task pada halaman demo belum memiliki record di backend. Simpan
+            // keputusan di flash session agar alur review tetap bisa dipresentasikan.
+            if (str_starts_with($task, 'PRJ-2026-001-')) {
+                return back()
+                    ->with('demo_task_review', [
+                        'task'     => $task,
+                        'decision' => $validated['decision'],
+                        'note'     => $validated['note'] ?? null,
+                    ])
+                    ->with('success', $validated['decision'] === 'approve'
+                        ? 'Task demo berhasil disetujui dan ditandai selesai.'
+                        : 'Permintaan revisi demo berhasil dikirim ke mahasiswa.');
+            }
+
+            try {
+                $response = $api->post('dosen/tasks/' . rawurlencode($task) . '/review', $validated);
+                return $response->successful()
+                    ? back()->with('success', $validated['decision'] === 'approve' ? 'Task berhasil disetujui dan ditandai selesai.' : 'Permintaan revisi berhasil dikirim.')
+                    : back()->with('error', $response->json('message') ?? 'Review task gagal disimpan ke backend.');
+            } catch (\Throwable $e) {
+                return back()->with('error', 'Backend review tidak dapat dihubungi: ' . $e->getMessage());
+            }
+        })->name('task.review');
     });
 
     Route::get('/dashboard-jurusan', function () {
