@@ -11,7 +11,7 @@ class DashboardAccessTest extends TestCase
     {
         $response = $this->get('/');
         $response->assertStatus(200);
-        $response->assertSee('ini halaman landing page');
+        $response->assertSee('TEVARA');
     }
 
     public function test_authenticated_user_can_access_main_page(): void
@@ -27,7 +27,7 @@ class DashboardAccessTest extends TestCase
         ])->get('/');
 
         $response->assertStatus(200);
-        $response->assertSee('ini halaman landing page');
+        $response->assertSee('Dashboard');
     }
 
     public function test_guest_is_redirected_to_login(): void
