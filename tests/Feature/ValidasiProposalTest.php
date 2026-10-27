@@ -76,9 +76,77 @@ class ValidasiProposalTest extends TestCase
         $response->assertSee('Latar Belakang');
         $response->assertSee('Target Pengguna');
         $response->assertSee('2 Proposal');
+        $response->assertSee('Lihat Detail');
+        $response->assertSee(route('pengurus-tefa.validasi-proposal.detail', 13), false);
+        $response->assertDontSee('Setujui');
 
         Http::assertSent(fn ($request) => str_ends_with($request->url(), '/api/v1/proposals/pending')
             && $request->hasHeader('Authorization'));
+    }
+
+    public function test_halaman_detail_proposal_mengambil_data_dari_endpoint_pending_detail(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals/13/pending' => Http::response([
+                'id'               => 13,
+                'proposal_code'    => 'PRSL-2026-490',
+                'title'            => 'lorep ipsum try from web',
+                'background'       => 'buatin mobil tesla yg bisa terbanggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg',
+                'target_audience'  => 'seluruh manusia dimuka bumi',
+                'category_name'    => 'Other',
+                'status'           => 'Submitted',
+                'desired_deadline' => '2027-05-25',
+                'estimated_budget' => '100000.00',
+                'client_name'      => 'PT. Maju Bersama Sentosa',
+                'pic'              => [
+                    'name'  => 'Budi Santoso',
+                    'email' => 'budi.santoso@majubersamasentosa.co.id',
+                    'no_hp' => '6281234567890',
+                ],
+                'modules' => [
+                    ['id' => 17, 'title' => 'terbang', 'description' => 'yg bisa terbang'],
+                    ['id' => 18, 'title' => 'jalan vertikal', 'description' => 'yg bisa jalan vertikal'],
+                ],
+            ]),
+        ]);
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->get('/pengurus-tefa/validasi-proposal/13');
+
+        $response->assertOk();
+        $response->assertSee('lorep ipsum try from web');
+        $response->assertSee('buatin mobil tesla yg bisa terbang');
+        $response->assertSee('seluruh manusia dimuka bumi');
+        $response->assertSee('PT. Maju Bersama Sentosa');
+        $response->assertSee('Budi Santoso');
+        $response->assertSee('budi.santoso@majubersamasentosa.co.id');
+        $response->assertSee('6281234567890');
+        $response->assertSee('terbang');
+        $response->assertSee('yg bisa terbang');
+        $response->assertSee('jalan vertikal');
+        $response->assertSee('yg bisa jalan vertikal');
+        $response->assertSee('Setujui');
+        $response->assertSee('Butuh Revisi');
+        $response->assertSee('Tolak');
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/api/v1/proposals/13/pending')
+            && $request->hasHeader('Authorization'));
+    }
+
+    public function test_halaman_detail_proposal_menampilkan_error_bila_tidak_ditemukan(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals/99/pending' => Http::response([
+                'message' => 'Proposal pending tidak ditemukan.',
+            ], 404),
+        ]);
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->get('/pengurus-tefa/validasi-proposal/99');
+
+        $response->assertOk();
+        $response->assertSee('Detail proposal tidak dapat ditampilkan');
+        $response->assertSee('Proposal pending tidak ditemukan.');
     }
 
     public function test_halaman_validasi_proposal_memakai_grid_penuh_tanpa_pm_mahasiswa_dan_riwayat(): void
