@@ -1,166 +1,301 @@
 <?php
 
+use App\Services\ApiService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
-$backendUrl = fn () => rtrim(config('services.backend_api.url') ?? env('BACKEND_API_URL', 'http://127.0.0.1:8000/api/v1'), '/');
-
-Route::get('/', function () use ($backendUrl) {
-    $base = $backendUrl();
+// Main page (Public: accessible by guest or logged-in users)
+Route::get('/', function (ApiService $api) {
+    $apiUrl = $api->getBaseUrl() . '/users';
     $initialData = null;
     $initialError = null;
 
     try {
-        // login untuk mendapat token (ponytail: kredensial demo hardcode; ganti session partner saat fitur auth disatukan)
-        $login = Http::timeout(30)->post($base.'/auth/login', [
-            'email'    => 'owner@majubersamasentosa.co.id',
-            'password' => 'password',
-        ]);
-
-        if (! $login->successful()) {
-            throw new RuntimeException('Login gagal: HTTP '.$login->status());
+        if (session('api_token')) {
+            $response = $api->get('/users');
+            if ($response->successful()) {
+                $initialData = $response->json();
+            }
         }
-
-        $token = $login->json('data.token');
-
-        $response = Http::withToken($token)->timeout(30)->get($base.'/users');
-        if ($response->successful()) {
-            $initialData = $response->json();
-        } else {
-            $initialError = 'HTTP '.$response->status().' - '.$response->reason();
-        }
-    } catch (Throwable $e) {
+    } catch (\Throwable $e) {
         $initialError = $e->getMessage();
     }
 
     return view('welcome', [
-        'apiUrl' => $base.'/users',
-        'initialData' => $initialData,
+        'apiUrl'       => $apiUrl,
+        'initialData'  => $initialData,
         'initialError' => $initialError,
     ]);
 });
 
+// Authentication routes
 Route::prefix('auth')->group(function () {
     Route::get('/login', function () {
-        if (session('api_token')) {
+        if (session('api_token') && session('user')) {
             return redirect()->route('dashboard');
         }
         return view('auth.login');
     })->name('login');
 
-    Route::post('/login', function (Request $request) {
+    Route::post('/login', function (Request $request, ApiService $api) {
         $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required',
         ]);
 
-        $backendUrl = rtrim(config('services.backend_api.url'), '/');
-
         try {
-            $response = Http::timeout(5)->post($backendUrl . '/auth/login', [
-                'email' => $request->email,
-                'password' => $request->password,
-            ]);
+            $response = $api->login($request->email, $request->password);
 
             if ($response->successful() && $response->json('success')) {
                 $data = $response->json('data');
+                $user = $data['user'];
+                $allowedRoles = ApiService::getEffectiveRoles($user);
+
+                if (empty($allowedRoles)) {
+                    return back()->withErrors(['email' => 'Akun tidak memiliki hak akses role.'])->withInput();
+                }
+
                 session([
                     'api_token'   => $data['token'],
-                    'user'        => $data['user'],
-                    'active_role' => $data['user']['roles'][0] ?? 'klien',
+                    'user'        => $user,
+                    'active_role' => $allowedRoles[0],
                 ]);
+
                 return redirect()->route('dashboard');
             }
 
-            return back()->withErrors(['email' => $response->json('message', 'Login gagal')])->withInput();
+            $message = $response->json('message') ?? 'Email atau password salah.';
+            return back()->withErrors(['email' => $message])->withInput();
         } catch (\Throwable $e) {
-            return back()->withErrors(['email' => 'Tidak dapat terhubung ke server: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['email' => 'Tidak dapat terhubung ke server backend: ' . $e->getMessage()])->withInput();
         }
     });
 
     Route::get('/register', fn () => view('auth.register'))->name('register');
     Route::post('/register', function (Request $request) {
         $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required|min:8',
         ]);
-
         return redirect('/dashboard');
     });
 
     Route::post('/logout', function () {
-        session()->forget(['api_token', 'user']);
+        session()->forget(['api_token', 'user', 'active_role']);
+        session()->invalidate();
+        session()->regenerateToken();
         return redirect()->route('login');
     })->name('logout');
 });
 
-// Dashboard routes — protected by session check
+// Protected routes (require valid session api_token and user)
 Route::middleware('auth.api')->group(function () {
-    Route::get('/dashboard', function () {
+
+    // Main dashboard router
+    Route::get('/dashboard', function (ApiService $api) {
         $user = session('user');
-        $role = session('active_role') ?? ($user['roles'][0] ?? 'klien');
-        if ($role === 'pm') {
-            $role = 'dosen';
+        $allowedRoles = ApiService::getEffectiveRoles($user);
+
+        if (empty($allowedRoles)) {
+            abort(403, 'Akun Anda tidak memiliki hak akses role.');
         }
 
-        $map = [
-            'klien'         => 'dashboard',
-            'pengurus_tefa' => 'dashboard-pengurus',
-            'dosen'         => 'dashboard-pm',
-            'mahasiswa'     => 'dashboard-mahasiswa',
-            'jurusan'       => 'dashboard-jurusan',
+        $activeRole = session('active_role');
+        if (!$activeRole || !in_array($activeRole, $allowedRoles, true)) {
+            $activeRole = $allowedRoles[0];
+            session(['active_role' => $activeRole]);
+        }
+
+        // Endpoint dashboard per role. Dosen & PM memakai endpoint dosen/dashboard.
+        $dashboardEndpoint = match ($activeRole) {
+            'klien'         => 'klien/dashboard',
+            'mahasiswa'     => 'mahasiswa/dashboard',
+            'pm'            => 'dosen/dashboard',
+            'dosen'         => 'dosen/dashboard',
+            'pengurus_tefa' => 'tefa/dashboard',
+            'jurusan'       => 'jurusan/dashboard',
+            default         => null,
+        };
+
+        $dashboardData = [];
+        if ($dashboardEndpoint) {
+            try {
+                $res = $api->get($dashboardEndpoint);
+                if ($res->successful()) {
+                    $dashboardData = $res->json('data', []);
+                }
+            } catch (\Throwable $e) {
+                // Biarkan halaman tetap tampil dengan nilai default bila backend tidak tersedia.
+                $dashboardData = [];
+            }
+        }
+
+        $viewMap = [
+            'klien'         => 'klien.dashboard',
+            'pengurus_tefa' => 'pengurus-tefa.dashboard',
+            'pm'            => 'pm.dashboard',
+            'dosen'         => 'pm.dashboard',
+            'mahasiswa'     => 'mahasiswa.dashboard',
+            'jurusan'       => 'jurusan.dashboard',
         ];
 
-        $view = $map[$role] ?? 'dashboard';
-        return view($view, ['user' => $user, 'currentRole' => $role]);
+        $view = $viewMap[$activeRole] ?? 'dashboard';
+        return view($view, ['user' => $user, 'currentRole' => $activeRole, 'dashboard' => $dashboardData]);
     })->name('dashboard');
 
-    // Switch Role handlers
+    // Switch Role handlers (Strictly validated against allowed roles)
     Route::get('/switch-role/{role}', function ($role) {
-        $validRoles = ['klien', 'pengurus_tefa', 'dosen', 'pm', 'mahasiswa', 'jurusan'];
-        if (in_array($role, $validRoles)) {
-            session(['active_role' => $role === 'pm' ? 'dosen' : $role]);
+        $user = session('user');
+        $allowedRoles = ApiService::getEffectiveRoles($user);
+
+        if (!in_array($role, $allowedRoles, true)) {
+            abort(403, 'Akses ditolak: Anda tidak memiliki role ' . $role);
         }
+
+        session(['active_role' => $role]);
         return redirect()->route('dashboard');
     })->name('switch-role.get');
 
     Route::post('/switch-role', function (Request $request) {
         $role = $request->input('role');
-        $validRoles = ['klien', 'pengurus_tefa', 'dosen', 'pm', 'mahasiswa', 'jurusan'];
-        if (in_array($role, $validRoles)) {
-            session(['active_role' => $role === 'pm' ? 'dosen' : $role]);
+        $user = session('user');
+        $allowedRoles = ApiService::getEffectiveRoles($user);
+
+        if (!in_array($role, $allowedRoles, true)) {
+            abort(403, 'Akses ditolak: Anda tidak memiliki role ' . $role);
         }
+
+        session(['active_role' => $role]);
         return redirect()->route('dashboard');
     })->name('switch-role');
 
-    // Direct dashboard aliases
+    // Klien: Ajukan Proyek Baru & Projek Saya
+    Route::middleware('auth.api:klien')->prefix('klien')->name('klien.')->group(function () {
+        Route::get('/projek-saya', fn () => view('klien.projek-saya', ['user' => session('user')]))
+            ->name('projek-saya');
+        Route::get('/proyek-saya', fn () => redirect()->route('klien.projek-saya'));
+
+        Route::get('/tagihan', fn () => view('klien.tagihan', ['user' => session('user')]))
+            ->name('tagihan');
+        Route::get('/tagihan-pembayaran', fn () => redirect()->route('klien.tagihan'));
+        Route::get('/pembayaran', fn () => redirect()->route('klien.tagihan'));
+
+        Route::get('/ajukan-proyek', fn () => view('klien.ajukan-proyek', ['user' => session('user')]))
+            ->name('ajukan-proyek');
+
+        Route::post('/ajukan-proyek', function (Request $request, ApiService $api) {
+            // Modul dikirim sebagai JSON string dari repeater Alpine, decode dulu agar rule array berlaku.
+            $request->merge([
+                'modul' => json_decode($request->input('modul', '[]'), true) ?: [],
+            ]);
+
+            $validated = $request->validate([
+                'nama_instansi'     => ['required', 'string', 'max:255'],
+                'pic_nama'          => ['required', 'string', 'max:100'],
+                'kontak_nomor'      => ['nullable', 'string', 'max:30'],
+                'kontak_email'      => ['required', 'email', 'max:255'],
+                'judul_proyek'      => ['required', 'string', 'max:255'],
+                // ID kategori mengikuti master data /categories; validitas akhir dicek backend.
+                'kategori_id'       => ['required', 'integer', 'min:1'],
+                'ringkasan'         => ['required', 'string', 'min:100', 'max:500'],
+                'target_pengguna'   => ['required', 'string', 'max:1000'],
+                'deadline'          => ['required', 'date', 'after_or_equal:' . now()->addDays(30)->toDateString()],
+                'anggaran'          => ['required', 'numeric', 'min:0'],
+                'modul'             => ['required', 'array', 'min:1'],
+                'modul.*.judul'     => ['required', 'string', 'max:255'],
+                'modul.*.deskripsi' => ['nullable', 'string', 'max:1000'],
+            ]);
+
+            // Modul dipisah ke field modules sesuai kontrak POST /proposals.
+            $modules = collect($validated['modul'] ?? [])
+                ->filter(fn ($m) => !empty($m['judul']))
+                ->map(fn ($m) => [
+                    'title'       => $m['judul'],
+                    'description' => $m['deskripsi'] ?? null,
+                ])
+                ->values()
+                ->all();
+
+            $user = session('user', []);
+
+            $response = $api->post('proposals', [
+                'client_id'        => (int) ($user['id'] ?? 0),
+                'title'            => $validated['judul_proyek'],
+                'background'       => $validated['ringkasan'],
+                'target_audience'  => $validated['target_pengguna'],
+                'category_id'      => (int) $validated['kategori_id'],
+                'desired_deadline' => $validated['deadline'],
+                'estimated_budget' => (int) $validated['anggaran'],
+                'modules'          => $modules,
+            ]);
+
+            if ($response->successful()) {
+                return redirect()
+                    ->route('klien.ajukan-proyek')
+                    ->with('success', 'Pengajuan proyek berhasil dikirim ke administrators TEVARA. Kode proposal: ' . ($response->json('proposal_code') ?? '-'));
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', 'Pengajuan gagal: ' . ($response->json('message') ?? 'terjadi kesalahan pada server TEVARA.'));
+        })->name('ajukan-proyek.store');
+    });
+
+    // Role-specific dashboard direct URLs
     Route::get('/dashboard-pengurus', function () {
+        $user = session('user');
+        if (!ApiService::hasRole($user, 'pengurus_tefa')) {
+            abort(403, 'Akses ditolak: Anda bukan Pengurus TeFa.');
+        }
         session(['active_role' => 'pengurus_tefa']);
         return redirect()->route('dashboard');
     })->name('dashboard-pengurus');
 
     Route::get('/dashboard-pm', function () {
-        session(['active_role' => 'dosen']);
+        $user = session('user');
+        if (!ApiService::hasRole($user, 'pm')) {
+            abort(403, 'Akses ditolak: Anda bukan Project Manager (PM).');
+        }
+        session(['active_role' => 'pm']);
         return redirect()->route('dashboard');
     })->name('dashboard-pm');
 
     Route::get('/dashboard-mahasiswa', function () {
+        $user = session('user');
+        if (!ApiService::hasRole($user, 'mahasiswa')) {
+            abort(403, 'Akses ditolak: Anda bukan Mahasiswa.');
+        }
         session(['active_role' => 'mahasiswa']);
         return redirect()->route('dashboard');
     })->name('dashboard-mahasiswa');
 
+    Route::get('/mahasiswa/project', fn () => view('mahasiswa.project', ['user' => session('user')]))->name('mahasiswa.project');
+    Route::get('/mahasiswa/task', fn () => view('mahasiswa.task', ['user' => session('user')]))->name('mahasiswa.task');
+
+    // PM sub-pages (Protected by role pm)
+    Route::middleware('auth.api:pm|dosen')->prefix('pm')->name('pm.')->group(function () {
+        Route::get('/project', fn () => view('pm.project', ['user' => session('user')]))->name('project');
+        Route::get('/anggota-tim', fn () => view('pm.anggota-tim', ['user' => session('user')]))->name('anggota-tim');
+        Route::get('/task-timeline', fn () => view('pm.task-timeline', ['user' => session('user')]))->name('task-timeline');
+    });
+
     Route::get('/dashboard-jurusan', function () {
+        $user = session('user');
+        if (!ApiService::hasRole($user, 'jurusan')) {
+            abort(403, 'Akses ditolak: Anda bukan Pihak Jurusan.');
+        }
         session(['active_role' => 'jurusan']);
         return redirect()->route('dashboard');
     })->name('dashboard-jurusan');
 
-    // ── Pengurus TEFA sub-pages ──
-    Route::get('/pengurus/projek', fn () => view('pengurus.projek', ['user' => session('user')]))->name('pengurus.projek');
-    Route::get('/pengurus/klien-mitra', fn () => view('pengurus.klien-mitra', ['user' => session('user')]))->name('pengurus.klien-mitra');
-    Route::get('/pengurus/dosen', fn () => view('pengurus.dosen', ['user' => session('user')]))->name('pengurus.dosen');
-    Route::get('/pengurus/mahasiswa', fn () => view('pengurus.mahasiswa', ['user' => session('user')]))->name('pengurus.mahasiswa');
-    Route::get('/pengurus/validasi-proposal', fn () => view('pengurus.validasi-proposal', ['user' => session('user')]))->name('pengurus.validasi-proposal');
-    Route::get('/pengurus/keuangan', fn () => view('pengurus.keuangan', ['user' => session('user')]))->name('pengurus.keuangan');
-    Route::get('/pengurus/monitoring', fn () => view('pengurus.monitoring', ['user' => session('user')]))->name('pengurus.monitoring');
+    // Pengurus TEFA sub-pages (Protected by role pengurus_tefa)
+    Route::middleware('auth.api:pengurus_tefa')->prefix('pengurus-tefa')->name('pengurus-tefa.')->group(function () {
+        Route::get('/projek', fn () => view('pengurus-tefa.projek', ['user' => session('user')]))->name('projek');
+        Route::get('/klien-mitra', fn () => view('pengurus-tefa.klien-mitra', ['user' => session('user')]))->name('klien-mitra');
+        Route::get('/dosen', fn () => view('pengurus-tefa.dosen', ['user' => session('user')]))->name('dosen');
+        Route::get('/mahasiswa', fn () => view('pengurus-tefa.mahasiswa', ['user' => session('user')]))->name('mahasiswa');
+        Route::get('/validasi-proposal', fn () => view('pengurus-tefa.validasi-proposal', ['user' => session('user')]))->name('validasi-proposal');
+        Route::get('/keuangan', fn () => view('pengurus-tefa.keuangan', ['user' => session('user')]))->name('keuangan');
+        Route::get('/monitoring', fn () => view('pengurus-tefa.monitoring', ['user' => session('user')]))->name('monitoring');
+    });
 });

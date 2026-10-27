@@ -50,3 +50,9 @@
 [x-cloak] {
     display: none !important;
 }
+
+/* Sembunyikan ikon reveal bawaan browser (Edge/Chromium) */
+input::-ms-reveal,
+input::-ms-clear {
+    display: none !important;
+}

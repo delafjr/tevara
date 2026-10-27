@@ -2,28 +2,21 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\ApiService;
 use Closure;
 use Illuminate\Http\Request;
 
 class AuthApi
 {
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next, ?string $role = null)
     {
         if (!session('api_token') || !session('user')) {
-            if (app()->environment('local')) {
-                session([
-                    'api_token'   => 'mock-dev-token',
-                    'user'        => [
-                        'id'    => 1,
-                        'name'  => 'Dimas Setiawan',
-                        'email' => 'dimas@polines.ac.id',
-                        'roles' => ['pm', 'dosen'],
-                    ],
-                    'active_role' => session('active_role') ?? 'dosen',
-                ]);
-                return $next($request);
-            }
             return redirect()->route('login');
+        }
+
+        $allowedRoles = $role ? explode('|', $role) : [];
+        if ($allowedRoles && !array_intersect($allowedRoles, ApiService::getUserRoles(session('user')))) {
+            abort(403, 'Akses ditolak: Anda tidak memiliki akses untuk role ' . $role);
         }
 
         return $next($request);

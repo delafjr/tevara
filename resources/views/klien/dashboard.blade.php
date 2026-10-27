@@ -7,13 +7,114 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 {{-- == ( halaman / title ) == --}}
     <title>Dashboard - Tevara</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased">
 
 @php
     $user = $user ?? session('user');
-    $userName = $user['name'];
+    $userName = $user['name'] ?? 'Klien';
+
+    $dash = $dashboard ?? [];
+    $totalProjects     = (int) ($dash['total_projects'] ?? 0);
+    $activeProjects    = (int) ($dash['active_projects'] ?? 0);
+    $completedProjects = (int) ($dash['completed_projects'] ?? 0);
+    $waitingReview     = (int) ($dash['waiting_review'] ?? 0);
+    $projects          = is_array($dash['projects'] ?? null) ? $dash['projects'] : [];
+    $projectCount      = count($projects);
+
+    // Warna pill status berdasarkan status dari API.
+    $statusStyle = function (string $status): string {
+        $s = strtolower($status);
+
+        if (str_contains($s, 'reject') || str_contains($s, 'cancel')) {
+            return 'bg-rose-50 text-rose-600';
+        }
+        if (str_contains($s, 'review') || str_contains($s, 'pending') || str_contains($s, 'menunggu')) {
+            return 'bg-amber-100 text-amber-700';
+        }
+        if (str_contains($s, 'complete') || str_contains($s, 'selesai') || $s === 'done') {
+            return 'bg-green-50 text-green-700';
+        }
+        if (str_contains($s, 'active') || str_contains($s, 'progress') || $s === 'berjalan') {
+            return 'bg-[#EAF3FF] text-[#0B3B82]';
+        }
+
+        return 'bg-slate-100 text-slate-600';
+    };
+
+    $progressColor = fn ($p) => $p >= 100 ? '#16A34A' : ($p >= 50 ? '#0B3B82' : '#F59E0B');
+
+    // category_distribution dari API berbentuk [{"web": 2}, ...] → ratakan lalu jumlahkan per kategori.
+    $categoryCounts = [];
+    foreach (($dash['category_distribution'] ?? []) as $entry) {
+        if (is_array($entry)) {
+            foreach ($entry as $key => $count) {
+                $key = strtolower((string) $key);
+                $categoryCounts[$key] = ($categoryCounts[$key] ?? 0) + (int) $count;
+            }
+        }
+    }
+
+    $categoryDefaults = [
+        ['label' => 'Website',    'color' => '#0B3B82'],
+        ['label' => 'IoT & Emb.', 'color' => '#FFB800'],
+        ['label' => 'Aplikasi',   'color' => '#4A6FA5'],
+        ['label' => 'Sistem',     'color' => '#94A3B8'],
+    ];
+    $categoryKeyMap = [
+        'web' => 0, 'website' => 0,
+        'iot' => 1, 'embedded' => 1,
+        'app' => 2, 'apps' => 2, 'aplikasi' => 2, 'mobile' => 2,
+        'sis' => 3, 'sistem' => 3, 'software' => 3, 'system' => 3,
+    ];
+
+    $categoryValues = [0, 0, 0, 0];
+    $categoryOther = 0;
+    foreach ($categoryCounts as $key => $count) {
+        $idx = $categoryKeyMap[$key] ?? null;
+        if ($idx === null) {
+            $categoryOther += $count;
+        } else {
+            $categoryValues[$idx] += $count;
+        }
+    }
+
+    $categoryChart = [];
+    foreach ($categoryDefaults as $i => $default) {
+        $categoryChart[] = [
+            'label' => $default['label'],
+            'color' => $default['color'],
+            'count' => $categoryValues[$i],
+        ];
+    }
+    if ($categoryOther > 0) {
+        $categoryChart[] = ['label' => 'Lainnya', 'color' => '#CBD5E1', 'count' => $categoryOther];
+    }
+
+    // Segmen donut chart (r = 40 → keliling 251.2).
+    $donutCircumference = 251.2;
+    $donutTotal = array_sum(array_column($categoryChart, 'count'));
+    $donutSegments = [];
+    $donutOffset = 0;
+    if ($donutTotal > 0) {
+        foreach ($categoryChart as $segment) {
+            if ($segment['count'] <= 0) {
+                continue;
+            }
+            $length = ($segment['count'] / $donutTotal) * $donutCircumference;
+            $donutSegments[] = [
+                'color'     => $segment['color'],
+                'dasharray' => round($length, 2) . ' ' . round($donutCircumference - $length, 2),
+                'offset'    => -round($donutOffset, 2),
+            ];
+            $donutOffset += $length;
+        }
+    }
+
+    $totalPages = max(1, (int) ceil($projectCount / 10));
 @endphp
 
 {{-- == ( layout utama : sidebar + main ) == --}}
@@ -45,10 +146,6 @@
                 </div>
 
                 <div class="relative z-10 flex flex-col items-end gap-2 flex-shrink-0">
-                    <span class="inline-flex items-center gap-2 bg-white border border-slate-200 shadow-sm text-[12.5px] font-semibold text-[#1E293B] px-3.5 py-2 rounded-lg">
-                        <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
-                        {{ now()->isoFormat('dddd, D MMMM Y') }}
-                    </span>
                     <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[11.5px] font-semibold px-3 py-1.5 rounded-lg">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
                         Data terbaru
@@ -61,10 +158,10 @@
 
                 @php
                 $stats = [
-                    ['label' => 'Total Proyek',         'value' => 10, 'sub' => 'Inisiatif Terdaftar', 'color' => '#0B3B82', 'icon' => 'folder'],
-                    ['label' => 'Proyek Berjalan',      'value' => 5,  'sub' => 'Dalam Pengerjaan',    'color' => '#0B3B82', 'icon' => 'play'],
-                    ['label' => 'Proyek Selesai',       'value' => 2,  'sub' => 'Siap Produksi',       'color' => '#0B3B82', 'icon' => 'check'],
-                    ['label' => 'Menunggu Persetujuan', 'value' => 3,  'sub' => 'Perlu Review',        'color' => '#F59E0B', 'icon' => 'clock-file'],
+                    ['label' => 'Total Proyek',         'value' => $totalProjects,     'sub' => 'Inisiatif Terdaftar', 'color' => '#0B3B82', 'icon' => 'folder'],
+                    ['label' => 'Proyek Berjalan',      'value' => $activeProjects,    'sub' => 'Dalam Pengerjaan',    'color' => '#0B3B82', 'icon' => 'play'],
+                    ['label' => 'Proyek Selesai',       'value' => $completedProjects, 'sub' => 'Siap Produksi',       'color' => '#0B3B82', 'icon' => 'check'],
+                    ['label' => 'Menunggu Persetujuan', 'value' => $waitingReview,     'sub' => 'Perlu Review',        'color' => '#F59E0B', 'icon' => 'clock-file'],
                 ];
                 @endphp
 
@@ -98,14 +195,14 @@
             {{-- == ( tombol aksi : ajukan & lihat semua ) == --}}
             <div class="flex items-center justify-between gap-6">
                 <div class="flex items-center gap-3">
-                    <a href="#"
+                    <a href="{{ route('klien.ajukan-proyek') }}"
                        class="flex items-center gap-2 bg-[#0B3B82] text-white rounded-full px-5 py-3 font-semibold text-sm hover:bg-[#0a3372] transition-colors shadow-sm">
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                         </svg>
                         Ajukan Proyek Baru
                     </a>
-                    <a href="#"
+                    <a href="{{ route('klien.projek-saya') }}"
                        class="flex items-center gap-2 bg-white border border-slate-200 text-[#1E293B] rounded-full px-5 py-3 font-semibold text-sm hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors shadow-sm">
                         <svg class="w-4 h-4 flex-shrink-0 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
@@ -134,7 +231,7 @@
                             <p class="font-bold text-[#1E293B] text-[16px]">Proyek Saya</p>
                             <p class="text-xs text-slate-400 mt-0.5">Semua project yang ditugaskan ke Anda</p>
                         </div>
-                        <a href="#" class="text-xs font-bold text-[#0B3B82] hover:underline flex items-center gap-1.5">
+                        <a href="{{ route('klien.projek-saya') }}" class="text-xs font-bold text-[#0B3B82] hover:underline flex items-center gap-1.5">
                             Lihat Semua
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                         </a>
@@ -146,67 +243,57 @@
                             <thead>
                                 <tr class="bg-[#EAF3FF]/60">
                                     <th class="text-left text-[11px] font-bold uppercase tracking-wide text-slate-500 px-6 py-3">Nama Project</th>
-                                    <th class="text-left text-[11px] font-bold uppercase tracking-wide text-slate-500 px-3 py-3">Klien / Mitra</th>
                                     <th class="text-left text-[11px] font-bold uppercase tracking-wide text-slate-500 px-3 py-3">Status</th>
                                     <th class="text-left text-[11px] font-bold uppercase tracking-wide text-slate-500 px-3 py-3 w-36">Progress</th>
                                 </tr>
                             </thead>
                             {{-- == ( baris data & progress bar : loop proyek ) == --}}
                             <tbody class="divide-y divide-slate-50">
+                                @forelse($projects as $project)
                                 @php
-                                $projects = [
-                                    ['name' => 'Sistem Informasi UMKM',        'client' => 'PT. ABC Indonesia',      'status' => 'Berjalan', 'progress' => 75],
-                                    ['name' => 'Smart Farming IoT',            'client' => 'CV. Tani Maju',          'status' => 'Review',   'progress' => 45],
-                                    ['name' => 'Website Company Profile',      'client' => 'PT. DEF Solusi',         'status' => 'Selesai',  'progress' => 100],
-                                    ['name' => 'Aplikasi Manajemen Inventori', 'client' => 'PT. Logistik Nusantara', 'status' => 'Berjalan', 'progress' => 30],
-                                ];
-
-                                $statusStyle = [
-                                    'Berjalan' => 'bg-[#EAF3FF] text-[#0B3B82]',
-                                    'Review'   => 'bg-amber-100 text-amber-700',
-                                    'Selesai'  => 'bg-green-50 text-green-700',
-                                ];
-
-                                $progressColor = fn($p) => $p >= 100 ? '#16A34A' : ($p >= 50 ? '#0B3B82' : '#F59E0B');
+                                    $projectStatus = (string) ($project['status'] ?? '-');
+                                    $projectProgress = max(0, min(100, (int) ($project['progress'] ?? 0)));
                                 @endphp
-
-                                @foreach($projects as $project)
                                 <tr class="hover:bg-slate-50/60 transition-colors">
                                     <td class="px-6 py-4">
-                                        <p class="font-semibold text-[#1E293B] text-[13px] leading-snug">{{ $project['name'] }}</p>
+                                        <p class="font-semibold text-[#1E293B] text-[13px] leading-snug">{{ $project['title'] ?? '-' }}</p>
                                     </td>
                                     <td class="px-3 py-4">
-                                        <p class="text-[13px] text-slate-600 leading-snug">{{ $project['client'] }}</p>
-                                    </td>
-                                    <td class="px-3 py-4">
-                                        <span class="text-[11px] font-bold px-2.5 py-1 rounded-full {{ $statusStyle[$project['status']] ?? 'bg-slate-100 text-slate-600' }}">
-                                            {{ $project['status'] }}
+                                        <span class="text-[11px] font-bold px-2.5 py-1 rounded-full {{ $statusStyle($projectStatus) }}">
+                                            {{ $projectStatus }}
                                         </span>
                                     </td>
                                     <td class="px-3 py-4 w-36">
                                         <div class="flex items-center gap-2">
                                             <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                                 <div class="h-full rounded-full transition-all"
-                                                     style="width: {{ $project['progress'] }}%; background-color: {{ $progressColor($project['progress']) }}">
+                                                     style="width: {{ $projectProgress }}%; background-color: {{ $progressColor($projectProgress) }}">
                                                 </div>
                                             </div>
-                                            <span class="text-[11px] font-bold text-slate-500 w-8 text-right">{{ $project['progress'] }}%</span>
+                                            <span class="text-[11px] font-bold text-slate-500 w-8 text-right">{{ $projectProgress }}%</span>
                                         </div>
                                     </td>
                                 </tr>
-                                @endforeach
+                                @empty
+                                <tr>
+                                    <td colspan="3" class="px-6 py-10 text-center">
+                                        <p class="text-sm font-semibold text-[#1E293B]">Belum ada proyek</p>
+                                        <p class="text-xs text-slate-400 mt-1">Proyek yang Anda ajukan akan muncul di sini.</p>
+                                    </td>
+                                </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
 
                     {{-- == ( pagination tabel ) == --}}
                     <div class="px-6 py-4 flex items-center justify-between">
-                        <p class="text-[11.5px] text-slate-400">Menampilkan <span class="font-semibold">1–4</span> dari <span class="font-semibold">10</span> proyek</p>
+                        <p class="text-[11.5px] text-slate-400">Menampilkan <span class="font-semibold">{{ $projectCount > 0 ? '1–' . $projectCount : '0' }}</span> dari <span class="font-semibold">{{ max($totalProjects, $projectCount) }}</span> proyek</p>
                         <div class="flex items-center gap-1.5">
                             <button class="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
                             </button>
-                            @foreach([1, 2, 3] as $page)
+                            @foreach(range(1, $totalPages) as $page)
                             <button class="w-7 h-7 rounded-md text-xs font-semibold transition-colors {{ $page === 1 ? 'bg-[#EAF3FF] text-[#0B3B82]' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700' }}">{{ $page }}</button>
                             @endforeach
                             <button class="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
@@ -229,41 +316,24 @@
                     </div>
 
                     {{-- SVG Donut --}}
-                    <div class="flex items-center justify-center my-2" x-data="{
-                        segments: [
-                            { label: 'Website',    value: 6, color: '#0B3B82', pct: 40 },
-                            { label: 'IoT & Emb.', value: 4, color: '#FFB800', pct: 26.67 },
-                            { label: 'Aplikasi',   value: 3, color: '#4A6FA5', pct: 20 },
-                            { label: 'Sistem',     value: 2, color: '#94A3B8', pct: 13.33 },
-                        ],
-                        total: 15,
-                        get arcs() {
-                            let offset = 0;
-                            return this.segments.map(s => {
-                                const dasharray = (s.pct / 100) * 251.2;
-                                const dashoffset = -offset * 2.512;
-                                offset += s.pct;
-                                return { ...s, dasharray, dashoffset };
-                            });
-                        }
-                    }">
+                    <div class="flex items-center justify-center my-2">
                         <div class="relative w-44 h-44">
                             <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
                                 <circle cx="50" cy="50" r="40" fill="none" stroke="#F1F5F9" stroke-width="16"/>
-                                <template x-for="arc in arcs" :key="arc.label">
+                                @foreach($donutSegments as $segment)
                                     <circle
                                         cx="50" cy="50" r="40"
                                         fill="none"
-                                        :stroke="arc.color"
+                                        stroke="{{ $segment['color'] }}"
                                         stroke-width="16"
                                         stroke-linecap="butt"
-                                        :stroke-dasharray="`${arc.dasharray} ${251.2 - arc.dasharray}`"
-                                        :stroke-dashoffset="arc.dashoffset"
+                                        stroke-dasharray="{{ $segment['dasharray'] }}"
+                                        stroke-dashoffset="{{ $segment['offset'] }}"
                                     />
-                                </template>
+                                @endforeach
                             </svg>
                             <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                <p class="text-3xl font-bold text-[#1E293B]" x-text="total">15</p>
+                                <p class="text-3xl font-bold text-[#1E293B]">{{ $totalProjects }}</p>
                                 <p class="text-[11px] text-slate-400 font-bold tracking-wide">PROYEK</p>
                             </div>
                         </div>
@@ -271,15 +341,7 @@
 
                     {{-- == ( legenda donut 2 kolom ) == --}}
                     <div class="mt-5 grid grid-cols-2 gap-x-4 gap-y-2.5">
-                        @php
-                        $donutItems = [
-                            ['label' => 'Website',    'count' => 6, 'color' => '#0B3B82'],
-                            ['label' => 'IoT & Emb.', 'count' => 4, 'color' => '#FFB800'],
-                            ['label' => 'Aplikasi',   'count' => 3, 'color' => '#4A6FA5'],
-                            ['label' => 'Sistem',     'count' => 2, 'color' => '#94A3B8'],
-                        ];
-                        @endphp
-                        @foreach($donutItems as $item)
+                        @foreach($categoryChart as $item)
                         <div class="flex items-center gap-2">
                             <span class="w-2.5 h-2.5 rounded-sm flex-shrink-0" style="background-color: {{ $item['color'] }}"></span>
                             <span class="text-[12.5px] text-slate-600 truncate">{{ $item['label'] }}</span>

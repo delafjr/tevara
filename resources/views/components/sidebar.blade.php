@@ -2,26 +2,25 @@
 
 @php
     $user = session('user') ?? [];
-    $currentRole = session('active_role') ?? ($user['roles'][0] ?? 'klien');
-    if ($currentRole === 'pm') {
-        $currentRole = 'dosen';
+    $allowedRoles = \App\Services\ApiService::getEffectiveRoles($user);
+    $currentRole = session('active_role') ?? ($allowedRoles[0] ?? 'klien');
+
+    // Pastikan currentRole ada di role yang diizinkan user
+    if (!empty($allowedRoles) && !in_array($currentRole, $allowedRoles, true)) {
+        $currentRole = $allowedRoles[0];
     }
 
-    $userName = $user['name'] ?? match($currentRole) {
-        'dosen', 'pm' => 'Dimas Setiawan',
-        'pengurus_tefa' => 'Indra Pratama',
-        'mahasiswa' => 'Rian Hidayat',
-        'jurusan' => 'Kajur Elektro',
-        default => 'Budi Santoso'
-    };
+    $userName = $user['name'] ?? 'User';
 
     // Ekstrak 2 huruf inisial dari nama
-    $words = array_values(array_filter(explode(' ', $userName), fn($w) => !empty($w) && !str_contains($w, '.') && !str_contains($w, ',')));
-    $initials = '';
-    if (count($words) >= 2) {
-        $initials = mb_substr($words[0], 0, 1) . mb_substr($words[1], 0, 1);
-    } elseif (count($words) === 1) {
-        $initials = mb_substr($words[0], 0, 2);
+    $cleanWords = array_values(array_filter(
+        explode(' ', $userName),
+        fn($w) => !empty($w) && !str_contains($w, '.') && !str_contains($w, ',')
+    ));
+    if (count($cleanWords) >= 2) {
+        $initials = mb_substr($cleanWords[0], 0, 1) . mb_substr($cleanWords[1], 0, 1);
+    } elseif (count($cleanWords) === 1) {
+        $initials = mb_substr($cleanWords[0], 0, 2);
     } else {
         $initials = mb_substr($userName, 0, 2);
     }
@@ -36,9 +35,13 @@
             'label' => 'Mahasiswa',
             'sub'   => 'Mahasiswa',
         ],
-        'dosen' => [
+        'pm' => [
             'label' => 'Project Manager',
-            'sub'   => 'Dosen / PM',
+            'sub'   => 'Project Manager',
+        ],
+        'dosen' => [
+            'label' => 'Dosen',
+            'sub'   => 'Dosen Pengampu',
         ],
         'pengurus_tefa' => [
             'label' => 'Pengurus TeFa',
@@ -50,36 +53,48 @@
         ],
     ];
 
-    $roleLabel = $rolesConfig[$currentRole]['label'] ?? 'User';
+    // Filter hanya role yang dimiliki user dari BE
+    $availableRoles = array_intersect_key($rolesConfig, array_flip($allowedRoles));
+    if (empty($availableRoles)) {
+        $availableRoles = [$currentRole => $rolesConfig[$currentRole] ?? ['label' => ucfirst($currentRole), 'sub' => '']];
+    }
+
+    $roleLabel = $rolesConfig[$currentRole]['label'] ?? ucfirst($currentRole);
 
     // Menu sidebar sesuai spesifikasi tiap role
     $menus = [
         'klien' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'ajukan-projek','label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => '#'],
-            ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => '#'],
-            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => '#'],
+            ['id' => 'ajukan-projek','label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => route('klien.ajukan-proyek')],
+            ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => route('klien.projek-saya')],
+            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => route('klien.tagihan')],
         ],
         'mahasiswa' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => '#'],
-            ['id' => 'task-saya',    'label' => 'Task Saya',             'icon' => 'task',           'href' => '#'],
+            ['id' => 'project',      'label' => 'Project',               'icon' => 'project',        'href' => route('mahasiswa.project')],
+            ['id' => 'task-saya',    'label' => 'Task Saya',             'icon' => 'task',           'href' => route('mahasiswa.task')],
+        ],
+        'pm' => [
+            ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
+            ['id' => 'project',      'label' => 'Project',               'icon' => 'project',        'href' => route('pm.project')],
+            ['id' => 'anggota-tim',  'label' => 'Anggota & Tim',         'icon' => 'team',           'href' => route('pm.anggota-tim')],
+            ['id' => 'task-timeline','label' => 'Task & Timeline',       'icon' => 'task',           'href' => route('pm.task-timeline')],
         ],
         'dosen' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'project',      'label' => 'Project',               'icon' => 'project',        'href' => '#'],
-            ['id' => 'anggota-tim',  'label' => 'Anggota & Tim',         'icon' => 'team',           'href' => '#'],
-            ['id' => 'task-timeline','label' => 'Task & Timeline',       'icon' => 'task',           'href' => '#'],
+            ['id' => 'project',      'label' => 'Project',               'icon' => 'project',        'href' => route('pm.project')],
+            ['id' => 'anggota-tim',  'label' => 'Anggota & Tim',         'icon' => 'team',           'href' => route('pm.anggota-tim')],
+            ['id' => 'task-timeline','label' => 'Task & Timeline',       'icon' => 'task',           'href' => route('pm.task-timeline')],
         ],
         'pengurus_tefa' => [
             ['id' => 'dashboard',         'label' => 'Dashboard',         'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'projek',            'label' => 'Projek',            'icon' => 'project',        'href' => route('pengurus.projek')],
-            ['id' => 'klien-mitra',       'label' => 'Klien & Mitra',     'icon' => 'team',           'href' => route('pengurus.klien-mitra')],
-            ['id' => 'dosen',             'label' => 'Dosen',             'icon' => 'team',           'href' => route('pengurus.dosen')],
-            ['id' => 'mahasiswa',         'label' => 'Mahasiswa',         'icon' => 'team',           'href' => route('pengurus.mahasiswa')],
-            ['id' => 'validasi-proposal', 'label' => 'Validasi Proposal', 'icon' => 'proposal',       'href' => route('pengurus.validasi-proposal')],
-            ['id' => 'keuangan',          'label' => 'Keuangan',          'icon' => 'tagihan',        'href' => route('pengurus.keuangan')],
-            ['id' => 'monitoring',        'label' => 'Monitoring',        'icon' => 'monitoring',     'href' => route('pengurus.monitoring')],
+            ['id' => 'projek',            'label' => 'Projek',            'icon' => 'project',        'href' => route('pengurus-tefa.projek')],
+            ['id' => 'klien-mitra',       'label' => 'Klien & Mitra',     'icon' => 'team',           'href' => route('pengurus-tefa.klien-mitra')],
+            ['id' => 'dosen',             'label' => 'Dosen',             'icon' => 'team',           'href' => route('pengurus-tefa.dosen')],
+            ['id' => 'mahasiswa',         'label' => 'Mahasiswa',         'icon' => 'team',           'href' => route('pengurus-tefa.mahasiswa')],
+            ['id' => 'validasi-proposal', 'label' => 'Validasi Proposal', 'icon' => 'proposal',       'href' => route('pengurus-tefa.validasi-proposal')],
+            ['id' => 'keuangan',          'label' => 'Keuangan',          'icon' => 'tagihan',        'href' => route('pengurus-tefa.keuangan')],
+            ['id' => 'monitoring',        'label' => 'Monitoring',        'icon' => 'monitoring',     'href' => route('pengurus-tefa.monitoring')],
         ],
         'jurusan' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
@@ -92,12 +107,12 @@
     $currentMenu = $menus[$currentRole] ?? $menus['klien'];
 @endphp
 
-<aside class="w-64 min-h-screen bg-[#F4F7FC] border-r border-slate-200/70 flex flex-col fixed top-0 left-0 z-30 select-none">
+<aside data-role="{{ $currentRole }}" class="w-64 min-h-screen bg-[#F8FAFC] border-r border-slate-200/70 flex flex-col fixed top-0 left-0 z-30 select-none">
 
     {{-- ===== LOGO TEVARA ===== --}}
     <div class="px-6 py-6 border-b border-slate-200/50 flex items-center">
         <a href="{{ route('dashboard') }}" class="block">
-            <img src="{{ asset('images/logo-tevara.png') }}" alt="TEVARA Knowledge into Action" class="h-8 w-auto max-w-[185px] object-contain">
+            <img src="{{ asset('images/tevara-logo.png') }}" alt="TEVARA Knowledge into Action" class="h-8 w-auto max-w-[185px] object-contain">
         </a>
     </div>
 
@@ -132,14 +147,22 @@
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                         </svg>
                     @elseif($item['icon'] === 'task')
-                        {{-- Task & Timeline / Calendar checklist icon --}}
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
-                            <rect width="18" height="18" x="3" y="4" rx="2"/>
-                            <path d="M16 2v4"/>
-                            <path d="M8 2v4"/>
-                            <path d="M3 10h18"/>
-                            <path d="m9 16 2 2 4-4"/>
-                        </svg>
+                        @if($currentRole === 'mahasiswa')
+                            {{-- Circular Task Icon matching student design --}}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                                <circle cx="12" cy="12" r="9"/>
+                                <polyline points="9 12 11.5 14.5 15.5 9.5"/>
+                            </svg>
+                        @else
+                            {{-- Task & Timeline / Calendar checklist icon --}}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                                <rect width="18" height="18" x="3" y="4" rx="2"/>
+                                <path d="M16 2v4"/>
+                                <path d="M8 2v4"/>
+                                <path d="M3 10h18"/>
+                                <path d="m9 16 2 2 4-4"/>
+                            </svg>
+                        @endif
                     @elseif($item['icon'] === 'ajukan-projek')
                         {{-- Plus circle icon --}}
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
@@ -168,7 +191,7 @@
                         </svg>
                     @endif
                 </span>
-                <span class="flex-1 truncate">{{ $item['label'] }}</span>
+                <span class="flex-1 truncate">                <span class="sidebar-label">{{ $item['label'] }}</span></span>
             </a>
         @endforeach
     </nav>
@@ -192,12 +215,12 @@
             >
                 <div class="px-2.5 py-1.5 flex items-center justify-between border-b border-slate-100 mb-1">
                     <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Switch Role</span>
-                    <span class="text-[10px] font-semibold text-[#0B3B82] bg-[#EAF3FF] px-2 py-0.5 rounded-full">5 Role</span>
+                    <span class="text-[10px] font-semibold text-[#0B3B82] bg-[#EAF3FF] px-2 py-0.5 rounded-full">{{ count($availableRoles) }} Role</span>
                 </div>
 
                 {{-- Role Choices --}}
                 <div class="space-y-0.5 py-1">
-                    @foreach($rolesConfig as $rKey => $rMeta)
+                    @foreach($availableRoles as $rKey => $rMeta)
                         @php
                             $isCurrent = ($currentRole === $rKey);
                         @endphp
@@ -240,19 +263,28 @@
             <button
                 @click="openRoleMenu = !openRoleMenu"
                 type="button"
-                class="w-full bg-white rounded-2xl p-3 flex items-center gap-3 shadow-xs border border-slate-100 hover:border-slate-200 transition-all duration-150 text-left cursor-pointer group"
+                class="w-full bg-white rounded-2xl p-3 flex items-center justify-between gap-3 shadow-xs border border-slate-100 hover:border-slate-200 transition-all duration-150 text-left cursor-pointer group"
                 title="Klik untuk ganti role"
             >
                 <div class="flex items-center gap-3 min-w-0 flex-1">
-                    {{-- Initials Badge --}}
-                    <div class="w-10 h-10 rounded-xl bg-[#0B1E3F] flex items-center justify-center text-white font-bold text-xs tracking-wider flex-shrink-0 shadow-xs">
-                        {{ $initials }}
+                    {{-- Avatar with user icon --}}
+                    <div class="w-9 h-9 rounded-full bg-[#0E1F40] flex items-center justify-center text-white flex-shrink-0 shadow-xs">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+                        </svg>
                     </div>
                     <div class="min-w-0 flex-1">
                         <p class="text-[13px] font-bold text-[#0F172A] leading-tight truncate">{{ $userName }}</p>
-                        <p class="text-[11px] text-slate-400 font-normal leading-tight mt-0.5 truncate">{{ $roleLabel }}</p>
+                        <span class="inline-block bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold px-2 py-0.5 rounded-md mt-0.5 leading-none">
+                            {{ $roleLabel }}
+                        </span>
                     </div>
                 </div>
+                <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 transition-transform flex-shrink-0"
+                     :class="openRoleMenu ? 'rotate-180' : ''"
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"/>
+                </svg>
             </button>
 
         </div>
