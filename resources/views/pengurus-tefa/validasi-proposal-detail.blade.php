@@ -50,7 +50,7 @@
 <div class="flex min-h-screen">
     <x-sidebar active="validasi-proposal" />
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
-        <main class="flex-1 px-8 py-7 space-y-6">
+        <main class="flex-1 px-8 py-7 pb-32 space-y-6">
 
             {{-- Breadcrumb --}}
             <div class="flex items-center justify-between gap-4">
@@ -260,38 +260,58 @@
                             </div>
                         </section>
 
-                        <section class="bg-white rounded-2xl border border-slate-100 shadow-sm px-6 py-6">
-                            <h2 class="text-[13px] font-bold text-[#1E293B]">Keputusan Review</h2>
-                            <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Pilih tindakan untuk proposal ini.</p>
-
-                            <div class="mt-4 space-y-2.5">
-                                <button type="button"
-                                        class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-4 py-2.5 text-xs font-bold text-white shadow-sm shadow-green-600/20 hover:bg-[#15803D] hover:shadow-md transition-all">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                                    Setujui
-                                </button>
-
-                                <button type="button"
-                                        class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-700 hover:bg-amber-100 hover:border-amber-300 transition-all">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>
-                                    Butuh Revisi
-                                </button>
-
-                                <button type="button"
-                                        class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-100 hover:border-red-300 transition-all">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                                    Tolak
-                                </button>
-                            </div>
-                        </section>
                     </div>
                 </div>
             @endif
         </main>
 
-        <footer class="px-8 py-4 border-t border-slate-100 bg-white">
-            <p class="text-[11px] text-slate-400 font-medium">© {{ date('Y') }} TEVARA · Politeknik Negeri Semarang · Teaching Factory</p>
-        </footer>
+        @unless ($error)
+            {{-- Review action dock --}}
+            <div class="fixed bottom-0 left-64 right-0 z-30 px-8 pb-5 pointer-events-none">
+                <div class="pointer-events-auto mx-auto max-w-[1500px] overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-2xl shadow-slate-900/10 backdrop-blur-md">
+                    <div class="h-1 bg-gradient-to-r from-[#0B3B82] via-[#2F6BD8] to-[#FFB800]"></div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-4 px-5 py-3.5">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="w-10 h-10 rounded-xl bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0 ring-1 ring-[#0B3B82]/10">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/>
+                                </svg>
+                            </span>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <p class="text-xs font-bold text-[#1E293B]">Keputusan Review</p>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border {{ $statusStyle($status) }}">{{ $status }}</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-0.5 truncate">Pilih tindakan untuk proposal {{ $proposal['proposal_code'] ?? '-' }}.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button"
+                                    class="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-50 hover:border-red-300 transition-all">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                Tolak
+                            </button>
+
+                            <button type="button"
+                                    class="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-700 hover:bg-amber-100 hover:border-amber-300 transition-all">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>
+                                Butuh Revisi
+                            </button>
+
+                            <div class="hidden sm:block h-6 w-px bg-slate-200 mx-1"></div>
+
+                            <button type="button"
+                                    class="inline-flex items-center gap-2 rounded-xl bg-[#16A34A] px-5 py-2.5 text-xs font-bold text-white shadow-sm shadow-green-600/20 hover:bg-[#15803D] hover:shadow-md transition-all">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                Setujui
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endunless
     </div>
 </div>
 </body>
