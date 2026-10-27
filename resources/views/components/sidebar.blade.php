@@ -105,25 +105,26 @@
     ];
 
     $currentMenu = $menus[$currentRole] ?? $menus['klien'];
+    $isCompact = count($currentMenu) > 5;
 @endphp
 
 <aside data-role="{{ $currentRole }}" class="w-64 min-h-screen bg-surface-soft border-r border-slate-200/70 flex flex-col fixed top-0 left-0 z-30 select-none">
 
     {{-- ===== LOGO TEVARA ===== --}}
-    <div class="px-6 py-6 border-b border-slate-200/50 flex items-center">
-        <a href="{{ route('dashboard') }}" class="block">
-            <img src="{{ asset('images/tevara-logo.png') }}" alt="TEVARA Knowledge into Action" class="h-8 w-auto max-w-[185px] object-contain">
+    <div class="px-6 py-5.5 border-b border-slate-200/50 flex items-center">
+        <a href="{{ route('dashboard') }}" class="block transition-opacity hover:opacity-95">
+            <img src="{{ asset('images/tevara-logo.png') }}" alt="TEVARA Knowledge into Action" class="h-9 w-auto max-w-[190px] object-contain">
         </a>
     </div>
 
     {{-- ===== NAV MENU ===== --}}
-    <nav class="flex-1 px-3.5 py-4 space-y-1.5 overflow-y-auto">
+    <nav class="flex-1 px-4 {{ $isCompact ? 'py-4 space-y-1.5' : 'py-5 space-y-2.5' }} overflow-y-auto">
         @foreach($currentMenu as $item)
             @php
                 $isActive = ($active === $item['id']);
             @endphp
             <a href="{{ $item['href'] }}"
-               class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-[13.5px] transition-all duration-150 {{ $isActive ? 'bg-[#EAF3FF] text-[#0B3B82] font-semibold' : 'text-[#64748B] hover:text-[#1E293B] hover:bg-white/70 font-medium' }}">
+               class="flex items-center gap-3.5 {{ $isCompact ? 'px-3.5 py-2.5 text-[13.5px]' : 'px-4 py-3 text-[14px]' }} rounded-xl transition-all duration-150 {{ $isActive ? 'bg-[#EAF3FF] text-[#0B3B82] font-semibold shadow-2xs' : 'text-[#64748B] hover:text-[#1E293B] hover:bg-white/70 font-medium' }}">
                 <span class="w-5 h-5 flex-shrink-0 {{ $isActive ? 'text-[#0B3B82]' : 'text-[#64748B]' }}">
                     @if($item['icon'] === 'dashboard')
                         {{-- Bento / Grid 4-square icon --}}
