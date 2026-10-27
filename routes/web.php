@@ -5,28 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Main page (Public: accessible by guest or logged-in users)
-Route::get('/', function (ApiService $api) {
-    $apiUrl = $api->getBaseUrl() . '/users';
-    $initialData = null;
-    $initialError = null;
-
-    try {
-        if (session('api_token')) {
-            $response = $api->get('/users');
-            if ($response->successful()) {
-                $initialData = $response->json();
-            }
-        }
-    } catch (\Throwable $e) {
-        $initialError = $e->getMessage();
-    }
-
-    return view('welcome', [
-        'apiUrl'       => $apiUrl,
-        'initialData'  => $initialData,
-        'initialError' => $initialError,
-    ]);
-});
+Route::get('/', fn () => view('welcome'));
 
 // Authentication routes
 Route::prefix('auth')->group(function () {
@@ -180,8 +159,13 @@ Route::middleware('auth.api')->group(function () {
         Route::get('/tagihan-pembayaran', fn () => redirect()->route('klien.tagihan'));
         Route::get('/pembayaran', fn () => redirect()->route('klien.tagihan'));
 
-        Route::get('/ajukan-proyek', fn () => view('klien.ajukan-proyek', ['user' => session('user')]))
-            ->name('ajukan-proyek');
+        Route::get('/ajukan-proyek', function (ApiService $api) {
+            return view('klien.ajukan-proyek', [
+                'user'       => session('user'),
+                'company'    => $api->getCompanyProfile(),
+                'categories' => $api->getCategories(),
+            ]);
+        })->name('ajukan-proyek');
 
         Route::post('/ajukan-proyek', function (Request $request, ApiService $api) {
             // Modul dikirim sebagai JSON string dari repeater Alpine, decode dulu agar rule array berlaku.
@@ -274,9 +258,97 @@ Route::middleware('auth.api')->group(function () {
 
     // PM sub-pages (Protected by role pm)
     Route::middleware('auth.api:pm|dosen')->prefix('pm')->name('pm.')->group(function () {
-        Route::get('/project', fn () => view('pm.project', ['user' => session('user')]))->name('project');
-        Route::get('/anggota-tim', fn () => view('pm.anggota-tim', ['user' => session('user')]))->name('anggota-tim');
+        Route::get('/project', function (ApiService $api) {
+            $projectData = [];
+
+            try {
+                $response = $api->get('dosen/dashboard');
+                if ($response->successful()) {
+                    $projectData = $response->json('data', []);
+                }
+            } catch (\Throwable) {
+                $projectData = [];
+            }
+
+            return view('pm.project', [
+                'user'        => session('user'),
+                'projectData' => is_array($projectData) ? $projectData : [],
+            ]);
+        })->name('project');
+        Route::get('/anggota-tim', function (ApiService $api) {
+            $dashboard = [];
+
+            try {
+                $response = $api->get('dosen/dashboard');
+                if ($response->successful()) {
+                    $dashboard = $response->json('data', []);
+                }
+            } catch (\Throwable) {
+                $dashboard = [];
+            }
+
+            return view('pm.anggota-tim', [
+                'user'      => session('user'),
+                'dashboard' => is_array($dashboard) ? $dashboard : [],
+            ]);
+        })->name('anggota-tim');
         Route::get('/task-timeline', fn () => view('pm.task-timeline', ['user' => session('user')]))->name('task-timeline');
+
+        Route::post('/tasks', function (Request $request, ApiService $api) {
+            $validated = $request->validate([
+                'project_id' => ['required', 'string', 'max:50'],
+                'title'      => ['required', 'string', 'max:255'],
+                'due_date'   => ['required', 'date'],
+                'assignee'   => ['nullable', 'string', 'max:100'],
+            ]);
+
+            // Project demo belum memiliki endpoint/task record di backend.
+            // Simpan sementara di flash session agar bisa dipresentasikan.
+            if (str_starts_with($validated['project_id'], 'PRJ-2026/')) {
+                return back()
+                    ->with('demo_task_created', $validated)
+                    ->with('success', 'Task demo berhasil ditambahkan ke kolom Todo.');
+            }
+
+            try {
+                $response = $api->post('dosen/tasks', $validated);
+                return $response->successful()
+                    ? back()->with('success', 'Task baru berhasil ditambahkan.')
+                    : back()->with('error', $response->json('message') ?? 'Task gagal disimpan ke backend.');
+            } catch (\Throwable $e) {
+                return back()->with('error', 'Backend task tidak dapat dihubungi: ' . $e->getMessage());
+            }
+        })->name('task.store');
+
+        Route::post('/tasks/{task}/review', function (Request $request, ApiService $api, string $task) {
+            $validated = $request->validate([
+                'decision' => ['required', 'in:revision,approve'],
+                'note'     => ['nullable', 'string', 'max:500'],
+            ]);
+
+            // Task pada halaman demo belum memiliki record di backend. Simpan
+            // keputusan di flash session agar alur review tetap bisa dipresentasikan.
+            if (str_starts_with($task, 'PRJ-2026-001-')) {
+                return back()
+                    ->with('demo_task_review', [
+                        'task'     => $task,
+                        'decision' => $validated['decision'],
+                        'note'     => $validated['note'] ?? null,
+                    ])
+                    ->with('success', $validated['decision'] === 'approve'
+                        ? 'Task demo berhasil disetujui dan ditandai selesai.'
+                        : 'Permintaan revisi demo berhasil dikirim ke mahasiswa.');
+            }
+
+            try {
+                $response = $api->post('dosen/tasks/' . rawurlencode($task) . '/review', $validated);
+                return $response->successful()
+                    ? back()->with('success', $validated['decision'] === 'approve' ? 'Task berhasil disetujui dan ditandai selesai.' : 'Permintaan revisi berhasil dikirim.')
+                    : back()->with('error', $response->json('message') ?? 'Review task gagal disimpan ke backend.');
+            } catch (\Throwable $e) {
+                return back()->with('error', 'Backend review tidak dapat dihubungi: ' . $e->getMessage());
+            }
+        })->name('task.review');
     });
 
     Route::get('/dashboard-jurusan', function () {
@@ -294,7 +366,57 @@ Route::middleware('auth.api')->group(function () {
         Route::get('/klien-mitra', fn () => view('pengurus-tefa.klien-mitra', ['user' => session('user')]))->name('klien-mitra');
         Route::get('/dosen', fn () => view('pengurus-tefa.dosen', ['user' => session('user')]))->name('dosen');
         Route::get('/mahasiswa', fn () => view('pengurus-tefa.mahasiswa', ['user' => session('user')]))->name('mahasiswa');
-        Route::get('/validasi-proposal', fn () => view('pengurus-tefa.validasi-proposal', ['user' => session('user')]))->name('validasi-proposal');
+        Route::get('/validasi-proposal', function (ApiService $api) {
+            $pendingProposals = [];
+            $allProposals = [];
+
+            try {
+                $pendingResponse = $api->get('proposals/pending');
+                if ($pendingResponse->successful() && is_array($pendingResponse->json())) {
+                    $pendingProposals = $pendingResponse->json();
+                }
+            } catch (\Throwable) {
+                // Biarkan kosong; halaman tetap dirender dengan empty state.
+            }
+
+            try {
+                $allResponse = $api->get('proposals');
+                if ($allResponse->successful() && is_array($allResponse->json())) {
+                    $allProposals = $allResponse->json();
+                }
+            } catch (\Throwable) {
+                // Statistik memakai data yang tersedia saja.
+            }
+
+            return view('pengurus-tefa.validasi-proposal', [
+                'user'         => session('user'),
+                'proposals'    => $pendingProposals,
+                'allProposals' => $allProposals,
+            ]);
+        })->name('validasi-proposal');
+        Route::get('/validasi-proposal/{proposal}', function (ApiService $api, int $proposal) {
+            $detail = [];
+            $error = null;
+
+            try {
+                $response = $api->get("proposals/{$proposal}/pending");
+                $data = $response->json();
+
+                if ($response->successful() && is_array($data)) {
+                    $detail = $data;
+                } else {
+                    $error = $response->json('message') ?? 'Detail proposal tidak ditemukan.';
+                }
+            } catch (\Throwable) {
+                $error = 'Gagal mengambil detail proposal dari server TEVARA.';
+            }
+
+            return view('pengurus-tefa.validasi-proposal-detail', [
+                'user'     => session('user'),
+                'proposal' => $detail,
+                'error'    => $error,
+            ]);
+        })->whereNumber('proposal')->name('validasi-proposal.detail');
         Route::get('/keuangan', fn () => view('pengurus-tefa.keuangan', ['user' => session('user')]))->name('keuangan');
         Route::get('/monitoring', fn () => view('pengurus-tefa.monitoring', ['user' => session('user')]))->name('monitoring');
     });

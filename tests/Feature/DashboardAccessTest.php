@@ -11,7 +11,7 @@ class DashboardAccessTest extends TestCase
     {
         $response = $this->get('/');
         $response->assertStatus(200);
-        $response->assertSee('Tevara');
+        $response->assertSee('TEVARA');
     }
 
     public function test_authenticated_user_can_access_main_page(): void
@@ -212,7 +212,7 @@ class DashboardAccessTest extends TestCase
         ])->get(route('pm.anggota-tim'));
 
         $teamResponse->assertOk();
-        $teamResponse->assertSee('PRJ-2026/014');
+        $teamResponse->assertSee('PRJ-DEMO-001');
 
         $taskResponse = $this->withSession([
             'api_token' => 'dummy-token',

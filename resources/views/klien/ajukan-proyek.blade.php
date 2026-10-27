@@ -18,11 +18,11 @@
 
     // Profil diambil dari GET /users/company (prioritas), lalu fallback ke session user.
     $profile = [
-        'instansi' => $user['company_name'] ?? $user['name'] ?? '',
-        'pic'      => $user['name'] ?? '',
-        'telepon'  => $user['phone_number'] ?? '',
-        'email'    => $user['email'] ?? '',
-        'jabatan'  => $user['position'] ?? '',
+        'instansi' => $company['company_name'] ?? $user['company_name'] ?? $user['name'] ?? '',
+        'pic'      => $company['name'] ?? $user['name'] ?? '',
+        'telepon'  => $company['no_hp'] ?? $user['phone_number'] ?? '',
+        'email'    => $company['email'] ?? $user['email'] ?? '',
+        'jabatan'  => $company['position'] ?? $user['position'] ?? '',
     ];
     $deadlineMin = now()->addDays(30)->toDateString();
 
