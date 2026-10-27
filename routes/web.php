@@ -8,7 +8,60 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => view('welcome'));
 
 // Authentication routes
-Route::prefix('auth')->group(function () {
+$googleAuthHandler = function (Request $request, ApiService $api) {
+    $validated = $request->validate([
+        'id_token'   => ['nullable', 'string', 'required_without:credential'],
+        'credential' => ['nullable', 'string', 'required_without:id_token'],
+    ]);
+
+    $idToken = $validated['id_token'] ?? $validated['credential'];
+
+    try {
+        $response = $api->loginWithGoogle($idToken);
+
+        if ($response->successful() && $response->json('success')) {
+            $data = $response->json('data');
+            $user = $data['user'];
+            $allowedRoles = ApiService::getEffectiveRoles($user);
+
+            if (empty($allowedRoles)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akun tidak memiliki hak akses role.',
+                ], 403);
+            }
+
+            session([
+                'api_token'   => $data['token'],
+                'user'        => $user,
+                'active_role' => $allowedRoles[0],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $response->json('message') ?? 'Login Google berhasil',
+                'data'    => [
+                    'user'         => $user,
+                    'token'        => $data['token'],
+                    'redirect_url' => route('dashboard'),
+                ],
+            ])->cookie('api_token', $data['token'], 60 * 24 * 7, '/', null, false, false);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $response->json('message') ?? 'Token Google tidak valid.',
+            'errors'  => $response->json('errors'),
+        ], $response->status() ?: 422);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Tidak dapat terhubung ke server backend: ' . $e->getMessage(),
+        ], 500);
+    }
+};
+
+Route::prefix('auth')->group(function () use ($googleAuthHandler) {
     Route::get('/login', function () {
         if (session('api_token') && session('user')) {
             return redirect()->route('dashboard');
@@ -50,6 +103,8 @@ Route::prefix('auth')->group(function () {
         }
     });
 
+    Route::post('/google', $googleAuthHandler)->name('auth.google');
+
     Route::get('/register', fn () => view('auth.register'))->name('register');
     Route::post('/register', function (Request $request) {
         $request->validate([
@@ -66,6 +121,9 @@ Route::prefix('auth')->group(function () {
         return redirect()->route('login');
     })->name('logout');
 });
+
+// Alias endpoint API v1 for Google Auth
+Route::post('/api/v1/auth/google', $googleAuthHandler)->name('api.auth.google');
 
 // Protected routes (require valid session api_token and user)
 Route::middleware('auth.api')->group(function () {

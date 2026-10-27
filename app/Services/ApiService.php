@@ -32,6 +32,16 @@ class ApiService
     }
 
     /**
+     * Authenticate user with Google id_token via backend API.
+     */
+    public function loginWithGoogle(string $idToken): Response
+    {
+        return Http::timeout(10)->post($this->baseUrl . '/auth/google', [
+            'id_token' => $idToken,
+        ]);
+    }
+
+    /**
      * Create an HTTP client pending request with Bearer token.
      */
     public function withToken(?string $token = null): PendingRequest

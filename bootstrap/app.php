@@ -11,6 +11,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->encryptCookies(except: [
+            'api_token',
+        ]);
+        $middleware->validateCsrfTokens(except: [
+            'api/v1/*',
+            'auth/google',
+        ]);
         $middleware->alias([
             'auth.api' => \App\Http\Middleware\AuthApi::class,
         ]);
