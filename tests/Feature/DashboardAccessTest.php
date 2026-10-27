@@ -212,7 +212,7 @@ class DashboardAccessTest extends TestCase
         ])->get(route('pm.anggota-tim'));
 
         $teamResponse->assertOk();
-        $teamResponse->assertSee('PRJ-2026/014');
+        $teamResponse->assertSee('PRJ-DEMO-001');
 
         $taskResponse = $this->withSession([
             'api_token' => 'dummy-token',
