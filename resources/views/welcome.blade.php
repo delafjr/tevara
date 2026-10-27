@@ -24,9 +24,6 @@
         {{-- Logo --}}
         <a href="{{ url('/') }}" class="flex items-center gap-3 group">
             <img src="{{ asset('images/tevara-logo.png') }}" alt="TEVARA Logo" class="h-9 w-auto max-w-[170px] object-contain transition-transform group-hover:scale-105">
-            <span class="hidden sm:inline-flex items-center text-[10px] font-extrabold uppercase tracking-widest text-[#0B3B82] bg-[#EAF3FF] px-2.5 py-1 rounded-full border border-[#0B3B82]/15">
-                Teaching Factory
-            </span>
         </a>
 
         {{-- Desktop Navigation Links --}}
@@ -194,7 +191,7 @@
                             badge: 'Lead & Supervisor',
                             badgeColor: 'bg-amber-100 text-amber-800',
                             title: 'Manajemen Task & Bimbingan Teknis',
-                            desc: 'Dosen memimpin arsitektur sistem, membagi task ke mahasiswa, mengontrol timeline sprint, dan memastikan kualitas deliverables.',
+                            desc: 'Dosen memimpin arsitektur sistem, membagi task ke mahasiswa, mengontrol timeline dan memastikan kualitas deliverables.',
                             highlight: 'Pengawasan langsung memastikan standar industri terpenuhi.'
                         },
                         mahasiswa: {
@@ -375,12 +372,12 @@
                     title: 'Penunjukan Dosen & Tim Mahasiswa',
                     actor: 'Dosen PM & Mahasiswa',
                     desc: 'Dosen PM ditugaskan untuk membentuk tim mahasiswa bertalenta sesuai spesialisasi teknologi yang dibutuhkan proyek.',
-                    deliverable: 'Susunan Anggota Tim & Timeline Sprint',
+                    deliverable: 'Susunan Anggota Tim & Timeline Pengerjaan',
                     iconBg: 'bg-indigo-50 text-indigo-700'
                 },
                 {
                     num: 4,
-                    title: 'Pengerjaan Modul & Sprint',
+                    title: 'Pengerjaan Modul & Monitoring',
                     actor: 'Seluruh Tim Proyek',
                     desc: 'Eksekusi pengerjaan berbasis modul dengan update progress task berkala, code review mingguan, dan demo milestone.',
                     deliverable: 'Source Code, Task Completed & Progress %',
