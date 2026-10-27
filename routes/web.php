@@ -415,6 +415,29 @@ Route::middleware('auth.api')->group(function () {
                 'allProposals' => $allProposals,
             ]);
         })->name('validasi-proposal');
+        Route::get('/validasi-proposal/{proposal}', function (ApiService $api, int $proposal) {
+            $detail = [];
+            $error = null;
+
+            try {
+                $response = $api->get("proposals/{$proposal}/pending");
+                $data = $response->json();
+
+                if ($response->successful() && is_array($data)) {
+                    $detail = $data;
+                } else {
+                    $error = $response->json('message') ?? 'Detail proposal tidak ditemukan.';
+                }
+            } catch (\Throwable) {
+                $error = 'Gagal mengambil detail proposal dari server TEVARA.';
+            }
+
+            return view('pengurus-tefa.validasi-proposal-detail', [
+                'user'     => session('user'),
+                'proposal' => $detail,
+                'error'    => $error,
+            ]);
+        })->whereNumber('proposal')->name('validasi-proposal.detail');
         Route::get('/keuangan', fn () => view('pengurus-tefa.keuangan', ['user' => session('user')]))->name('keuangan');
         Route::get('/monitoring', fn () => view('pengurus-tefa.monitoring', ['user' => session('user')]))->name('monitoring');
     });
