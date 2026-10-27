@@ -5,28 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Main page (Public: accessible by guest or logged-in users)
-Route::get('/', function (ApiService $api) {
-    $apiUrl = $api->getBaseUrl() . '/users';
-    $initialData = null;
-    $initialError = null;
-
-    try {
-        if (session('api_token')) {
-            $response = $api->get('/users');
-            if ($response->successful()) {
-                $initialData = $response->json();
-            }
-        }
-    } catch (\Throwable $e) {
-        $initialError = $e->getMessage();
-    }
-
-    return view('welcome', [
-        'apiUrl'       => $apiUrl,
-        'initialData'  => $initialData,
-        'initialError' => $initialError,
-    ]);
-});
+Route::get('/', fn () => view('welcome'));
 
 // Authentication routes
 Route::prefix('auth')->group(function () {
