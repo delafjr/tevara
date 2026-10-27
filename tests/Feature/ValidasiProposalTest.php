@@ -31,6 +31,8 @@ class ValidasiProposalTest extends TestCase
                     'proposal_code'    => 'PRSL-2026-490',
                     'client_name'      => 'PT. Maju Bersama Sentosa',
                     'title'            => 'Portal Berita Digital',
+                    'background'       => 'Kami membutuhkan portal berita digital yang mudah dikelola redaksi.',
+                    'target_audience'  => 'Masyarakat umum dan tim redaksi',
                     'category_name'    => 'Web',
                     'status'           => 'Submitted',
                     'desired_deadline' => '2027-05-25',
@@ -69,13 +71,17 @@ class ValidasiProposalTest extends TestCase
         $response->assertSee('PT. Maju Bersama Sentosa');
         $response->assertSee('Aplikasi Mobile Company Profile');
         $response->assertSee('Rp 10.000.000');
+        $response->assertSee('Kami membutuhkan portal berita digital yang mudah dikelola redaksi.');
+        $response->assertSee('Masyarakat umum dan tim redaksi');
+        $response->assertSee('Latar Belakang');
+        $response->assertSee('Target Pengguna');
         $response->assertSee('2 Proposal');
 
         Http::assertSent(fn ($request) => str_ends_with($request->url(), '/api/v1/proposals/pending')
             && $request->hasHeader('Authorization'));
     }
 
-    public function test_halaman_validasi_proposal_memakai_grid_dua_kolom_tanpa_pm_mahasiswa_dan_riwayat(): void
+    public function test_halaman_validasi_proposal_memakai_grid_penuh_tanpa_pm_mahasiswa_dan_riwayat(): void
     {
         $this->fakeApi();
 
@@ -83,7 +89,7 @@ class ValidasiProposalTest extends TestCase
             ->get('/pengurus-tefa/validasi-proposal');
 
         $response->assertOk();
-        $response->assertSee('grid-cols-2', false);
+        $response->assertSee('grid grid-cols-1 gap-4', false);
         $response->assertDontSee('PM:');
         $response->assertDontSee('mhs');
         $response->assertDontSee('Riwayat Validasi');

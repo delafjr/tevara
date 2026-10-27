@@ -99,7 +99,7 @@
                     <p class="font-semibold text-[#1E293B] text-[15px]">Proposal Menunggu Validasi</p>
                     <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">{{ $pendingCount }} Proposal</span>
                 </div>
-                <div class="grid grid-cols-2 gap-5">
+                <div class="grid grid-cols-1 gap-4">
                     @forelse($proposals as $p)
                     @php
                         $category = (string) ($p['category_name'] ?? 'Other');
@@ -113,6 +113,16 @@
                             </div>
                             <h3 class="font-bold text-[#1E293B] text-[13px] leading-tight mb-1">{{ $p['title'] ?? '-' }}</h3>
                             <p class="text-[10px] text-slate-400 font-mono">{{ $p['proposal_code'] ?? '-' }}</p>
+                        </div>
+                        <div class="px-5 py-4 border-b border-slate-100 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-[10px] font-bold tracking-wide uppercase text-slate-400 mb-1">Latar Belakang</p>
+                                <p class="text-[11.5px] text-slate-600 leading-relaxed whitespace-pre-line">{{ $p['background'] ?? '-' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold tracking-wide uppercase text-slate-400 mb-1">Target Pengguna</p>
+                                <p class="text-[11.5px] text-slate-600 leading-relaxed whitespace-pre-line">{{ $p['target_audience'] ?? '-' }}</p>
+                            </div>
                         </div>
                         <div class="px-5 py-3.5 space-y-1.5">
                             <div class="flex items-center gap-1.5">
@@ -141,7 +151,7 @@
                         </div>
                     </div>
                     @empty
-                    <div class="col-span-2 bg-white rounded-xl border border-dashed border-slate-200 px-6 py-12 text-center">
+                    <div class="col-span-1 bg-white rounded-xl border border-dashed border-slate-200 px-6 py-12 text-center">
                         <p class="text-sm font-semibold text-slate-600">Belum ada proposal yang menunggu validasi</p>
                         <p class="text-xs text-slate-400 mt-1">Proposal baru dari klien akan muncul di sini.</p>
                     </div>
