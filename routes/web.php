@@ -180,8 +180,13 @@ Route::middleware('auth.api')->group(function () {
         Route::get('/tagihan-pembayaran', fn () => redirect()->route('klien.tagihan'));
         Route::get('/pembayaran', fn () => redirect()->route('klien.tagihan'));
 
-        Route::get('/ajukan-proyek', fn () => view('klien.ajukan-proyek', ['user' => session('user')]))
-            ->name('ajukan-proyek');
+        Route::get('/ajukan-proyek', function (ApiService $api) {
+            return view('klien.ajukan-proyek', [
+                'user'       => session('user'),
+                'company'    => $api->getCompanyProfile(),
+                'categories' => $api->getCategories(),
+            ]);
+        })->name('ajukan-proyek');
 
         Route::post('/ajukan-proyek', function (Request $request, ApiService $api) {
             // Modul dikirim sebagai JSON string dari repeater Alpine, decode dulu agar rule array berlaku.
@@ -294,7 +299,34 @@ Route::middleware('auth.api')->group(function () {
         Route::get('/klien-mitra', fn () => view('pengurus-tefa.klien-mitra', ['user' => session('user')]))->name('klien-mitra');
         Route::get('/dosen', fn () => view('pengurus-tefa.dosen', ['user' => session('user')]))->name('dosen');
         Route::get('/mahasiswa', fn () => view('pengurus-tefa.mahasiswa', ['user' => session('user')]))->name('mahasiswa');
-        Route::get('/validasi-proposal', fn () => view('pengurus-tefa.validasi-proposal', ['user' => session('user')]))->name('validasi-proposal');
+        Route::get('/validasi-proposal', function (ApiService $api) {
+            $pendingProposals = [];
+            $allProposals = [];
+
+            try {
+                $pendingResponse = $api->get('proposals/pending');
+                if ($pendingResponse->successful() && is_array($pendingResponse->json())) {
+                    $pendingProposals = $pendingResponse->json();
+                }
+            } catch (\Throwable) {
+                // Biarkan kosong; halaman tetap dirender dengan empty state.
+            }
+
+            try {
+                $allResponse = $api->get('proposals');
+                if ($allResponse->successful() && is_array($allResponse->json())) {
+                    $allProposals = $allResponse->json();
+                }
+            } catch (\Throwable) {
+                // Statistik memakai data yang tersedia saja.
+            }
+
+            return view('pengurus-tefa.validasi-proposal', [
+                'user'         => session('user'),
+                'proposals'    => $pendingProposals,
+                'allProposals' => $allProposals,
+            ]);
+        })->name('validasi-proposal');
         Route::get('/keuangan', fn () => view('pengurus-tefa.keuangan', ['user' => session('user')]))->name('keuangan');
         Route::get('/monitoring', fn () => view('pengurus-tefa.monitoring', ['user' => session('user')]))->name('monitoring');
     });

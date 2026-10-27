@@ -7,7 +7,48 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased">
-@php $user = $user ?? session('user'); $firstName = explode(' ', $user['name'] ?? 'Pengurus')[0]; @endphp
+@php
+    $user = $user ?? session('user');
+    $firstName = explode(' ', $user['name'] ?? 'Pengurus')[0];
+
+    $proposals = is_array($proposals ?? null) ? $proposals : [];
+    $allProposals = is_array($allProposals ?? null) ? $allProposals : [];
+
+    $pendingCount = count($proposals);
+    $statusCounts = collect($allProposals)->countBy(fn ($p) => strtolower((string) ($p['status'] ?? '')));
+    $approvedCount = $statusCounts->get('approved', 0);
+    $revisionCount = $statusCounts->get('revision required', 0);
+    $totalProposalCount = count($allProposals) ?: $pendingCount;
+
+    $categoryStyle = [
+        'web'     => 'bg-blue-50 text-blue-700',
+        'mobile'  => 'bg-purple-50 text-purple-700',
+        'desktop' => 'bg-indigo-50 text-indigo-700',
+        'iot'     => 'bg-amber-50 text-amber-700',
+        'other'   => 'bg-slate-100 text-slate-600',
+    ];
+
+    $statusStyle = function (string $status): string {
+        $s = strtolower($status);
+
+        if (str_contains($s, 'revision') || str_contains($s, 'reject')) {
+            return 'bg-red-50 text-red-700';
+        }
+        if (str_contains($s, 'submitted') || str_contains($s, 'review')) {
+            return 'bg-amber-50 text-amber-700';
+        }
+        if (str_contains($s, 'approved')) {
+            return 'bg-green-50 text-green-700';
+        }
+
+        return 'bg-slate-100 text-slate-600';
+    };
+
+    $formatRupiah = fn ($value) => 'Rp ' . number_format((float) $value, 0, ',', '.');
+    $formatDate = fn ($value) => $value
+        ? \Carbon\Carbon::parse($value)->translatedFormat('d M Y')
+        : '—';
+@endphp
 <div class="flex min-h-screen">
     <x-sidebar active="validasi-proposal" />
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
@@ -34,7 +75,7 @@
                 <div class="relative z-10 flex-shrink-0">
                     <div class="flex items-center gap-2 bg-[#FFF9ED] border border-[#FFE8A3] rounded-xl px-5 py-2.5">
                         <div class="text-center">
-                            <p class="text-2xl font-bold text-[#FFB800]">7</p>
+                            <p class="text-2xl font-bold text-[#FFB800]">{{ $pendingCount }}</p>
                             <p class="text-slate-500 text-xs font-medium">Menunggu Validasi</p>
                         </div>
                     </div>
@@ -43,7 +84,7 @@
 
             {{-- Stats --}}
             <div class="grid grid-cols-4 gap-4">
-                @foreach([['7','Menunggu Validasi','#F59E0B'],['18','Disetujui','#16A34A'],['3','Dikembalikan','#EF4444'],['28','Total Proposal','#0B3B82']] as [$v,$l,$c])
+                @foreach([[ $pendingCount, 'Menunggu Validasi', '#F59E0B'], [ $approvedCount, 'Disetujui', '#16A34A'], [ $revisionCount, 'Dikembalikan', '#EF4444'], [ $totalProposalCount, 'Total Proposal', '#0B3B82']] as [$v, $l, $c])
                 <div class="bg-white rounded-xl px-5 py-5 border border-slate-100 shadow-sm">
                     <p class="text-3xl font-bold text-[#1E293B] leading-none">{{ $v }}</p>
                     <p class="text-xs text-slate-400 mt-1.5 font-medium">{{ $l }}</p>
@@ -56,49 +97,35 @@
             <div>
                 <div class="flex items-center justify-between mb-4">
                     <p class="font-semibold text-[#1E293B] text-[15px]">Proposal Menunggu Validasi</p>
-                    <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">7 Proposal</span>
+                    <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">{{ $pendingCount }} Proposal</span>
                 </div>
-                <div class="grid grid-cols-3 gap-5">
+                <div class="grid grid-cols-2 gap-5">
+                    @forelse($proposals as $p)
                     @php
-                    $proposals = [
-                        ['title'=>'Sistem Manajemen Parkir Cerdas','client'=>'Pemkot Semarang','pm'=>'Ari Wibowo','cat'=>'IoT','budget'=>'Rp 12.000.000','date'=>'18 Okt 2026','mhs'=>9,'duration'=>'4 bulan','desc'=>'Pengembangan sistem parkir berbasis sensor dan IoT untuk area perkotaan Semarang.'],
-                        ['title'=>'Platform E-Learning Pesantren','client'=>'Yayasan Al-Hikmah','pm'=>'Siti Rahayu','cat'=>'Website','budget'=>'Rp 8.500.000','date'=>'17 Okt 2026','mhs'=>6,'duration'=>'3 bulan','desc'=>'Sistem pembelajaran online berbasis web untuk membantu santri belajar dari rumah.'],
-                        ['title'=>'Aplikasi Absensi Wajah','client'=>'PT. Sejahtera','pm'=>'Budi Prasetyo','cat'=>'Aplikasi','budget'=>'Rp 15.000.000','date'=>'16 Okt 2026','mhs'=>5,'duration'=>'3 bulan','desc'=>'Aplikasi presensi karyawan menggunakan teknologi face recognition berbasis deep learning.'],
-                        ['title'=>'Website Profil UMKM Kreatif','client'=>'Dinas UMKM Jateng','pm'=>'Nadia Putri','cat'=>'Website','budget'=>'Rp 6.000.000','date'=>'15 Okt 2026','mhs'=>4,'duration'=>'2 bulan','desc'=>'Platform digital untuk mempromosikan produk UMKM kreatif di Jawa Tengah.'],
-                        ['title'=>'Sistem Monitoring Greenhouse','client'=>'CV. Agro Jaya','pm'=>'Rizky Pratama','cat'=>'IoT','budget'=>'Rp 18.000.000','date'=>'14 Okt 2026','mhs'=>7,'duration'=>'5 bulan','desc'=>'Monitoring suhu, kelembapan, dan nutrisi tanaman secara real-time menggunakan IoT.'],
-                        ['title'=>'Aplikasi Manajemen Koperasi','client'=>'Koperasi Warga Jaya','pm'=>'Thomas Elang','cat'=>'Aplikasi','budget'=>'Rp 9.500.000','date'=>'13 Okt 2026','mhs'=>5,'duration'=>'3 bulan','desc'=>'Sistem pengelolaan simpan pinjam dan anggota koperasi secara digital dan terintegrasi.'],
-                        ['title'=>'Dashboard Analytics Toko','client'=>'Toko Santosa Jaya','pm'=>'Dimas Setiawan','cat'=>'Website','budget'=>'Rp 7.000.000','date'=>'12 Okt 2026','mhs'=>4,'duration'=>'2 bulan','desc'=>'Dashboard analitik penjualan dan stok barang dengan visualisasi data yang komprehensif.'],
-                    ];
-                    $catColor=['IoT'=>'bg-amber-50 text-amber-700','Website'=>'bg-blue-50 text-blue-700','Aplikasi'=>'bg-purple-50 text-purple-700'];
+                        $category = (string) ($p['category_name'] ?? 'Other');
+                        $status = (string) ($p['status'] ?? '-');
                     @endphp
-                    @foreach($proposals as $p)
                     <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden hover:border-slate-200 hover:shadow-md transition-all">
                         <div class="px-5 py-4 border-b border-slate-100">
-                            <div class="flex items-center justify-between mb-2.5">
-                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg {{ $catColor[$p['cat']] ?? 'bg-slate-100 text-slate-600' }}">{{ $p['cat'] }}</span>
-                                <span class="text-[10px] text-slate-400 font-medium">{{ $p['date'] }}</span>
+                            <div class="flex items-center justify-between gap-3 mb-2.5">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg {{ $categoryStyle[strtolower($category)] ?? 'bg-slate-100 text-slate-600' }}">{{ $category }}</span>
+                                <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full {{ $statusStyle($status) }}">{{ $status }}</span>
                             </div>
-                            <h3 class="font-bold text-[#1E293B] text-[13px] leading-tight mb-1">{{ $p['title'] }}</h3>
-                            <p class="text-[11px] text-slate-500 leading-snug line-clamp-2">{{ $p['desc'] }}</p>
+                            <h3 class="font-bold text-[#1E293B] text-[13px] leading-tight mb-1">{{ $p['title'] ?? '-' }}</h3>
+                            <p class="text-[10px] text-slate-400 font-mono">{{ $p['proposal_code'] ?? '-' }}</p>
                         </div>
                         <div class="px-5 py-3.5 space-y-1.5">
                             <div class="flex items-center gap-1.5">
                                 <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z"/></svg>
-                                <span class="text-[11px] text-slate-600">{{ $p['client'] }}</span>
+                                <span class="text-[11px] text-slate-600">{{ $p['client_name'] ?? '-' }}</span>
                             </div>
                             <div class="flex items-center gap-1.5">
-                                <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
-                                <span class="text-[11px] text-slate-600">PM: {{ $p['pm'] }}</span>
+                                <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
+                                <span class="text-[11px] text-slate-600">Deadline {{ $formatDate($p['desired_deadline'] ?? null) }}</span>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                                    <span class="text-[11px] font-bold text-[#0B3B82]">{{ $p['budget'] }}</span>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/></svg>
-                                    <span class="text-[11px] text-slate-500">{{ $p['mhs'] }} mhs · {{ $p['duration'] }}</span>
-                                </div>
+                            <div class="flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                <span class="text-[11px] font-bold text-[#0B3B82]">{{ $formatRupiah($p['estimated_budget'] ?? 0) }}</span>
                             </div>
                         </div>
                         <div class="px-5 pb-4 flex gap-2">
@@ -113,48 +140,12 @@
                             </button>
                         </div>
                     </div>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- Riwayat Proposal --}}
-            <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <p class="font-semibold text-[#1E293B] text-[15px]">Riwayat Validasi</p>
-                    <span class="text-xs text-slate-400">21 proposal telah diproses</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b border-slate-100">
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-6 py-3">Nama Proposal</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Klien</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Tanggal</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Anggaran</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Hasil</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            @php
-                            $history = [
-                                ['name'=>'Sistem Informasi UMKM','client'=>'PT. ABC Indonesia','date'=>'5 Okt 2026','budget'=>'Rp 12.000.000','hasil'=>'Disetujui'],
-                                ['name'=>'Smart Farming IoT','client'=>'CV. Tani Maju','date'=>'2 Okt 2026','budget'=>'Rp 20.000.000','hasil'=>'Disetujui'],
-                                ['name'=>'Redesign Website Kampus','client'=>'Polines','date'=>'28 Sep 2026','budget'=>'Rp 5.000.000','hasil'=>'Dikembalikan'],
-                                ['name'=>'Aplikasi Inventori','client'=>'PT. Maju Sentosa','date'=>'20 Sep 2026','budget'=>'Rp 14.000.000','hasil'=>'Disetujui'],
-                            ];
-                            $hStyle=['Disetujui'=>'bg-green-50 text-green-700','Dikembalikan'=>'bg-red-50 text-red-700'];
-                            @endphp
-                            @foreach($history as $h)
-                            <tr class="hover:bg-slate-50/60 transition-colors">
-                                <td class="px-6 py-3 text-[13px] font-semibold text-[#1E293B]">{{ $h['name'] }}</td>
-                                <td class="px-3 py-3 text-[12px] text-slate-600">{{ $h['client'] }}</td>
-                                <td class="px-3 py-3 text-[12px] text-slate-500">{{ $h['date'] }}</td>
-                                <td class="px-3 py-3 text-[12px] font-semibold text-[#1E293B]">{{ $h['budget'] }}</td>
-                                <td class="px-3 py-3"><span class="text-[11px] font-semibold px-2.5 py-1 rounded-full {{ $hStyle[$h['hasil']] ?? 'bg-slate-100 text-slate-600' }}">{{ $h['hasil'] }}</span></td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    @empty
+                    <div class="col-span-2 bg-white rounded-xl border border-dashed border-slate-200 px-6 py-12 text-center">
+                        <p class="text-sm font-semibold text-slate-600">Belum ada proposal yang menunggu validasi</p>
+                        <p class="text-xs text-slate-400 mt-1">Proposal baru dari klien akan muncul di sini.</p>
+                    </div>
+                    @endforelse
                 </div>
             </div>
         </main>
