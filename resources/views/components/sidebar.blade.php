@@ -98,9 +98,9 @@
         ],
         'jurusan' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'ajukan-projek','label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => '#'],
-            ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => '#'],
-            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => '#'],
+            ['id' => 'ajukan',       'label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => url()->current() . '?page=ajukan'],
+            ['id' => 'projek',       'label' => 'Projek Saya',           'icon' => 'project',        'href' => url()->current() . '?page=projek'],
+            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => url()->current() . '?page=tagihan'],
         ],
     ];
 
