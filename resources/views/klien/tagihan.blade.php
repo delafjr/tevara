@@ -16,149 +16,114 @@
     $user = $user ?? session('user', []);
     $userName = $user['name'] ?? 'Budi Santoso';
 
-    $projectsBilling = [
-        [
-            'id'             => 'PRJ-2026/014',
-            'spk'            => 'SPK/TEFA/2026/008',
-            'spk_status'     => 'SPK Ditandatangani',
-            'spk_status_type'=> 'success',
-            'title'          => 'Sistem Monitoring Rantai Pasok Terpadu (IoT & Web)',
-            'period'         => 'Periode: 01 Agt 2026 s.d. 30 Nov 2026 • Skema: 3 Termin (30% - 40% - 30%)',
-            'total_value'    => 'Rp 75.000.000',
-            'paid_percent'   => 66.6,
-            'paid_status'    => '66.6% Terbayar',
-            'has_open'       => false,
-            'termins' => [
-                [
-                    'name'         => 'Termin 1 — Down Payment (30%)',
-                    'desc'         => 'Kick-off, Spesifikasi Teknis, dan Persetujuan Arsitektur Sistem',
-                    'nominal'      => 'Rp 22.500.000',
-                    'channel'      => 'Virtual Account BCA',
-                    'channel_icon' => 'bank',
-                    'status'       => 'verified',
-                    'status_label' => 'VERIFIED (Lunas)',
-                    'due_date'     => null,
-                    'can_download' => true,
-                    'can_upload'   => false,
-                ],
-                [
-                    'name'         => 'Termin 2 — Progres Lapangan & Integrasi IoT (40%)',
-                    'desc'         => 'Implementasi Firmware Sensor, Broker MQTT, dan Visualisasi Web',
-                    'nominal'      => 'Rp 30.000.000',
-                    'channel'      => 'Virtual Account BCA',
-                    'channel_icon' => 'bank',
-                    'status'       => 'verified',
-                    'status_label' => 'VERIFIED (Lunas)',
-                    'due_date'     => null,
-                    'can_download' => true,
-                    'can_upload'   => false,
-                ],
-                [
-                    'name'         => 'Termin 3 — Final UAT & Serah Terima (30%)',
-                    'desc'         => 'Uji Terima Pengguna (UAT) Final, Pelatihan Operator, & Handover',
-                    'nominal'      => 'Rp 22.500.000',
-                    'channel'      => 'BCA VA / Mandiri Giro',
-                    'channel_icon' => 'card',
-                    'status'       => 'pending',
-                    'status_label' => 'BELUM TERBUKA',
-                    'due_date'     => 'Est. 25 Nov 2026',
-                    'can_download' => false,
-                    'can_upload'   => false,
-                ],
-            ],
-        ],
-        [
-            'id'             => 'PRJ-2026/009',
-            'spk'            => 'SPK/TEFA/2026/005',
-            'spk_status'     => 'SPK Aktif',
-            'spk_status_type'=> 'success',
-            'has_open'       => true,
-            'open_badge'     => '! Tagihan Terbuka',
-            'title'          => 'Aplikasi Mobile Portal Layanan Nasabah & Pembayaran Digital',
-            'period'         => 'Periode: 10 Mei 2026 s.d. 30 Okt 2026 • Skema: 2 Termin (DP 50% & Pelunasan 50%)',
-            'total_value'    => 'Kontrak: Rp 60.000.000',
-            'paid_percent'   => 50.0,
-            'paid_status'    => '50.0%',
-            'active_action'  => 'Bayar Termin 2',
-            'termins' => [
-                [
-                    'name'         => 'Termin 1 — Down Payment (50%)',
-                    'desc'         => 'Kick-off & Approval System Architecture & UI/UX',
-                    'nominal'      => 'Rp 30.000.000',
-                    'channel'      => 'Virtual Account BCA',
-                    'channel_icon' => 'bank',
-                    'status'       => 'verified',
-                    'status_label' => 'VERIFIED (Lunas)',
-                    'due_date'     => null,
-                    'can_download' => true,
-                    'can_upload'   => false,
-                ],
-                [
-                    'name'         => 'Termin 2 — Pelunasan & Deployment (50%)',
-                    'is_urgent'    => true,
-                    'desc'         => 'UAT Final, User Training, & Penyerahan Source Code',
-                    'nominal'      => 'Rp 30.000.000',
-                    'channel'      => 'BCA VA / Mandiri Giro',
-                    'channel_icon' => 'card',
-                    'status'       => 'unpaid',
-                    'status_label' => 'MENUNGGU PEMBAYARAN',
-                    'due_date'     => 'Jatuh Tempo: 15 Okt 2026',
-                    'can_download' => false,
-                    'can_upload'   => true,
+    $hasRealBilling = !empty($projectsBilling);
+    if (!$hasRealBilling) {
+        $projectsBilling = [
+            [
+                'id'             => 'PRJ-2026/014',
+                'proposal_id'    => 1,
+                'spk'            => 'SPK/TEFA/2026/008',
+                'spk_status'     => 'SPK Ditandatangani',
+                'spk_status_type'=> 'success',
+                'title'          => 'Sistem Monitoring Rantai Pasok Terpadu (IoT & Web)',
+                'period'         => 'Periode: 01 Agt 2026 s.d. 30 Nov 2026 • Skema: 3 Termin (30% - 40% - 30%)',
+                'total_value'    => 'Rp 75.000.000',
+                'paid_percent'   => 66.6,
+                'paid_status'    => '66.6% Terbayar',
+                'has_open'       => false,
+                'termins' => [
+                    [
+                        'id'           => 1,
+                        'proposal_id'  => 1,
+                        'name'         => 'Termin 1 — Down Payment (30%)',
+                        'desc'         => 'Kick-off, Spesifikasi Teknis, dan Persetujuan Arsitektur Sistem',
+                        'nominal'      => 'Rp 22.500.000',
+                        'channel'      => 'Virtual Account BCA',
+                        'channel_icon' => 'bank',
+                        'status'       => 'verified',
+                        'status_label' => 'VERIFIED (Lunas)',
+                        'due_date'     => null,
+                        'can_download' => true,
+                        'can_upload'   => false,
+                    ],
+                    [
+                        'id'           => 2,
+                        'proposal_id'  => 1,
+                        'name'         => 'Termin 2 — Progres Lapangan & Integrasi IoT (40%)',
+                        'desc'         => 'Implementasi Firmware Sensor, Broker MQTT, dan Visualisasi Web',
+                        'nominal'      => 'Rp 30.000.000',
+                        'channel'      => 'Virtual Account BCA',
+                        'channel_icon' => 'bank',
+                        'status'       => 'verified',
+                        'status_label' => 'VERIFIED (Lunas)',
+                        'due_date'     => null,
+                        'can_download' => true,
+                        'can_upload'   => false,
+                    ],
+                    [
+                        'id'           => 3,
+                        'proposal_id'  => 1,
+                        'name'         => 'Termin 3 — Final UAT & Serah Terima (30%)',
+                        'desc'         => 'Uji Terima Pengguna (UAT) Final, Pelatihan Operator, & Handover',
+                        'nominal'      => 'Rp 22.500.000',
+                        'channel'      => 'BCA VA / Mandiri Giro',
+                        'channel_icon' => 'card',
+                        'status'       => 'pending',
+                        'status_label' => 'BELUM TERBUKA',
+                        'due_date'     => 'Est. 25 Nov 2026',
+                        'can_download' => false,
+                        'can_upload'   => false,
+                    ],
                 ],
             ],
-        ],
-        [
-            'id'             => 'PRJ-2026/021',
-            'spk'            => 'SPK/TEFA/2026/012',
-            'spk_status'     => 'Kontrak Aktif',
-            'spk_status_type'=> 'success',
-            'title'          => 'Smart Warehouse Environmental Sensor & Desktop Control Unit',
-            'period'         => 'Periode: 01 Sep 2026 s.d. 15 Jan 2027 • Skema: 3 Termin (DP 40% - Progres 30% - UAT 30%)',
-            'total_value'    => 'Nilai: Rp 50.000.000',
-            'paid_percent'   => 40.0,
-            'paid_status'    => '40.0% Terbayar',
-            'has_open'       => false,
-            'termins' => [
-                [
-                    'name'         => 'Termin 1 — Down Payment (40%)',
-                    'desc'         => 'Pengadaan Perangkat Keras Sensor & Desain Arsitektur Hardware',
-                    'nominal'      => 'Rp 20.000.000',
-                    'channel'      => 'Mandiri Giro',
-                    'channel_icon' => 'bank',
-                    'status'       => 'verified',
-                    'status_label' => 'VERIFIED (Lunas)',
-                    'due_date'     => null,
-                    'can_download' => true,
-                    'can_upload'   => false,
-                ],
-                [
-                    'name'         => 'Termin 2 — Progres Pengerjaan & Modul Desktop (30%)',
-                    'desc'         => 'Pengembangan GUI Desktop & Uji Kalibrasi Sensor Suhu Gudang',
-                    'nominal'      => 'Rp 15.000.000',
-                    'channel'      => 'BCA VA / Mandiri Giro',
-                    'channel_icon' => 'card',
-                    'status'       => 'verifying',
-                    'status_label' => 'DALAM VERIFIKASI',
-                    'due_date'     => 'Sedang Diverifikasi Keuangan TEFA',
-                    'can_download' => false,
-                    'can_upload'   => false,
-                ],
-                [
-                    'name'         => 'Termin 3 — UAT & Deployment Akhir (30%)',
-                    'desc'         => 'Instalasi Lapangan & Serah Terima Unit Kendali Desktop',
-                    'nominal'      => 'Rp 15.000.000',
-                    'channel'      => 'Mandiri Giro',
-                    'channel_icon' => 'card',
-                    'status'       => 'pending',
-                    'status_label' => 'BELUM TERBUKA',
-                    'due_date'     => 'Est. 15 Jan 2027',
-                    'can_download' => false,
-                    'can_upload'   => false,
+            [
+                'id'             => 'PRJ-2026/009',
+                'proposal_id'    => 2,
+                'spk'            => 'SPK/TEFA/2026/005',
+                'spk_status'     => 'SPK Aktif',
+                'spk_status_type'=> 'success',
+                'has_open'       => true,
+                'open_badge'     => '! Tagihan Terbuka',
+                'title'          => 'Aplikasi Mobile Portal Layanan Nasabah & Pembayaran Digital',
+                'period'         => 'Periode: 10 Mei 2026 s.d. 30 Okt 2026 • Skema: 2 Termin (DP 50% & Pelunasan 50%)',
+                'total_value'    => 'Kontrak: Rp 60.000.000',
+                'paid_percent'   => 50.0,
+                'paid_status'    => '50.0%',
+                'active_action'  => 'Bayar Termin 2',
+                'termins' => [
+                    [
+                        'id'           => 4,
+                        'proposal_id'  => 2,
+                        'name'         => 'Termin 1 — Down Payment (50%)',
+                        'desc'         => 'Kick-off & Approval System Architecture & UI/UX',
+                        'nominal'      => 'Rp 30.000.000',
+                        'channel'      => 'Virtual Account BCA',
+                        'channel_icon' => 'bank',
+                        'status'       => 'verified',
+                        'status_label' => 'VERIFIED (Lunas)',
+                        'due_date'     => null,
+                        'can_download' => true,
+                        'can_upload'   => false,
+                    ],
+                    [
+                        'id'           => 5,
+                        'proposal_id'  => 2,
+                        'name'         => 'Termin 2 — Pelunasan & Deployment (50%)',
+                        'is_urgent'    => true,
+                        'desc'         => 'UAT Final, User Training, & Penyerahan Source Code',
+                        'nominal'      => 'Rp 30.000.000',
+                        'channel'      => 'BCA VA / Mandiri Giro',
+                        'channel_icon' => 'card',
+                        'status'       => 'unpaid',
+                        'status_label' => 'MENUNGGU PEMBAYARAN',
+                        'due_date'     => 'Jatuh Tempo: 15 Okt 2026',
+                        'can_download' => false,
+                        'can_upload'   => true,
+                    ],
                 ],
             ],
-        ],
-    ];
+        ];
+    }
 @endphp
 
 <div class="flex min-h-screen"
@@ -166,11 +131,7 @@
          searchQuery: '',
          activeStatusFilter: 'Semua',
          selectedProjectFilter: 'all',
-         expanded: {
-             'PRJ-2026/014': false,
-             'PRJ-2026/009': true,
-             'PRJ-2026/021': false
-         },
+         expanded: {},
          toggle(id) {
              this.expanded[id] = !this.expanded[id];
          },
@@ -185,12 +146,7 @@
              navigator.clipboard.writeText(text);
              this.triggerToast(label + ' berhasil disalin ke clipboard!');
          },
-         uploadModalOpen: false,
-         uploadTargetTermin: 'Termin 2 — Pelunasan & Deployment (PRJ-2026/009)',
-         openUploadModal(terminName) {
-             if (terminName) this.uploadTargetTermin = terminName;
-             this.uploadModalOpen = true;
-         },
+
          matches(p) {
              if (this.selectedProjectFilter !== 'all' && p.id !== this.selectedProjectFilter) {
                  return false;
@@ -240,6 +196,27 @@
         </div>
 
         <main class="flex-1 px-8 py-7 space-y-6">
+
+            {{-- Flash Alert Messages --}}
+            @if (session('success'))
+                <div class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800 shadow-xs">
+                    <svg class="w-5 h-5 flex-shrink-0 text-emerald-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    <div>
+                        <p class="text-xs font-bold text-emerald-900">Berhasil</p>
+                        <p class="text-xs font-medium text-emerald-700 leading-relaxed">{{ session('success') }}</p>
+                    </div>
+                </div>
+            @endif
+
+            @if (session('error') || ($error ?? null))
+                <div class="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-700 shadow-xs">
+                    <svg class="w-5 h-5 flex-shrink-0 text-red-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
+                    <div>
+                        <p class="text-xs font-bold text-red-900">Perhatian</p>
+                        <p class="text-xs font-medium text-red-700 leading-relaxed">{{ session('error') ?? $error }}</p>
+                    </div>
+                </div>
+            @endif
 
             {{-- == ( header card : judul halaman & informasi sinkronisasi ) == --}}
             <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#EFF6FF] via-[#F4F8FE] to-[#FCF8EC] border border-blue-100/70 px-8 py-7 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -354,15 +331,33 @@
                 </div>
 
                 <div class="flex-shrink-0">
-                    <button type="button"
-                            @click="openUploadModal('Termin 2 — Pelunasan & Deployment (PRJ-2026/009)')"
-                            class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-5 py-3 rounded-xl flex items-center gap-2 shadow-sm transition cursor-pointer">
+                    @php
+                        // Cari termin urgent yang dapat diupload dari data projectsBilling
+                        $urgentProposalId = null;
+                        $urgentPaymentId  = null;
+                        foreach ($projectsBilling as $_proj) {
+                            foreach ($_proj['termins'] ?? [] as $_t) {
+                                if (!empty($_t['can_upload'])) {
+                                    $urgentProposalId = $_t['proposal_id'] ?? ($_proj['proposal_id'] ?? null);
+                                    $urgentPaymentId  = $_t['id'] ?? null;
+                                    break 2;
+                                }
+                            }
+                        }
+                    @endphp
+                    @if($urgentProposalId && $urgentPaymentId)
+                        <a href="{{ route('tagihan.unggah', ['proposal' => $urgentProposalId, 'payment' => $urgentPaymentId]) }}"
+                           class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-5 py-3 rounded-xl flex items-center gap-2 shadow-sm transition">
+                    @else
+                        <a href="{{ route('klien.tagihan') }}"
+                           class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-5 py-3 rounded-xl flex items-center gap-2 shadow-sm transition">
+                    @endif
                         {{-- Document Upload Icon --}}
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
                         </svg>
                         <span>Unggah Bukti Bayar Sekarang</span>
-                    </button>
+                    </a>
                 </div>
 
             </div>
@@ -552,21 +547,21 @@
                                                 @endif
                                             </div>
                                             <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                                                {{ $termin['desc'] }}
+                                                {{ $termin['desc'] ?? ($termin['name'] ?? '-') }}
                                             </p>
                                         </td>
 
                                         {{-- 2. Nominal SPK --}}
                                         <td class="px-5 py-4 whitespace-nowrap">
                                             <div class="font-bold text-slate-800 text-[13px]">
-                                                {{ $termin['nominal'] }}
+                                                {{ $termin['nominal'] ?? 'Rp 0' }}
                                             </div>
                                         </td>
 
                                         {{-- 3. Kanal Pembayaran --}}
                                         <td class="px-5 py-4 whitespace-nowrap">
                                             <div class="inline-flex items-center gap-2 text-slate-600 font-medium">
-                                                @if($termin['channel_icon'] === 'bank')
+                                                @if(($termin['channel_icon'] ?? 'bank') === 'bank')
                                                     {{-- Bank / Building Icon --}}
                                                     <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5M4.5 21V10.5M3 21h18"/>
@@ -578,7 +573,7 @@
                                                         <line x1="2" x2="22" y1="10" y2="10"/>
                                                     </svg>
                                                 @endif
-                                                <span>{{ $termin['channel'] }}</span>
+                                                <span>{{ $termin['channel'] ?? 'Transfer Bank' }}</span>
                                             </div>
                                         </td>
 
@@ -610,6 +605,18 @@
                                                     <span class="w-2 h-2 rounded-full bg-blue-600 animate-ping"></span>
                                                     {{ $termin['status_label'] }}
                                                 </span>
+                                            @elseif($termin['status'] === 'rejected')
+                                                <div class="space-y-1">
+                                                    <span class="inline-flex items-center gap-1.5 text-red-800 bg-red-100 px-3 py-1 rounded-full text-[11px] font-bold">
+                                                        <svg class="w-3.5 h-3.5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
+                                                        {{ $termin['status_label'] }}
+                                                    </span>
+                                                    @if(!empty($termin['verification_notes']))
+                                                        <p class="text-[10px] text-red-600 font-semibold pl-1">
+                                                            Catatan: {{ $termin['verification_notes'] }}
+                                                        </p>
+                                                    @endif
+                                                </div>
                                             @else
                                                 <span class="inline-flex items-center gap-1.5 text-slate-500 bg-slate-100 px-3 py-1 rounded-full text-xs font-semibold">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
@@ -630,14 +637,13 @@
                                                     <span>Unduh Kwitansi</span>
                                                 </button>
                                             @elseif($termin['can_upload'])
-                                                <button type="button"
-                                                        @click="openUploadModal('{{ $termin['name'] }}')"
-                                                        class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 shadow-xs transition cursor-pointer">
+                                                <a href="{{ route('tagihan.unggah', ['proposal' => $termin['proposal_id'] ?? ($p['proposal_id'] ?? 0), 'payment' => $termin['id'] ?? 0]) }}"
+                                                   class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 shadow-xs transition">
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/>
                                                     </svg>
                                                     <span>Unggah Bukti</span>
-                                                </button>
+                                                </a>
                                             @else
                                                 <span class="text-xs text-slate-300 font-medium italic">
                                                     Belum Tersedia
@@ -658,282 +664,8 @@
 
             </div>
 
-            {{-- == ( area bawah : rekening resmi & prosedur sla ) == --}}
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
-
-                {{-- Kolom Kiri (2 Kolom): Rekening Pembayaran Resmi TEVARA --}}
-                <div class="lg:col-span-2 space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h4 class="text-base font-bold text-slate-800">
-                            Rekening Pembayaran Resmi TEVARA
-                        </h4>
-                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
-                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
-                            </svg>
-                            Rekening Terverifikasi TEFA
-                        </span>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                        {{-- Kartu Bank Mandiri --}}
-                        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-5 flex flex-col justify-between hover:shadow-md transition">
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="bg-blue-50 text-[#0B3B82] text-[10.5px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wide">
-                                        BANK MANDIRI (GIRO)
-                                    </span>
-                                    <div class="w-7 h-7 rounded-lg bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5M4.5 21V10.5M3 21h18"/>
-                                        </svg>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <p class="text-[11px] text-slate-400 font-medium">Nomor Rekening:</p>
-                                    <div class="text-lg font-extrabold text-slate-800 font-mono tracking-wide mt-0.5">
-                                        142-00-9928172-1
-                                    </div>
-                                    <p class="text-xs text-slate-500 font-medium mt-1">
-                                        a.n. Teaching Factory Politeknik
-                                    </p>
-                                    <p class="text-[11px] text-slate-400 mt-0.5">
-                                        Kode Bank Mandiri: 008
-                                    </p>
-                                </div>
-                            </div>
-
-                            <button type="button"
-                                    @click="copyText('1420099281721', 'Nomor Rekening Mandiri')"
-                                    class="mt-5 w-full bg-[#EAF3FF] hover:bg-[#D9E9FF] text-[#0B3B82] text-xs font-semibold py-2.5 rounded-xl inline-flex items-center justify-center gap-1.5 transition cursor-pointer">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"/>
-                                </svg>
-                                <span>Salin Rekening</span>
-                            </button>
-                        </div>
-
-                        {{-- Kartu BCA Virtual Account --}}
-                        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-5 flex flex-col justify-between hover:shadow-md transition">
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="bg-emerald-50 text-emerald-700 text-[10.5px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wide">
-                                        BCA VIRTUAL ACCOUNT
-                                    </span>
-                                    <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
-                                        </svg>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <p class="text-[11px] text-slate-400 font-medium">Nomor Virtual Account Klien:</p>
-                                    <div class="text-lg font-extrabold text-slate-800 font-mono tracking-wide mt-0.5">
-                                        88720-08123456789
-                                    </div>
-                                    <p class="text-xs text-slate-500 font-medium mt-1">
-                                        a.n. TEVARA - {{ $userName }}
-                                    </p>
-                                    <p class="text-[11px] text-emerald-600 font-semibold mt-0.5 inline-flex items-center gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                        Auto-verifikasi otomatis 5 menit
-                                    </p>
-                                </div>
-                            </div>
-
-                            <button type="button"
-                                    @click="copyText('8872008123456789', 'Nomor Virtual Account BCA')"
-                                    class="mt-5 w-full bg-[#EAF3FF] hover:bg-[#D9E9FF] text-[#0B3B82] text-xs font-semibold py-2.5 rounded-xl inline-flex items-center justify-center gap-1.5 transition cursor-pointer">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"/>
-                                </svg>
-                                <span>Salin No. VA</span>
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-
-                {{-- Kolom Kanan (1 Kolom): Prosedur & Standar SLA Keuangan --}}
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-5 flex flex-col justify-between space-y-4">
-                    <div class="space-y-3.5">
-                        <h4 class="text-sm font-bold text-slate-800">
-                            Prosedur & Standar SLA Keuangan
-                        </h4>
-
-                        <div class="space-y-3">
-                            {{-- Item 1 --}}
-                            <div class="flex items-start gap-2.5">
-                                <div class="w-6 h-6 rounded-md bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                    </svg>
-                                </div>
-                                <p class="text-xs text-slate-500 leading-relaxed">
-                                    <strong class="text-slate-700">Verifikasi Cepat 1x24 Jam Kerja:</strong> Bukti transfer bank giro diverifikasi manual oleh Bagian Keuangan TEFA dalam 24 jam.
-                                </p>
-                            </div>
-
-                            {{-- Item 2 --}}
-                            <div class="flex items-start gap-2.5">
-                                <div class="w-6 h-6 rounded-md bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
-                                    </svg>
-                                </div>
-                                <p class="text-xs text-slate-500 leading-relaxed">
-                                    <strong class="text-slate-700">Kwitansi & Faktur Pajak Otomatis:</strong> Dokumen kwitansi sah bermeterai registrasi langsung tersedia unduh setelah terverifikasi.
-                                </p>
-                            </div>
-
-                            {{-- Item 3 --}}
-                            <div class="flex items-start gap-2.5">
-                                <div class="w-6 h-6 rounded-md bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
-                                    </svg>
-                                </div>
-                                <p class="text-xs text-slate-500 leading-relaxed">
-                                    <strong class="text-slate-700">Rekonsiliasi & Bantuan:</strong> Jika membutuhkan faktur pajak khusus instansi, silakan hubungi unit akuntansi melalui bantuan ticket.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Security Alert Card Bottom --}}
-                    <div class="bg-[#EFF5FF] rounded-xl p-3 flex items-start gap-2.5 border border-blue-100/60">
-                        <svg class="w-4 h-4 text-[#0B3B82] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
-                        </svg>
-                        <p class="text-[11px] text-[#0B3B82] leading-relaxed">
-                            Seluruh transaksi terlindungi protokol kepatuhan audit Teaching Factory dan terintegrasi langsung dengan sistem pembukuan resmi Politeknik.
-                        </p>
-                    </div>
-                </div>
-
-            </div>
-
         </main>
 
-    </div>
-
-    {{-- == ( MODAL UNGGAH BUKTI PEMBAYARAN ) == --}}
-    <div x-show="uploadModalOpen"
-         x-cloak
-         style="display: none;"
-         class="fixed inset-0 z-50 overflow-y-auto"
-         role="dialog"
-         aria-modal="true">
-
-        {{-- Backdrop --}}
-        <div x-show="uploadModalOpen"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             @click="uploadModalOpen = false"
-             class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"></div>
-
-        {{-- Modal Content Box --}}
-        <div class="min-h-screen px-4 text-center flex items-center justify-center">
-            <div x-show="uploadModalOpen"
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 scale-95 translate-y-2"
-                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave="transition ease-in duration-150"
-                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave-end="opacity-0 scale-95 translate-y-2"
-                 class="inline-block w-full max-w-lg p-6 my-8 text-left align-middle bg-white rounded-3xl shadow-2xl border border-slate-100 transform transition-all relative z-10">
-
-                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-                    <div>
-                        <h3 class="text-base font-bold text-slate-800">
-                            Unggah Bukti Pembayaran
-                        </h3>
-                        <p class="text-xs text-slate-400 mt-0.5" x-text="uploadTargetTermin"></p>
-                    </div>
-                    <button type="button"
-                            @click="uploadModalOpen = false"
-                            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-
-                <form @submit.prevent="uploadModalOpen = false; triggerToast('Bukti transfer berhasil diunggah! Sedang diverifikasi bagian keuangan TEFA.');"
-                      class="space-y-4 pt-4">
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">
-                            Metode / Kanal Transfer
-                        </label>
-                        <select class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82]">
-                            <option>BCA Virtual Account (88720-08123456789)</option>
-                            <option>Bank Mandiri Giro (142-00-9928172-1)</option>
-                            <option>Transfer Antar Bank (SKN / BI-FAST / Realtime)</option>
-                        </select>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">
-                                Tanggal Transfer
-                            </label>
-                            <input type="date" value="{{ date('Y-m-d') }}"
-                                   class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82]">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">
-                                4 Digit Terakhir Rekening Pengirim
-                            </label>
-                            <input type="text" placeholder="Contoh: 4321" maxlength="4"
-                                   class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82]">
-                        </div>
-                    </div>
-
-                    {{-- Drag & Drop File Upload --}}
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">
-                            Berkas Bukti Transfer (JPG, PNG, atau PDF max 5MB)
-                        </label>
-                        <div class="border-2 border-dashed border-slate-200 hover:border-[#0B3B82] rounded-2xl p-6 text-center bg-[#F8FAFC] cursor-pointer transition">
-                            <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/>
-                            </svg>
-                            <p class="text-xs font-bold text-slate-700">
-                                Klik untuk memilih berkas atau seret ke sini
-                            </p>
-                            <p class="text-[11px] text-slate-400 mt-1">
-                                Pastikan bukti transfer menampilkan nomor referensi & nominal jelas
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-                        <button type="button"
-                                @click="uploadModalOpen = false"
-                                class="px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl transition cursor-pointer">
-                            Batal
-                        </button>
-                        <button type="submit"
-                                class="px-5 py-2.5 text-xs font-semibold text-white bg-[#0B3B82] hover:bg-[#082d64] rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1.5">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"/>
-                            </svg>
-                            <span>Kirim Bukti Pembayaran</span>
-                        </button>
-                    </div>
-
-                </form>
-
-            </div>
-        </div>
     </div>
 
 </div>
