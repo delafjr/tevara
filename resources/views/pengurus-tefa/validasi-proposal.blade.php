@@ -31,17 +31,27 @@
     $statusStyle = function (string $status): string {
         $s = strtolower($status);
 
-        if (str_contains($s, 'revision') || str_contains($s, 'reject')) {
+        if (str_contains($s, 'revision')) {
+            return 'bg-amber-50 text-amber-700 border border-amber-200';
+        }
+        if (str_contains($s, 'reject')) {
             return 'bg-red-50 text-red-700';
         }
         if (str_contains($s, 'submitted') || str_contains($s, 'review')) {
-            return 'bg-amber-50 text-amber-700';
+            return 'bg-blue-50 text-blue-700';
         }
         if (str_contains($s, 'approved')) {
             return 'bg-green-50 text-green-700';
         }
 
         return 'bg-slate-100 text-slate-600';
+    };
+
+    $formatStatusLabel = function (string $status): string {
+        if (str_contains(strtolower($status), 'revision')) {
+            return 'Improvement (Revisi)';
+        }
+        return $status;
     };
 
     $formatRupiah = fn ($value) => 'Rp ' . number_format((float) $value, 0, ',', '.');
@@ -109,7 +119,7 @@
                         <div class="px-5 py-4 border-b border-slate-100">
                             <div class="flex items-center justify-between gap-3 mb-2.5">
                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg {{ $categoryStyle[strtolower($category)] ?? 'bg-slate-100 text-slate-600' }}">{{ $category }}</span>
-                                <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full {{ $statusStyle($status) }}">{{ $status }}</span>
+                                <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full {{ $statusStyle($status) }}">{{ $formatStatusLabel($status) }}</span>
                             </div>
                             <h3 class="font-bold text-[#1E293B] text-[13px] leading-tight mb-1">{{ $p['title'] ?? '-' }}</h3>
                             <p class="text-[10px] text-slate-400 font-mono">{{ $p['proposal_code'] ?? '-' }}</p>

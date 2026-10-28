@@ -8,7 +8,60 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => view('welcome'));
 
 // Authentication routes
-Route::prefix('auth')->group(function () {
+$googleAuthHandler = function (Request $request, ApiService $api) {
+    $validated = $request->validate([
+        'id_token'   => ['nullable', 'string', 'required_without:credential'],
+        'credential' => ['nullable', 'string', 'required_without:id_token'],
+    ]);
+
+    $idToken = $validated['id_token'] ?? $validated['credential'];
+
+    try {
+        $response = $api->loginWithGoogle($idToken);
+
+        if ($response->successful() && $response->json('success')) {
+            $data = $response->json('data');
+            $user = $data['user'];
+            $allowedRoles = ApiService::getEffectiveRoles($user);
+
+            if (empty($allowedRoles)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akun tidak memiliki hak akses role.',
+                ], 403);
+            }
+
+            session([
+                'api_token'   => $data['token'],
+                'user'        => $user,
+                'active_role' => $allowedRoles[0],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $response->json('message') ?? 'Login Google berhasil',
+                'data'    => [
+                    'user'         => $user,
+                    'token'        => $data['token'],
+                    'redirect_url' => route('dashboard'),
+                ],
+            ])->cookie('api_token', $data['token'], 60 * 24 * 7, '/', null, false, false);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $response->json('message') ?? 'Token Google tidak valid.',
+            'errors'  => $response->json('errors'),
+        ], $response->status() ?: 422);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Tidak dapat terhubung ke server backend: ' . $e->getMessage(),
+        ], 500);
+    }
+};
+
+Route::prefix('auth')->group(function () use ($googleAuthHandler) {
     Route::get('/login', function () {
         if (session('api_token') && session('user')) {
             return redirect()->route('dashboard');
@@ -50,6 +103,8 @@ Route::prefix('auth')->group(function () {
         }
     });
 
+    Route::post('/google', $googleAuthHandler)->name('auth.google');
+
     Route::get('/register', fn () => view('auth.register'))->name('register');
     Route::post('/register', function (Request $request) {
         $request->validate([
@@ -66,6 +121,9 @@ Route::prefix('auth')->group(function () {
         return redirect()->route('login');
     })->name('logout');
 });
+
+// Alias endpoint API v1 for Google Auth
+Route::post('/api/v1/auth/google', $googleAuthHandler)->name('api.auth.google');
 
 // Protected routes (require valid session api_token and user)
 Route::middleware('auth.api')->group(function () {
@@ -150,9 +208,109 @@ Route::middleware('auth.api')->group(function () {
 
     // Klien: Ajukan Proyek Baru & Projek Saya
     Route::middleware('auth.api:klien')->prefix('klien')->name('klien.')->group(function () {
-        Route::get('/projek-saya', fn () => view('klien.projek-saya', ['user' => session('user')]))
-            ->name('projek-saya');
+        Route::get('/projek-saya', function (ApiService $api) {
+            $proposals = [];
+            $error = null;
+
+            try {
+                $response = $api->get('proposals/mine');
+                if ($response->successful() && is_array($response->json())) {
+                    $proposals = $response->json();
+                }
+            } catch (\Throwable $e) {
+                $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
+            }
+
+            return view('klien.projek-saya', [
+                'user'      => session('user'),
+                'proposals' => $proposals,
+                'error'     => $error,
+            ]);
+        })->name('projek-saya');
         Route::get('/proyek-saya', fn () => redirect()->route('klien.projek-saya'));
+
+        Route::get('/projek-saya/{proposal}', function (ApiService $api, int $proposal) {
+            $detail = [];
+            $error = null;
+
+            try {
+                $response = $api->get("proposals/{$proposal}");
+                if ($response->successful() && is_array($response->json())) {
+                    $detail = $response->json();
+                } else {
+                    $error = $response->json('message') ?? 'Projek tidak ditemukan.';
+                }
+            } catch (\Throwable $e) {
+                $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
+            }
+
+            return view('klien.projek-detail', [
+                'user'       => session('user'),
+                'proposal'   => $detail,
+                'company'    => $api->getCompanyProfile(),
+                'categories' => $api->getCategories(),
+                'error'      => $error,
+            ]);
+        })->whereNumber('proposal')->name('projek-saya.detail');
+        Route::get('/proyek-saya/{proposal}', fn ($proposal) => redirect()->route('klien.projek-saya.detail', $proposal));
+
+        Route::post('/projek-saya/{proposal}/revisi', function (Request $request, ApiService $api, int $proposal) {
+            $request->merge([
+                'modul' => json_decode($request->input('modul', '[]'), true) ?: [],
+            ]);
+
+            $validated = $request->validate([
+                'judul_proyek'      => ['required', 'string', 'max:255'],
+                'kategori_id'       => ['required', 'integer', 'min:1'],
+                'ringkasan'         => ['required', 'string', 'min:100', 'max:500'],
+                'target_pengguna'   => ['required', 'string', 'max:1000'],
+                'deadline'          => ['required', 'date'],
+                'anggaran'          => ['required', 'numeric', 'min:0'],
+                'modul'             => ['nullable', 'array'],
+                'modul.*.judul'     => ['required_with:modul', 'string', 'max:255'],
+                'modul.*.deskripsi' => ['nullable', 'string', 'max:1000'],
+            ], [
+                'ringkasan.min'     => 'Ringkasan kebutuhan proyek minimal 100 karakter.',
+                'anggaran.required' => 'Estimasi anggaran/harga wajib diisi.',
+            ]);
+
+            $modules = collect($validated['modul'] ?? [])
+                ->filter(fn ($m) => !empty($m['judul']))
+                ->map(fn ($m) => [
+                    'title'       => $m['judul'],
+                    'description' => $m['deskripsi'] ?? null,
+                ])
+                ->values()
+                ->all();
+
+            $payload = [
+                'title'            => $validated['judul_proyek'],
+                'background'       => $validated['ringkasan'],
+                'target_audience'  => $validated['target_pengguna'],
+                'category_id'      => (int) $validated['kategori_id'],
+                'desired_deadline' => $validated['deadline'],
+                'estimated_budget' => (float) $validated['anggaran'],
+                'modules'          => $modules,
+            ];
+
+            try {
+                $response = $api->put("proposals/{$proposal}", $payload);
+
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('klien.projek-saya')
+                        ->with('success', 'Data perbaikan proyek berhasil dikirim kembali ke Pengurus TEFA untuk dicek.');
+                }
+
+                return back()
+                    ->withInput()
+                    ->with('error', 'Gagal menyimpan revisi: ' . ($response->json('message') ?? 'Terjadi kesalahan pada server.'));
+            } catch (\Throwable $e) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Tidak dapat terhubung ke server: ' . $e->getMessage());
+            }
+        })->whereNumber('proposal')->name('projek-saya.revisi.store');
 
         Route::get('/tagihan', fn () => view('klien.tagihan', ['user' => session('user')]))
             ->name('tagihan');
@@ -292,26 +450,74 @@ Route::middleware('auth.api')->group(function () {
                 'dashboard' => is_array($dashboard) ? $dashboard : [],
             ]);
         })->name('anggota-tim');
-        Route::get('/task-timeline', fn () => view('pm.task-timeline', ['user' => session('user')]))->name('task-timeline');
-
-        Route::post('/tasks', function (Request $request, ApiService $api) {
-            $validated = $request->validate([
-                'project_id' => ['required', 'string', 'max:50'],
-                'title'      => ['required', 'string', 'max:255'],
-                'due_date'   => ['required', 'date'],
-                'assignee'   => ['nullable', 'string', 'max:100'],
-            ]);
-
-            // Project demo belum memiliki endpoint/task record di backend.
-            // Simpan sementara di flash session agar bisa dipresentasikan.
-            if (str_starts_with($validated['project_id'], 'PRJ-2026/')) {
-                return back()
-                    ->with('demo_task_created', $validated)
-                    ->with('success', 'Task demo berhasil ditambahkan ke kolom Todo.');
-            }
+        Route::get('/task-timeline', function (Request $request, ApiService $api) {
+            $projects = [];
 
             try {
-                $response = $api->post('dosen/tasks', $validated);
+                $response = $api->get('dosen/dashboard');
+                if ($response->successful()) {
+                    $projects = $response->json('data.projects', []);
+                }
+            } catch (\Throwable) {
+                $projects = [];
+            }
+
+            $projects = is_array($projects) ? $projects : [];
+
+            // Proposal yang dipilih lewat ?proposal_id=..., fallback ke proyek pertama.
+            $requestedId = $request->query('proposal_id')
+                ?? $request->query('proposal')
+                ?? $request->query('project');
+            $proposalId = null;
+
+            foreach ($projects as $project) {
+                if ($requestedId !== null && (string) ($project['id'] ?? '') === (string) $requestedId) {
+                    $proposalId = $project['id'];
+                    break;
+                }
+            }
+
+            if ($proposalId === null && !empty($projects)) {
+                $proposalId = $projects[0]['id'] ?? null;
+            }
+
+            $overview = [];
+            $error = null;
+
+            if ($proposalId !== null) {
+                try {
+                    $response = $api->get('proposals/' . rawurlencode((string) $proposalId) . '/tasks/overview');
+
+                    if ($response->successful()) {
+                        $overview = $response->json('data', []);
+                    } else {
+                        $error = $response->json('message') ?? 'Gagal mengambil data task dari backend.';
+                    }
+                } catch (\Throwable $e) {
+                    $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
+                }
+            }
+
+            return view('pm.task-timeline', [
+                'user'       => session('user'),
+                'projects'   => $projects,
+                'proposalId' => $proposalId,
+                'overview'   => is_array($overview) ? $overview : [],
+                'error'      => $error,
+            ]);
+        })->name('task-timeline');
+
+        Route::post('/proposals/{proposal}/tasks', function (Request $request, ApiService $api, string $proposal) {
+            $validated = $request->validate([
+                'title'               => ['required', 'string', 'max:255'],
+                'priority'            => ['nullable', 'in:LOW,MEDIUM,HIGH,CRITICAL'],
+                'due_date'            => ['nullable', 'date'],
+                'assigned_student_id' => ['nullable', 'integer'],
+            ]);
+
+            try {
+                $response = $api->post('proposals/' . rawurlencode($proposal) . '/tasks', $validated);
+
                 return $response->successful()
                     ? back()->with('success', 'Task baru berhasil ditambahkan.')
                     : back()->with('error', $response->json('message') ?? 'Task gagal disimpan ke backend.');
@@ -320,30 +526,24 @@ Route::middleware('auth.api')->group(function () {
             }
         })->name('task.store');
 
-        Route::post('/tasks/{task}/review', function (Request $request, ApiService $api, string $task) {
+        Route::post('/proposals/{proposal}/tasks/{task}/review', function (Request $request, ApiService $api, string $proposal, string $task) {
             $validated = $request->validate([
                 'decision' => ['required', 'in:revision,approve'],
                 'note'     => ['nullable', 'string', 'max:500'],
             ]);
 
-            // Task pada halaman demo belum memiliki record di backend. Simpan
-            // keputusan di flash session agar alur review tetap bisa dipresentasikan.
-            if (str_starts_with($task, 'PRJ-2026-001-')) {
-                return back()
-                    ->with('demo_task_review', [
-                        'task'     => $task,
-                        'decision' => $validated['decision'],
-                        'note'     => $validated['note'] ?? null,
-                    ])
-                    ->with('success', $validated['decision'] === 'approve'
-                        ? 'Task demo berhasil disetujui dan ditandai selesai.'
-                        : 'Permintaan revisi demo berhasil dikirim ke mahasiswa.');
-            }
+            $payload = [
+                'pm_status' => $validated['decision'] === 'approve' ? 'APPROVED' : 'NEEDS_IMPROVEMENT',
+                'pm_notes'  => $validated['note'] ?? null,
+            ];
 
             try {
-                $response = $api->post('dosen/tasks/' . rawurlencode($task) . '/review', $validated);
+                $response = $api->patch('proposals/' . rawurlencode($proposal) . '/tasks/' . rawurlencode($task) . '/review', $payload);
+
                 return $response->successful()
-                    ? back()->with('success', $validated['decision'] === 'approve' ? 'Task berhasil disetujui dan ditandai selesai.' : 'Permintaan revisi berhasil dikirim.')
+                    ? back()->with('success', $validated['decision'] === 'approve'
+                        ? 'Task berhasil disetujui.'
+                        : 'Permintaan revisi berhasil dikirim.')
                     : back()->with('error', $response->json('message') ?? 'Review task gagal disimpan ke backend.');
             } catch (\Throwable $e) {
                 return back()->with('error', 'Backend review tidak dapat dihubungi: ' . $e->getMessage());
@@ -417,6 +617,76 @@ Route::middleware('auth.api')->group(function () {
                 'error'    => $error,
             ]);
         })->whereNumber('proposal')->name('validasi-proposal.detail');
+
+        Route::get('/validasi-proposal/{proposal}/revisi', function (ApiService $api, int $proposal) {
+            $detail = [];
+            $error = null;
+
+            try {
+                $response = $api->get("proposals/{$proposal}/pending");
+                $data = $response->json();
+
+                if ($response->successful() && is_array($data)) {
+                    $detail = $data;
+                } else {
+                    $altResponse = $api->get("proposals/{$proposal}");
+                    if ($altResponse->successful() && is_array($altResponse->json())) {
+                        $alt = $altResponse->json();
+                        $detail = [
+                            'id'               => $alt['id'],
+                            'proposal_code'    => $alt['proposal_code'] ?? '-',
+                            'title'            => $alt['title'] ?? '-',
+                            'client_name'      => $alt['client']['name'] ?? $alt['client_name'] ?? '-',
+                            'review_notes'     => $alt['review_notes'] ?? '',
+                            'status'           => $alt['status']['name'] ?? $alt['status'] ?? '-',
+                            'category_name'    => $alt['category']['name'] ?? $alt['category_name'] ?? 'Other',
+                            'estimated_budget' => $alt['estimated_budget'] ?? 0,
+                            'desired_deadline' => $alt['desired_deadline'] ?? null,
+                        ];
+                    } else {
+                        $error = $response->json('message') ?? 'Detail proposal tidak ditemukan.';
+                    }
+                }
+            } catch (\Throwable) {
+                $error = 'Gagal mengambil detail proposal dari server TEVARA.';
+            }
+
+            return view('pengurus-tefa.revisi-proposal', [
+                'user'     => session('user'),
+                'proposal' => $detail,
+                'error'    => $error,
+            ]);
+        })->whereNumber('proposal')->name('validasi-proposal.revisi');
+
+        Route::post('/validasi-proposal/{proposal}/revisi', function (Request $request, ApiService $api, int $proposal) {
+            $validated = $request->validate([
+                'review_notes' => ['required', 'string', 'min:5', 'max:2000'],
+            ], [
+                'review_notes.required' => 'Catatan apa yang perlu direvisi klien wajib diisi.',
+                'review_notes.min'      => 'Catatan revisi minimal 5 karakter.',
+            ]);
+
+            try {
+                $response = $api->patch("proposals/{$proposal}/review", [
+                    'decision'     => 'revision_required',
+                    'review_notes' => $validated['review_notes'],
+                ]);
+
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('pengurus-tefa.validasi-proposal')
+                        ->with('success', 'Permintaan revisi berhasil dikirim ke klien. Status proposal berubah menjadi Improvement (Revisi).');
+                }
+
+                return back()
+                    ->withInput()
+                    ->with('error', 'Gagal mengirim revisi: ' . ($response->json('message') ?? 'Terjadi kesalahan pada backend.'));
+            } catch (\Throwable $e) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Tidak dapat terhubung ke backend: ' . $e->getMessage());
+            }
+        })->whereNumber('proposal')->name('validasi-proposal.revisi.store');
         Route::get('/keuangan', fn () => view('pengurus-tefa.keuangan', ['user' => session('user')]))->name('keuangan');
         Route::get('/monitoring', fn () => view('pengurus-tefa.monitoring', ['user' => session('user')]))->name('monitoring');
     });

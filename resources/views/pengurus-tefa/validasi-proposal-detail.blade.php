@@ -29,11 +29,14 @@
     $statusStyle = function (string $value): string {
         $s = strtolower($value);
 
-        if (str_contains($s, 'revision') || str_contains($s, 'reject')) {
+        if (str_contains($s, 'revision')) {
+            return 'bg-amber-50 text-amber-700 border-amber-200';
+        }
+        if (str_contains($s, 'reject')) {
             return 'bg-red-50 text-red-700 border-red-100';
         }
         if (str_contains($s, 'submitted') || str_contains($s, 'review')) {
-            return 'bg-amber-50 text-amber-700 border-amber-100';
+            return 'bg-blue-50 text-blue-700 border-blue-100';
         }
         if (str_contains($s, 'approved')) {
             return 'bg-green-50 text-green-700 border-green-100';
@@ -41,6 +44,8 @@
 
         return 'bg-slate-100 text-slate-600 border-slate-200';
     };
+
+    $displayStatus = str_contains(strtolower($status), 'revision') ? 'Improvement (Revisi)' : $status;
 
     $formatRupiah = fn ($value) => 'Rp ' . number_format((float) $value, 0, ',', '.');
     $formatDate = fn ($value) => $value
@@ -281,7 +286,7 @@
                             <div class="min-w-0">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <p class="text-xs font-bold text-[#1E293B]">Keputusan Review</p>
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border {{ $statusStyle($status) }}">{{ $status }}</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border {{ $statusStyle($status) }}">{{ $displayStatus }}</span>
                                 </div>
                                 <p class="text-[11px] text-slate-400 mt-0.5 truncate">Pilih tindakan untuk proposal {{ $proposal['proposal_code'] ?? '-' }}.</p>
                             </div>
@@ -294,11 +299,11 @@
                                 Tolak
                             </button>
 
-                            <button type="button"
-                                    class="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-700 hover:bg-amber-100 hover:border-amber-300 transition-all">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>
+                            <a href="{{ route('pengurus-tefa.validasi-proposal.revisi', $proposal['id']) }}"
+                               class="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-800 hover:bg-amber-100 hover:border-amber-400 transition-all shadow-xs">
+                                <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>
                                 Butuh Revisi
-                            </button>
+                            </a>
 
                             <div class="hidden sm:block h-6 w-px bg-slate-200 mx-1"></div>
 
