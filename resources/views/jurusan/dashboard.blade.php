@@ -47,62 +47,19 @@
         </div>
 
         {{-- STAT CARDS --}}
+        @php
+            $jurusanStats = [
+                ['label' => 'Total Projek',         'value' => 28,  'sub' => 'Inisiatif Terdaftar', 'color' => '#0B3B82', 'icon' => 'folder'],
+                ['label' => 'Projek Berjalan',      'value' => 142, 'sub' => 'Dalam Pengerjaan',    'color' => '#0B3B82', 'icon' => 'play'],
+                ['label' => 'Projek Selesai',       'value' => 16,  'sub' => 'Siap Produksi',       'color' => '#0B3B82', 'icon' => 'check'],
+                ['label' => 'Menunggu Persetujuan', 'value' => 7,   'sub' => 'Perlu Review',        'color' => '#F59E0B', 'icon' => 'clock-file'],
+            ];
+        @endphp
+
         <div class="grid grid-cols-4 gap-4">
-            {{-- Card 1 --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
-                <div class="flex items-start justify-between mb-4">
-                    <p class="text-xs font-semibold text-slate-500 tracking-wide">TOTAL PROJEK</p>
-                    <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-[#0B3B82]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <h2 class="text-4xl font-bold text-[#1E293B]">28</h2>
-                    <p class="text-xs text-slate-500 font-medium">Inisiatif Terdaftar</p>
-                </div>
-            </div>
-
-            {{-- Card 2 --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
-                <div class="flex items-start justify-between mb-4">
-                    <p class="text-xs font-semibold text-slate-500 tracking-wide">PROJEK BERJALAN</p>
-                    <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-[#0B3B82]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <h2 class="text-4xl font-bold text-[#0B3B82]">142</h2>
-                    <p class="text-xs text-slate-500 font-medium">Dalam Pengerjaan</p>
-                </div>
-            </div>
-
-            {{-- Card 3 --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
-                <div class="flex items-start justify-between mb-4">
-                    <p class="text-xs font-semibold text-slate-500 tracking-wide">PROJEK SELESAI</p>
-                    <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <h2 class="text-4xl font-bold text-[#1E293B]">16</h2>
-                    <p class="text-xs text-slate-500 font-medium">Siap Produksi</p>
-                </div>
-            </div>
-
-            {{-- Card 4 --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
-                <div class="flex items-start justify-between mb-4">
-                    <p class="text-xs font-semibold text-slate-500 tracking-wide">MENUNGGU PERSETUJUAN</p>
-                    <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <h2 class="text-4xl font-bold text-[#F59E0B]">7</h2>
-                    <p class="text-xs text-amber-600 font-medium">Perlu Review</p>
-                </div>
-            </div>
+            @foreach($jurusanStats as $stat)
+                <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
+            @endforeach
         </div>
 
         {{-- ACTIONS BAR --}}

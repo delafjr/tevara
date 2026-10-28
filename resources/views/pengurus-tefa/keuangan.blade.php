@@ -26,13 +26,13 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Rekap <span class="text-[#FFB800]">Keuangan TeFa</span>
                     </h1>
-                    <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
+                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
                         Pantau pemasukan, pengeluaran, dan laporan keuangan seluruh projek Teaching Factory.
                     </p>
                 </div>
 
                 <div class="relative z-10 flex-shrink-0">
-                    <a href="#" class="flex items-center gap-2 bg-[#FFB800] text-[#1E293B] font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-yellow-300 transition-colors shadow-sm">
+                    <a href="#" class="flex items-center gap-2 bg-[#0B3B82] text-white font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-[#082a5c] transition-colors shadow-sm">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                         Ekspor Laporan
                     </a>
@@ -40,18 +40,17 @@
             </div>
 
             {{-- Stats Keuangan --}}
-            <div class="grid grid-cols-4 gap-4">
-                @foreach([
-                    ['Rp 218 Jt','Total Pemasukan 2026','#16A34A','↑ 32% vs 2025'],
-                    ['Rp 124 Jt','Total Pengeluaran 2026','#EF4444','↑ 18% vs 2025'],
-                    ['Rp 94 Jt','Saldo Bersih','#0B3B82','Net positif'],
-                    ['Rp 46 Jt','Piutang Belum Cair','#F59E0B','5 projek'],
-                ] as [$v,$l,$c,$sub])
-                <div class="bg-white rounded-xl px-5 py-5 border border-slate-100 shadow-sm">
-                    <p class="text-2xl font-bold text-[#1E293B] leading-none">{{ $v }}</p>
-                    <p class="text-xs text-slate-400 mt-1.5 font-medium">{{ $l }}</p>
-                    <p class="text-[11px] mt-1.5 font-semibold" style="color:{{ $c }}">{{ $sub }}</p>
-                </div>
+            <div class="grid grid-cols-4 gap-4 items-stretch">
+                @php
+                $keuStats = [
+                    ['label' => 'Total Pemasukan', 'value' => 'Rp 218 Jt', 'sub' => '↑ 32% vs 2025',  'color' => '#16A34A', 'icon' => 'check'],
+                    ['label' => 'Total Pengeluaran', 'value' => 'Rp 124 Jt', 'sub' => '↑ 18% vs 2025',  'color' => '#DC2626', 'icon' => 'clock-file'],
+                    ['label' => 'Saldo Bersih',      'value' => 'Rp 94 Jt',  'sub' => 'Net Positif',    'color' => '#0B3B82', 'icon' => 'folder'],
+                    ['label' => 'Piutang Belum Cair','value' => 'Rp 46 Jt',  'sub' => '5 Projek',       'color' => '#F59E0B', 'icon' => 'calendar'],
+                ];
+                @endphp
+                @foreach($keuStats as $stat)
+                    <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
                 @endforeach
             </div>
 

@@ -2,7 +2,7 @@
 
 @php
     $user = session('user') ?? [];
-    $allowedRoles = \App\Services\ApiService::getUserRoles($user);
+    $allowedRoles = \App\Services\ApiService::getEffectiveRoles($user);
     $currentRole = session('active_role') ?? ($allowedRoles[0] ?? 'klien');
 
     // Pastikan currentRole ada di role yang diizinkan user
@@ -66,8 +66,8 @@
         'klien' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
             ['id' => 'ajukan-projek','label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => route('klien.ajukan-proyek')],
-            ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => '#'],
-            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => '#'],
+            ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => route('klien.projek-saya')],
+            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => route('klien.tagihan')],
         ],
         'mahasiswa' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
@@ -98,33 +98,34 @@
         ],
         'jurusan' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'ajukan-projek','label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => '#'],
-            ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => '#'],
-            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => '#'],
+            ['id' => 'ajukan',       'label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => url()->current() . '?page=ajukan'],
+            ['id' => 'projek',       'label' => 'Projek Saya',           'icon' => 'project',        'href' => url()->current() . '?page=projek'],
+            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => url()->current() . '?page=tagihan'],
         ],
     ];
 
     $currentMenu = $menus[$currentRole] ?? $menus['klien'];
+    $isCompact = count($currentMenu) > 5;
 @endphp
 
-<aside data-role="{{ $currentRole }}" class="w-64 min-h-screen bg-[#F8FAFC] border-r border-slate-200/70 flex flex-col fixed top-0 left-0 z-30 select-none">
+<aside data-role="{{ $currentRole }}" class="w-64 min-h-screen bg-surface-soft border-r border-slate-200/70 flex flex-col fixed top-0 left-0 z-30 select-none">
 
     {{-- ===== LOGO TEVARA ===== --}}
-    <div class="px-6 py-6 border-b border-slate-200/50 flex items-center">
-        <a href="{{ route('dashboard') }}" class="block">
-            <img src="{{ asset('images/tevara-logo.png') }}" alt="TEVARA Knowledge into Action" class="h-8 w-auto max-w-[185px] object-contain">
+    <div class="px-6 py-5.5 border-b border-slate-200/50 flex items-center">
+        <a href="{{ route('dashboard') }}" class="block transition-opacity hover:opacity-95">
+            <img src="{{ asset('images/tevara-logo.png') }}" alt="TEVARA Knowledge into Action" class="h-9 w-auto max-w-[190px] object-contain">
         </a>
     </div>
 
     {{-- ===== NAV MENU ===== --}}
-    <nav class="flex-1 px-3.5 py-4 space-y-1.5 overflow-y-auto">
+    <nav class="flex-1 px-4 {{ $isCompact ? 'py-4 space-y-1.5' : 'py-5 space-y-2.5' }} overflow-y-auto">
         @foreach($currentMenu as $item)
             @php
                 $isActive = ($active === $item['id']);
             @endphp
             <a href="{{ $item['href'] }}"
-               class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-[13.5px] transition-all duration-150 {{ $isActive ? 'bg-[#DDE9FA] text-[#2563EB] font-semibold' : 'text-slate-500 hover:text-slate-900 hover:bg-white/70 font-medium' }}">
-                <span class="w-5 h-5 flex-shrink-0 {{ $isActive ? 'text-[#2563EB]' : 'text-slate-400' }}">
+               class="flex items-center gap-3.5 {{ $isCompact ? 'px-3.5 py-2.5 text-[13.5px]' : 'px-4 py-3 text-[14px]' }} rounded-xl transition-all duration-150 {{ $isActive ? 'bg-[#EAF3FF] text-[#0B3B82] font-semibold shadow-2xs' : 'text-[#64748B] hover:text-[#1E293B] hover:bg-white/70 font-medium' }}">
+                <span class="w-5 h-5 flex-shrink-0 {{ $isActive ? 'text-[#0B3B82]' : 'text-[#64748B]' }}">
                     @if($item['icon'] === 'dashboard')
                         {{-- Bento / Grid 4-square icon --}}
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
@@ -215,7 +216,7 @@
             >
                 <div class="px-2.5 py-1.5 flex items-center justify-between border-b border-slate-100 mb-1">
                     <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Switch Role</span>
-                    <span class="text-[10px] font-semibold text-[#0B3B82] bg-[#EAF3FF] px-2 py-0.5 rounded-full">{{ count($availableRoles) }} Role</span>
+                    <span class="text-[10px] font-semibold text-primary bg-section px-2 py-0.5 rounded-full">{{ count($availableRoles) }} Role</span>
                 </div>
 
                 {{-- Role Choices --}}
@@ -263,19 +264,28 @@
             <button
                 @click="openRoleMenu = !openRoleMenu"
                 type="button"
-                class="w-full bg-white rounded-2xl p-3 flex items-center gap-3 shadow-xs border border-slate-100 hover:border-slate-200 transition-all duration-150 text-left cursor-pointer group"
+                class="w-full bg-white rounded-2xl p-3 flex items-center justify-between gap-3 shadow-xs border border-slate-100 hover:border-slate-200 transition-all duration-150 text-left cursor-pointer group"
                 title="Klik untuk ganti role"
             >
                 <div class="flex items-center gap-3 min-w-0 flex-1">
-                    {{-- Initials Badge --}}
-                    <div class="w-10 h-10 rounded-xl bg-[#0B1E3F] flex items-center justify-center text-white font-bold text-xs tracking-wider flex-shrink-0 shadow-xs">
-                        {{ $initials }}
+                    {{-- Avatar with user icon --}}
+                    <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white flex-shrink-0 shadow-xs">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+                        </svg>
                     </div>
                     <div class="min-w-0 flex-1">
                         <p class="text-[13px] font-bold text-[#0F172A] leading-tight truncate">{{ $userName }}</p>
-                        <p class="text-[11px] text-slate-400 font-normal leading-tight mt-0.5 truncate">{{ $roleLabel }}</p>
+                        <span class="inline-block bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold px-2 py-0.5 rounded-md mt-0.5 leading-none">
+                            {{ $roleLabel }}
+                        </span>
                     </div>
                 </div>
+                <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 transition-transform flex-shrink-0"
+                     :class="openRoleMenu ? 'rotate-180' : ''"
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"/>
+                </svg>
             </button>
 
         </div>

@@ -1,530 +1,877 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Users - Tevara API Client</title>
+    <title>TEVARA · Teaching Factory Politeknik Negeri Semarang</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-full bg-slate-50/60 text-text-primary antialiased selection:bg-accent selection:text-text-primary"
-      x-data="usersPage({
-          apiUrl: '{{ $apiUrl }}',
-          initialData: {{ Js::from($initialData) }},
-          initialError: {{ Js::from($initialError) }}
-      })"
-      x-init="initData()">
+<body class="bg-[#F4F7FB] font-sans text-[#1E293B] antialiased selection:bg-[#0B3B82] selection:text-white">
 
-    <!-- Background subtle decoration -->
-    <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div class="absolute -top-40 -left-40 w-96 h-96 bg-section rounded-full blur-3xl opacity-80"></div>
-        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-section rounded-full blur-3xl opacity-70"></div>
-        <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+@php
+    $user = session('user');
+    $isLoggedIn = session('api_token') && $user;
+@endphp
+
+{{-- Navigation --}}
+<header x-data="{ mobileOpen: false, scrolled: false }"
+        @scroll.window="scrolled = (window.pageYOffset > 16)"
+        :class="scrolled ? 'bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm' : 'bg-white border-b border-slate-100'"
+        class="sticky top-0 z-50 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        {{-- Logo --}}
+        <a href="{{ url('/') }}" class="flex items-center gap-3 group">
+            <img src="{{ asset('images/tevara-logo.png') }}" alt="TEVARA Logo" class="h-8 w-auto max-w-[170px] object-contain transition-opacity group-hover:opacity-90">
+        </a>
+
+        {{-- Desktop Navigation Links --}}
+        <nav class="hidden lg:flex items-center gap-7 text-sm font-medium text-[#64748B]">
+            <a href="#tentang" class="hover:text-[#0B3B82] transition-colors">Tentang TeFa</a>
+            <a href="#alur-kerja" class="hover:text-[#0B3B82] transition-colors">Alur Proyek</a>
+            <a href="#peran" class="hover:text-[#0B3B82] transition-colors">Ekosistem</a>
+            <a href="#simulasi" class="hover:text-[#0B3B82] transition-colors flex items-center gap-2">
+                <span>Simulasi</span>
+                <span class="text-[10px] font-bold bg-[#EAF3FF] text-[#0B3B82] px-2 py-0.5 rounded-full">Interaktif</span>
+            </a>
+            <a href="#faq" class="hover:text-[#0B3B82] transition-colors">FAQ</a>
+        </nav>
+
+        {{-- Auth Actions --}}
+        <div class="hidden lg:flex items-center gap-3">
+            @if ($isLoggedIn)
+                <a href="{{ route('dashboard') }}"
+                   class="inline-flex items-center gap-2 bg-[#0B3B82] text-white rounded-xl px-5 py-2.5 font-semibold text-sm whitespace-nowrap hover:bg-[#082a5c] transition-all shadow-sm">
+                    <span>Dashboard</span>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
+                    </svg>
+                </a>
+            @else
+                <a href="{{ route('login') }}"
+                   class="inline-flex items-center px-4 py-2.5 text-sm font-medium text-[#64748B] hover:text-[#0B3B82] transition-colors">
+                    Masuk
+                </a>
+                <a href="{{ route('klien.ajukan-proyek') }}"
+                   class="inline-flex items-center gap-2 bg-[#0B3B82] text-white rounded-xl px-5 py-2.5 font-semibold text-sm whitespace-nowrap hover:bg-[#082a5c] transition-all shadow-sm">
+                    <span>Ajukan Proyek</span>
+                    <svg class="w-3.5 h-3.5 text-[#FFB800]" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
+                    </svg>
+                </a>
+            @endif
+        </div>
+
+        {{-- Mobile Hamburger --}}
+        <button @click="mobileOpen = !mobileOpen"
+                class="lg:hidden p-2 rounded-lg text-[#64748B] hover:bg-[#F8FAFC] transition-colors"
+                aria-label="Toggle menu">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path x-show="!mobileOpen" stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+                <path x-show="mobileOpen" x-cloak stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+            </svg>
+        </button>
     </div>
 
-    <!-- Top Navigation Bar -->
-    <header class="border-b border-primary/10 bg-white/85 backdrop-blur-md sticky top-0 z-40 shadow-xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/25">
-                    <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <div class="flex items-center space-x-2">
-                        <span class="font-extrabold text-xl tracking-tight text-primary">Tevara</span>
-                        <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-section text-primary border border-primary/20">API Client</span>
-                    </div>
-                    <p class="text-xs text-text-secondary hidden sm:block">User Management Dashboard</p>
-                </div>
-            </div>
+    {{-- Mobile Menu Dropdown --}}
+    <div x-show="mobileOpen"
+         x-cloak
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 -translate-y-2"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 -translate-y-2"
+         class="lg:hidden bg-white border-t border-slate-100 px-6 py-5 space-y-4 shadow-sm">
+        <a @click="mobileOpen = false" href="#tentang" class="block text-sm font-medium text-[#64748B] hover:text-[#0B3B82]">Tentang TeFa</a>
+        <a @click="mobileOpen = false" href="#alur-kerja" class="block text-sm font-medium text-[#64748B] hover:text-[#0B3B82]">Alur Proyek</a>
+        <a @click="mobileOpen = false" href="#peran" class="block text-sm font-medium text-[#64748B] hover:text-[#0B3B82]">Ekosistem</a>
+        <a @click="mobileOpen = false" href="#simulasi" class="block text-sm font-medium text-[#64748B] hover:text-[#0B3B82]">Simulasi Proyek</a>
+        <a @click="mobileOpen = false" href="#faq" class="block text-sm font-medium text-[#64748B] hover:text-[#0B3B82]">FAQ</a>
 
-            <!-- API Endpoint Pill & Refresh button -->
-            <div class="flex items-center space-x-2 sm:space-x-3">
-                <div class="hidden md:flex items-center space-x-2 bg-section border border-primary/15 rounded-xl px-3 py-1.5 text-xs text-text-primary shadow-xs">
-                    <span class="px-1.5 py-0.5 font-bold uppercase rounded text-[10px] bg-primary text-white">GET</span>
-                    <span class="font-mono text-primary font-semibold max-w-[280px] truncate" x-text="apiUrl"></span>
-                </div>
-
-                <button @click="hitApi()" 
-                        :disabled="isLoading"
-                        class="inline-flex items-center space-x-2 px-4 py-2 text-sm font-semibold rounded-xl text-white bg-primary hover:bg-primary/90 active:scale-95 transition duration-150 shadow-md shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-                    <svg class="w-4 h-4" :class="{'animate-spin': isLoading}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span class="hidden sm:inline" x-text="isLoading ? 'Memuat...' : 'Hit API'">Hit API</span>
-                </button>
-
-                @if(session('api_token') && session('user'))
-                    <a href="{{ route('dashboard') }}" class="inline-flex items-center space-x-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-primary bg-section hover:bg-primary/10 transition duration-150 border border-primary/20">
-                        <span>Dashboard</span>
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                    </a>
-                @else
-                    <a href="{{ route('login') }}" class="inline-flex items-center space-x-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-primary bg-section hover:bg-primary/10 transition duration-150 border border-primary/20">
-                        <span>Login</span>
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
-                    </a>
-                @endif
-            </div>
+        <div class="pt-4 border-t border-slate-100 flex flex-col gap-2">
+            @if ($isLoggedIn)
+                <a href="{{ route('dashboard') }}"
+                   class="w-full text-center bg-[#0B3B82] text-white rounded-xl py-2.5 text-sm font-semibold shadow-sm">
+                    Dashboard
+                </a>
+            @else
+                <a href="{{ route('login') }}"
+                   class="w-full text-center bg-white border border-slate-200 rounded-xl py-2.5 text-sm font-semibold text-[#1E293B]">
+                    Masuk
+                </a>
+                <a href="{{ route('klien.ajukan-proyek') }}"
+                   class="w-full text-center bg-[#0B3B82] text-white rounded-xl py-2.5 text-sm font-semibold shadow-sm">
+                    Ajukan Proyek
+                </a>
+            @endif
         </div>
-    </header>
+    </div>
+</header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- Header Hero & API Banner -->
-        <div class="mb-8">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-text-primary flex items-center gap-3">
-                        Daftar Pengguna
-                        <span class="text-sm font-bold px-3 py-1 rounded-full bg-section text-primary border border-primary/20" 
-                              x-text="filteredUsers.length + ' User'"></span>
+{{-- Hero Section --}}
+<section class="pt-6 pb-10 sm:pt-8 sm:pb-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-6 py-7 sm:px-8 sm:py-9">
+            {{-- Decorative gradient --}}
+            <div class="absolute inset-y-0 right-0 w-2/3 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+            <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+                {{-- Left: Headline & Actions --}}
+                <div class="lg:col-span-7 space-y-5 text-center lg:text-left">
+                    {{-- Badge --}}
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#FFB800]"></span>
+                        Politeknik Negeri Semarang
+                    </span>
+
+                    {{-- Headline --}}
+                    <h1 class="text-3xl sm:text-4xl lg:text-[2.6rem] font-bold text-[#1E293B] tracking-tight leading-[1.18]">
+                        Solusi Digital Nyata dari <span class="text-[#0B3B82]">Kolaborasi Industri</span> &amp;
+                        <span class="relative inline-block text-[#0B3B82]">Talenta Polines<span class="absolute bottom-1 left-0 w-full h-3 bg-[#FFB800]/30 -z-10 rounded"></span></span>
                     </h1>
-                    <p class="text-sm text-text-secondary mt-1">
-                        Data diambil langsung via method <span class="text-primary font-mono font-bold">GET</span> dari endpoint <code class="px-2 py-0.5 bg-section rounded-md font-mono text-primary text-xs border border-primary/15 font-semibold" x-text="apiUrl"></code>
+
+                    {{-- Subtitle --}}
+                    <p class="text-sm sm:text-base text-[#64748B] max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                        TEVARA menjembatani kebutuhan proyek riil mitra industri dengan tim pengerjaan profesional yang dipimpin Dosen Project Manager serta mahasiswa vokasi terbaik.
                     </p>
-                </div>
 
-                <!-- API Status indicator -->
-                <div class="flex items-center space-x-2 text-xs">
-                    <span class="text-text-secondary font-medium">Status API:</span>
-                    <template x-if="responseSuccess">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-success/10 text-success border border-success/30">
-                            <span class="w-2 h-2 rounded-full bg-success mr-1.5 animate-pulse"></span>
-                            200 OK (Connected)
-                        </span>
-                    </template>
-                    <template x-if="!responseSuccess && !isLoading && errorMessage">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-error/10 text-error border border-error/30">
-                            <span class="w-2 h-2 rounded-full bg-error mr-1.5"></span>
-                            Error Connection
-                        </span>
-                    </template>
-                    <template x-if="isLoading">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-accent/25 text-amber-800 border border-accent/40">
-                            <span class="w-2 h-2 rounded-full bg-accent mr-1.5 animate-ping"></span>
-                            Memuat Data...
-                        </span>
-                    </template>
-                </div>
-            </div>
-        </div>
-
-        <!-- Metric Stat Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white border border-primary/10 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-primary/30 transition">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-text-secondary uppercase tracking-wider">Total Users</span>
-                    <span class="p-2.5 rounded-xl bg-section text-primary border border-primary/15">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                    </span>
-                </div>
-                <div class="mt-3">
-                    <span class="text-3xl font-extrabold text-primary tracking-tight" x-text="users.length"></span>
-                    <span class="text-xs text-text-secondary ml-1 font-medium">terdaftar</span>
-                </div>
-            </div>
-
-            <div class="bg-white border border-primary/10 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-primary/30 transition">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-text-secondary uppercase tracking-wider">Role Admin</span>
-                    <span class="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                    </span>
-                </div>
-                <div class="mt-3">
-                    <span class="text-3xl font-extrabold text-primary tracking-tight" x-text="countRole('admin')"></span>
-                    <span class="text-xs text-text-secondary ml-1 font-medium">administrator</span>
-                </div>
-            </div>
-
-            <div class="bg-white border border-primary/10 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-primary/30 transition">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-text-secondary uppercase tracking-wider">Role Member</span>
-                    <span class="p-2.5 rounded-xl bg-accent/20 text-amber-700 border border-accent/40">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                    </span>
-                </div>
-                <div class="mt-3">
-                    <span class="text-3xl font-extrabold text-text-primary tracking-tight" x-text="countRole('member')"></span>
-                    <span class="text-xs text-text-secondary ml-1 font-medium">anggota aktif</span>
-                </div>
-            </div>
-
-            <div class="bg-white border border-primary/10 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-primary/30 transition">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-text-secondary uppercase tracking-wider">API Message</span>
-                    <span class="p-2.5 rounded-xl bg-success/10 text-success border border-success/20">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                    </span>
-                </div>
-                <div class="mt-3">
-                    <p class="text-sm font-bold text-text-primary truncate" x-text="apiMessage || 'Tidak ada pesan'"></p>
-                    <span class="text-xs text-text-secondary font-mono" x-text="lastFetched ? 'Diupdate ' + lastFetched : 'Belum dimuat'"></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Error Alert (If API fails) -->
-        <template x-if="errorMessage">
-            <div class="mb-6 p-4 rounded-xl bg-error/10 border border-error/30 text-error flex items-start space-x-3">
-                <svg class="w-5 h-5 text-error shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <div class="flex-1 text-sm">
-                    <p class="font-bold text-error">Gagal Mengambil Data Pengguna</p>
-                    <p class="mt-1 text-xs text-error/90" x-text="errorMessage"></p>
-                    <p class="mt-2 text-xs text-error/80">
-                        Pastikan server backend API berjalan di <code class="px-1.5 py-0.5 bg-white/70 rounded border border-error/30 font-semibold" x-text="apiUrl"></code>.
-                    </p>
-                </div>
-                <button @click="hitApi()" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-error hover:bg-error/90 text-white transition shadow-xs cursor-pointer">
-                    Coba Lagi
-                </button>
-            </div>
-        </template>
-
-        <!-- Main Card Section -->
-        <div class="bg-white border border-primary/10 rounded-2xl shadow-sm overflow-hidden">
-            
-            <!-- Controls Bar: Search, Filters & View Mode -->
-            <div class="p-4 sm:p-5 border-b border-primary/10 bg-section/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                
-                <!-- Search Input -->
-                <div class="relative flex-1 max-w-md">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-secondary">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                    <input type="text"
-                           x-model="searchQuery"
-                           placeholder="Cari nama, email, atau ID..."
-                           class="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-primary/20 rounded-xl text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition shadow-xs">
-                </div>
-
-                <!-- Role Filter Tabs & View Toggle -->
-                <div class="flex items-center flex-wrap gap-2.5">
-                    
-                    <!-- Role Filter -->
-                    <div class="inline-flex rounded-xl bg-white p-1 border border-primary/15 text-xs shadow-xs">
-                        <button @click="selectedRole = 'all'"
-                                :class="selectedRole === 'all' ? 'bg-primary text-white font-bold shadow-xs' : 'text-text-secondary hover:text-text-primary'"
-                                class="px-3 py-1.5 rounded-lg transition cursor-pointer">
-                            Semua
-                        </button>
-                        <button @click="selectedRole = 'admin'"
-                                :class="selectedRole === 'admin' ? 'bg-primary text-white font-bold shadow-xs' : 'text-text-secondary hover:text-text-primary'"
-                                class="px-3 py-1.5 rounded-lg transition cursor-pointer">
-                            Admin
-                        </button>
-                        <button @click="selectedRole = 'member'"
-                                :class="selectedRole === 'member' ? 'bg-accent text-text-primary font-bold shadow-xs' : 'text-text-secondary hover:text-text-primary'"
-                                class="px-3 py-1.5 rounded-lg transition cursor-pointer">
-                            Member
-                        </button>
-                    </div>
-
-                    <!-- Layout Toggle (Table vs Cards) -->
-                    <div class="inline-flex rounded-xl bg-white p-1 border border-primary/15 text-xs shadow-xs">
-                        <button @click="viewMode = 'table'"
-                                :class="viewMode === 'table' ? 'bg-section text-primary font-bold' : 'text-text-secondary hover:text-text-primary'"
-                                title="Tampilan Tabel"
-                                class="p-2 rounded-lg transition cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    {{-- Action Buttons --}}
+                    <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
+                        <a href="{{ $isLoggedIn ? route('dashboard') : route('klien.ajukan-proyek') }}"
+                           class="inline-flex items-center gap-2 bg-[#0B3B82] text-white rounded-xl px-5 py-2.5 font-semibold text-sm whitespace-nowrap hover:bg-[#082a5c] transition-all shadow-sm">
+                            <span>{{ $isLoggedIn ? 'Buka Dashboard Anda' : 'Ajukan Proyek Sekarang' }}</span>
+                            <svg class="w-4 h-4 text-[#FFB800]" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
                             </svg>
-                        </button>
-                        <button @click="viewMode = 'grid'"
-                                :class="viewMode === 'grid' ? 'bg-section text-primary font-bold' : 'text-text-secondary hover:text-text-primary'"
-                                title="Tampilan Card Grid"
-                                class="p-2 rounded-lg transition cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </a>
+
+                        <a href="#alur-kerja"
+                           class="inline-flex items-center gap-2 bg-white border border-slate-200 text-[#1E293B] rounded-xl px-5 py-2.5 font-semibold text-sm whitespace-nowrap hover:border-[#0B3B82] hover:text-[#0B3B82] transition-all shadow-xs">
+                            <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m15.91 11.672-6.284-3.928A.75.75 0 0 0 8.5 8.384v7.232a.75.75 0 0 0 1.126.64l6.284-3.928a.75.75 0 0 0 0-1.28Z"/>
                             </svg>
-                        </button>
+                            <span>Lihat Alur Kerja</span>
+                        </a>
                     </div>
 
-                    <!-- JSON Modal/Drawer Toggle -->
-                    <button @click="showJsonDrawer = !showJsonDrawer"
-                            class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-white border border-primary/20 text-xs font-semibold text-text-primary hover:bg-section hover:text-primary transition shadow-xs cursor-pointer">
-                        <svg class="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                        </svg>
-                        <span>Raw JSON</span>
-                    </button>
+                    {{-- Trust Metrics --}}
+                    <div class="pt-5 grid grid-cols-3 gap-3 max-w-md mx-auto lg:mx-0">
+                        <div class="bg-[#F8FAFC] rounded-xl border border-slate-100 px-4 py-3 text-left">
+                            <p class="text-lg sm:text-xl font-bold text-[#0B3B82] leading-none">100%</p>
+                            <p class="text-[10px] font-medium text-[#64748B] mt-1.5">Proyek Industri Riil</p>
+                        </div>
+                        <div class="bg-[#F8FAFC] rounded-xl border border-slate-100 px-4 py-3 text-left">
+                            <p class="text-lg sm:text-xl font-bold text-[#0B3B82] leading-none">4+</p>
+                            <p class="text-[10px] font-medium text-[#64748B] mt-1.5">Bidang Teknologi</p>
+                        </div>
+                        <div class="bg-[#F8FAFC] rounded-xl border border-slate-100 px-4 py-3 text-left">
+                            <p class="text-lg sm:text-xl font-bold text-[#FFB800] leading-none">Multi</p>
+                            <p class="text-[10px] font-medium text-[#64748B] mt-1.5">Ekosistem Peran</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Loading Skeleton -->
-            <template x-if="isLoading">
-                <div class="p-6 space-y-4 animate-pulse">
-                    <div class="h-12 bg-section rounded-xl"></div>
-                    <div class="h-12 bg-section/70 rounded-xl"></div>
-                    <div class="h-12 bg-section/40 rounded-xl"></div>
-                </div>
-            </template>
+                {{-- Right: Interactive Role Showcase Card (Alpine.js) --}}
+                <div class="lg:col-span-5"
+                     x-data="{
+                        activeRole: 'klien',
+                        roles: {
+                            klien: {
+                                name: 'Mitra Industri / Klien',
+                                badge: 'Pemilik Kebutuhan',
+                                badgeColor: 'bg-[#EAF3FF] text-[#0B3B82]',
+                                title: 'Pengajuan Proposal Cepat & Transparan',
+                                desc: 'Klien mendaftarkan kebutuhan modul, deadline, dan anggaran secara mandiri. Monitor progres setiap modul tanpa perantara berbelit.',
+                                highlight: 'Pantau status proposal dari Submitted, Validasi TeFa, hingga Approved.'
+                            },
+                            pm: {
+                                name: 'Dosen Project Manager',
+                                badge: 'Lead & Supervisor',
+                                badgeColor: 'bg-[#FEF3C7] text-[#D97706]',
+                                title: 'Manajemen Task & Bimbingan Teknis',
+                                desc: 'Dosen memimpin arsitektur sistem, membagi task ke mahasiswa, mengontrol timeline dan memastikan kualitas deliverables.',
+                                highlight: 'Pengawasan langsung memastikan standar industri terpenuhi.'
+                            },
+                            mahasiswa: {
+                                name: 'Mahasiswa Talenta',
+                                badge: 'Eksekutor Proyek',
+                                badgeColor: 'bg-purple-50 text-purple-700',
+                                title: 'Pengalaman Nyata Berbasis Portofolio',
+                                desc: 'Mahasiswa mengerjakan modul riil, submit tugas sesuai deadline, berkolaborasi dengan git, dan membangun portofolio bersertifikasi.',
+                                highlight: 'Pembelajaran berbasis Teaching Factory yang siap kerja.'
+                            },
+                            tefa: {
+                                name: 'Pengurus TeFa',
+                                badge: 'Reviewer & Tata Kelola',
+                                badgeColor: 'bg-[#DCFCE7] text-[#16A34A]',
+                                title: 'Validasi Proposal & Alokasi Sumber Daya',
+                                desc: 'Pengurus TeFa memvalidasi kelayakan anggaran, menyetujui proposal, dan mendistribusikan proyek ke jurusan terkait.',
+                                highlight: 'Penjamin mutu dan tata kelola program Teaching Factory.'
+                            }
+                        }
+                     }">
+                    <div class="rounded-2xl border border-slate-200/70 bg-[#F8FAFC] p-5">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-200/70">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                                <span class="ml-2 text-[11px] font-medium text-slate-400">tevara.live/preview</span>
+                            </div>
+                            <span class="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-white border border-slate-200/70 text-[#64748B]">Live Preview</span>
+                        </div>
 
-            <!-- Table View Mode -->
-            <template x-if="!isLoading && viewMode === 'table'">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-text-primary">
-                        <thead class="bg-section text-xs uppercase text-text-secondary font-bold tracking-wider border-b border-primary/10">
-                            <tr>
-                                <th scope="col" class="py-3.5 px-6">ID</th>
-                                <th scope="col" class="py-3.5 px-6">User</th>
-                                <th scope="col" class="py-3.5 px-6">Email</th>
-                                <th scope="col" class="py-3.5 px-6">Role</th>
-                                <th scope="col" class="py-3.5 px-6 text-right">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-primary/5">
-                            <template x-for="user in filteredUsers" :key="user.id">
-                                <tr class="hover:bg-section/40 transition group">
-                                    <td class="py-4 px-6 font-mono text-xs text-text-secondary">
-                                        <span class="px-2.5 py-1 rounded-md bg-section border border-primary/10 font-bold text-primary" x-text="'#' + user.id"></span>
-                                    </td>
-                                    <td class="py-4 px-6">
-                                        <div class="flex items-center space-x-3">
-                                            <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shadow-xs"
-                                                 :class="user.role === 'admin' ? 'bg-primary text-white' : 'bg-accent text-text-primary font-extrabold'"
-                                                 x-text="getInitials(user.name)">
-                                            </div>
-                                            <div>
-                                                <div class="font-bold text-text-primary group-hover:text-primary transition" x-text="user.name"></div>
-                                                <div class="text-xs text-text-secondary sm:hidden" x-text="user.email"></div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="py-4 px-6 text-text-secondary font-mono text-xs">
-                                        <a :href="'mailto:' + user.email" class="hover:text-primary transition flex items-center gap-1.5 underline decoration-primary/30 underline-offset-2">
-                                            <svg class="w-3.5 h-3.5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                            </svg>
-                                            <span x-text="user.email"></span>
-                                        </a>
-                                    </td>
-                                    <td class="py-4 px-6">
-                                        <template x-if="user.role === 'admin'">
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
-                                                <svg class="w-3 h-3 mr-1 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                                </svg>
-                                                Admin
-                                            </span>
-                                        </template>
-                                        <template x-if="user.role !== 'admin'">
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-accent/20 text-amber-800 border border-accent/40">
-                                                <svg class="w-3 h-3 mr-1 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                </svg>
-                                                Member
-                                            </span>
-                                        </template>
-                                    </td>
-                                    <td class="py-4 px-6 text-right">
-                                        <span class="inline-flex items-center text-xs text-success font-semibold">
-                                            <span class="w-2 h-2 rounded-full bg-success mr-1.5"></span>
-                                            Active
-                                        </span>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-            </template>
+                        {{-- Role Selector Tabs --}}
+                        <div class="grid grid-cols-4 gap-1 p-1 bg-white border border-slate-200/70 rounded-xl mt-4">
+                            <button type="button"
+                                    @click="activeRole = 'klien'"
+                                    :class="activeRole === 'klien' ? 'bg-[#EAF3FF] text-[#0B3B82]' : 'text-[#64748B] hover:text-[#1E293B]'"
+                                    class="py-2 text-[11px] font-semibold rounded-lg transition-all text-center">
+                                Klien
+                            </button>
+                            <button type="button"
+                                    @click="activeRole = 'pm'"
+                                    :class="activeRole === 'pm' ? 'bg-[#EAF3FF] text-[#0B3B82]' : 'text-[#64748B] hover:text-[#1E293B]'"
+                                    class="py-2 text-[11px] font-semibold rounded-lg transition-all text-center">
+                                Dosen PM
+                            </button>
+                            <button type="button"
+                                    @click="activeRole = 'mahasiswa'"
+                                    :class="activeRole === 'mahasiswa' ? 'bg-[#EAF3FF] text-[#0B3B82]' : 'text-[#64748B] hover:text-[#1E293B]'"
+                                    class="py-2 text-[11px] font-semibold rounded-lg transition-all text-center">
+                                Mahasiswa
+                            </button>
+                            <button type="button"
+                                    @click="activeRole = 'tefa'"
+                                    :class="activeRole === 'tefa' ? 'bg-[#EAF3FF] text-[#0B3B82]' : 'text-[#64748B] hover:text-[#1E293B]'"
+                                    class="py-2 text-[11px] font-semibold rounded-lg transition-all text-center">
+                                TeFa
+                            </button>
+                        </div>
 
-            <!-- Card Grid View Mode -->
-            <template x-if="!isLoading && viewMode === 'grid'">
-                <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    <template x-for="user in filteredUsers" :key="user.id">
-                        <div class="bg-white border border-primary/10 hover:border-primary/40 rounded-2xl p-5 transition duration-200 hover:shadow-md hover:shadow-primary/5 group flex flex-col justify-between">
-                            <div>
-                                <div class="flex items-start justify-between">
-                                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm shadow-sm"
-                                         :class="user.role === 'admin' ? 'bg-primary text-white shadow-primary/20' : 'bg-accent text-text-primary font-extrabold shadow-accent/20'"
-                                         x-text="getInitials(user.name)">
-                                    </div>
-                                    <span class="px-2.5 py-1 rounded-md bg-section border border-primary/10 text-xs font-mono font-bold text-primary" x-text="'#' + user.id"></span>
-                                </div>
-
-                                <div class="mt-4">
-                                    <h3 class="text-base font-bold text-text-primary group-hover:text-primary transition" x-text="user.name"></h3>
-                                    <a :href="'mailto:' + user.email" class="mt-1 text-xs text-text-secondary hover:text-primary font-mono block truncate" x-text="user.email"></a>
-                                </div>
+                        {{-- Dynamic Role Card Preview --}}
+                        <div class="mt-4 space-y-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full"
+                                      :class="roles[activeRole].badgeColor"
+                                      x-text="roles[activeRole].badge"></span>
+                                <span class="text-[11px] text-slate-400 font-medium truncate" x-text="roles[activeRole].name"></span>
                             </div>
 
-                            <div class="mt-5 pt-4 border-t border-primary/10 flex items-center justify-between">
-                                <template x-if="user.role === 'admin'">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
-                                        Admin
-                                    </span>
-                                </template>
-                                <template x-if="user.role !== 'admin'">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-accent/20 text-amber-800 border border-accent/40">
-                                        Member
-                                    </span>
-                                </template>
+                            <div>
+                                <h3 class="text-[15px] font-bold text-[#1E293B]" x-text="roles[activeRole].title"></h3>
+                                <p class="text-xs text-[#64748B] mt-1.5 leading-relaxed" x-text="roles[activeRole].desc"></p>
+                            </div>
 
-                                <span class="inline-flex items-center text-xs text-success font-semibold">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-success mr-1.5"></span>
-                                    Active
-                                </span>
+                            {{-- Simulated Dashboard Widget --}}
+                            <div class="rounded-xl border border-slate-100 bg-white p-3.5 space-y-2.5">
+                                <div class="flex items-center justify-between text-xs font-semibold">
+                                    <span class="text-slate-400 uppercase tracking-wide text-[10px]">Highlight Fitur</span>
+                                    <span class="text-[#16A34A] flex items-center gap-1 font-bold text-[10px]">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-[#16A34A]"></span> Aktif
+                                    </span>
+                                </div>
+                                <p class="text-xs font-medium text-[#0B3B82] leading-relaxed" x-text="roles[activeRole].highlight"></p>
                             </div>
                         </div>
-                    </template>
-                </div>
-            </template>
 
-            <!-- Empty State -->
-            <template x-if="!isLoading && filteredUsers.length === 0">
-                <div class="py-16 text-center px-4">
-                    <div class="w-16 h-16 rounded-2xl bg-section border border-primary/20 flex items-center justify-center mx-auto text-primary mb-4">
-                        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        <div class="mt-4 pt-3.5 border-t border-slate-200/70 flex items-center justify-between">
+                            <span class="text-[10px] text-slate-400">Klik tab untuk berganti peran</span>
+                            <a href="{{ route('login') }}" class="text-xs font-semibold text-[#0B3B82] hover:text-[#082a5c] flex items-center gap-1 transition-colors">
+                                <span>Eksplorasi</span>
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+                            </a>
+                        </div>
                     </div>
-                    <h3 class="text-base font-bold text-text-primary">Tidak ada pengguna ditemukan</h3>
-                    <p class="text-xs text-text-secondary max-w-sm mx-auto mt-1">
-                        Coba sesuaikan kata kunci pencarian atau filter role yang Anda gunakan.
-                    </p>
-                    <button @click="searchQuery = ''; selectedRole = 'all'" class="mt-4 px-4 py-2 text-xs font-bold rounded-xl bg-primary hover:bg-primary/90 text-white transition shadow-sm cursor-pointer">
-                        Reset Filter
-                    </button>
-                </div>
-            </template>
-        </div>
-
-        <!-- Raw JSON API Response Drawer / Accordion -->
-        <div class="mt-8 bg-white border border-primary/15 rounded-2xl p-5 shadow-sm" x-show="showJsonDrawer" x-transition>
-            <div class="flex items-center justify-between pb-3 border-b border-primary/10 mb-3">
-                <div class="flex items-center space-x-2">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-section text-primary border border-primary/20">RESPONSE</span>
-                    <span class="text-xs font-bold text-text-primary">Raw JSON dari API <span class="font-mono text-text-secondary font-normal" x-text="apiUrl"></span></span>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <button @click="copyJson()" 
-                            class="px-3 py-1.5 text-xs rounded-xl bg-section hover:bg-blue-100 text-primary border border-primary/20 transition flex items-center space-x-1.5 font-semibold cursor-pointer">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        <span x-text="copied ? 'Disalin!' : 'Copy JSON'"></span>
-                    </button>
                 </div>
             </div>
-            <pre class="bg-slate-900 p-4 rounded-xl text-xs font-mono text-emerald-400 overflow-x-auto border border-slate-800 leading-relaxed max-h-96"
-                 x-text="JSON.stringify(rawResponse, null, 2)"></pre>
+        </div>
+    </div>
+</section>
+
+{{-- Section: Tentang TeFa Polines --}}
+<section id="tentang" class="scroll-mt-20 pb-10 sm:pb-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto space-y-2.5">
+            <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full">
+                Konsep Teaching Factory
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-[#1E293B] tracking-tight">
+                Membawa Standar Industri ke Dalam Ekosistem Pendidikan
+            </h2>
+            <p class="text-sm text-[#64748B] leading-relaxed">
+                Teaching Factory (TeFa) Polines menyinergikan kurikulum vokasi dengan kebutuhan riil dunia usaha dan dunia industri (DUDI), menghasilkan produk teknologi yang siap pakai.
+            </p>
         </div>
 
-    </main>
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:border-[#0B3B82]/30 hover:shadow-md transition-all">
+                <div class="w-11 h-11 rounded-xl bg-[#0B3B82] text-white flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+                    </svg>
+                </div>
+                <h3 class="text-[15px] font-bold text-[#1E293B]">Kecepatan & Fleksibilitas</h3>
+                <p class="text-xs text-[#64748B] mt-2 leading-relaxed">
+                    Alur pengajuan proyek ringkas tanpa birokrasi berbelit. Evaluasi modul dan estimasi timeline ditentukan bersama secara transparan.
+                </p>
+            </div>
 
-    <footer class="mt-16 border-t border-primary/10 py-6 text-center text-xs text-text-secondary">
-        <p>Tevara &copy; {{ date('Y') }} &bull; Laravel + Tailwind CSS + Alpine.js API Client</p>
-    </footer>
+            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:border-[#0B3B82]/30 hover:shadow-md transition-all">
+                <div class="w-11 h-11 rounded-xl bg-[#FFB800] text-[#1E293B] flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
+                    </svg>
+                </div>
+                <h3 class="text-[15px] font-bold text-[#1E293B]">Kualitas Terjamin Dosen Ahli</h3>
+                <p class="text-xs text-[#64748B] mt-2 leading-relaxed">
+                    Setiap pengerjaan diawasi langsung oleh Dosen Project Manager berkualifikasi industri yang bertanggung jawab atas arsitektur dan kualitas kode.
+                </p>
+            </div>
 
-    <!-- Alpine.js Component Script -->
-    <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('usersPage', (config) => ({
-                apiUrl: config.apiUrl || '',
-                users: [],
-                rawResponse: null,
-                apiMessage: '',
-                responseSuccess: false,
-                isLoading: false,
-                errorMessage: config.initialError || '',
-                searchQuery: '',
-                selectedRole: 'all',
-                viewMode: 'table',
-                showJsonDrawer: true,
-                copied: false,
-                lastFetched: '',
+            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:border-[#0B3B82]/30 hover:shadow-md transition-all">
+                <div class="w-11 h-11 rounded-xl bg-purple-700 text-white flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                </div>
+                <h3 class="text-[15px] font-bold text-[#1E293B]">Efisiensi Biaya Nyata</h3>
+                <p class="text-xs text-[#64748B] mt-2 leading-relaxed">
+                    Model kemitraan vokasi yang saling menguntungkan. Industri mendapatkan solusi bernilai tinggi dan mahasiswa mendapatkan portofolio riil.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
 
-                initData() {
-                    if (config.initialData && config.initialData.success) {
-                        this.processResponse(config.initialData);
-                    } else if (!config.initialError) {
-                        this.hitApi();
-                    }
+{{-- Section: Interactive Workflow / Alur Kerja (Alpine.js) --}}
+<section id="alur-kerja" class="scroll-mt-20 pb-10 sm:pb-12"
+         x-data="{
+            activeStep: 1,
+            steps: [
+                {
+                    num: 1,
+                    title: 'Pengajuan Proposal Klien',
+                    actor: 'Mitra Industri / Klien',
+                    desc: 'Klien mengisi formulir pengajuan berisi latar belakang, target pengguna, modul fitur, batas deadline, serta estimasi anggaran.',
+                    deliverable: 'Draft Proposal & Daftar Modul Proyek',
+                    iconBg: 'bg-blue-50 text-[#0B3B82]'
                 },
-
-                async hitApi() {
-                    this.isLoading = true;
-                    this.errorMessage = '';
-                    try {
-                        const response = await fetch(this.apiUrl, {
-                            method: 'GET',
-                            headers: {
-                                'Accept': 'application/json'
-                            }
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
-                        }
-
-                        const data = await response.json();
-                        this.processResponse(data);
-                    } catch (err) {
-                        console.error('API Fetch error:', err);
-                        this.errorMessage = err.message || 'Terjadi kesalahan saat memanggil API.';
-                        this.responseSuccess = false;
-                    } finally {
-                        this.isLoading = false;
-                    }
+                {
+                    num: 2,
+                    title: 'Validasi & Penilaian TeFa',
+                    actor: 'Pengurus TeFa Polines',
+                    desc: 'Tim pengurus meninjau kelayakan teknis, relevansi kurikulum, dan kesesuaian anggaran sebelum disetujui atau dimintakan revisi.',
+                    deliverable: 'Status Validasi: Disetujui / Butuh Revisi',
+                    iconBg: 'bg-amber-50 text-amber-700'
                 },
-
-                processResponse(data) {
-                    this.rawResponse = data;
-                    this.responseSuccess = Boolean(data.success);
-                    this.apiMessage = data.message || '';
-                    this.users = Array.isArray(data.data) ? data.data : [];
-                    
-                    const now = new Date();
-                    this.lastFetched = now.toLocaleTimeString();
+                {
+                    num: 3,
+                    title: 'Penunjukan Dosen & Tim Mahasiswa',
+                    actor: 'Dosen PM & Mahasiswa',
+                    desc: 'Dosen PM ditugaskan untuk membentuk tim mahasiswa bertalenta sesuai spesialisasi teknologi yang dibutuhkan proyek.',
+                    deliverable: 'Susunan Anggota Tim & Timeline Pengerjaan',
+                    iconBg: 'bg-indigo-50 text-indigo-700'
                 },
-
-                get filteredUsers() {
-                    return this.users.filter(user => {
-                        const matchesRole = this.selectedRole === 'all' || user.role === this.selectedRole;
-                        const q = this.searchQuery.toLowerCase().trim();
-                        const matchesSearch = !q || 
-                            user.name.toLowerCase().includes(q) || 
-                            user.email.toLowerCase().includes(q) || 
-                            String(user.id).includes(q);
-                        return matchesRole && matchesSearch;
-                    });
+                {
+                    num: 4,
+                    title: 'Pengerjaan Modul & Monitoring',
+                    actor: 'Seluruh Tim Proyek',
+                    desc: 'Eksekusi pengerjaan berbasis modul dengan update progress task berkala, code review mingguan, dan demo milestone.',
+                    deliverable: 'Source Code, Task Completed & Progress %',
+                    iconBg: 'bg-emerald-50 text-emerald-700'
                 },
-
-                countRole(role) {
-                    return this.users.filter(u => u.role === role).length;
-                },
-
-                getInitials(name) {
-                    if (!name) return 'U';
-                    const parts = name.trim().split(' ');
-                    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-                    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-                },
-
-                copyJson() {
-                    if (!this.rawResponse) return;
-                    navigator.clipboard.writeText(JSON.stringify(this.rawResponse, null, 2));
-                    this.copied = true;
-                    setTimeout(() => { this.copied = false; }, 2000);
+                {
+                    num: 5,
+                    title: 'Uji Fungsi & Serah Terima',
+                    actor: 'Klien, PM & TeFa',
+                    desc: 'Uji penerimaan pengguna (UAT), serah terima hak cipta dan dokumentasi, serta evaluasi kepuasan mitra industri.',
+                    deliverable: 'Berita Acara Serah Terima & Invoice Selesai',
+                    iconBg: 'bg-slate-100 text-slate-700'
                 }
-            }));
-        });
-    </script>
+            ]
+         }">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto space-y-2.5">
+            <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full">
+                Alur Pengerjaan
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-[#1E293B] tracking-tight">
+                5 Tahap Menuju Keberhasilan Proyek Anda
+            </h2>
+            <p class="text-sm text-[#64748B] leading-relaxed">
+                Klik tahapan di bawah untuk melihat rincian proses, peran yang terlibat, dan output yang dihasilkan di setiap langkah.
+            </p>
+        </div>
+
+        {{-- Steps Navigation Bar --}}
+        <div class="mt-8 grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <template x-for="s in steps" :key="s.num">
+                <button type="button"
+                        @click="activeStep = s.num"
+                        :class="activeStep === s.num
+                            ? 'bg-[#0B3B82] text-white border-[#0B3B82] shadow-sm'
+                            : 'bg-white text-[#64748B] border-slate-100 hover:bg-[#F8FAFC] hover:border-slate-200'"
+                        class="p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-[92px]">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold font-mono"
+                              :class="activeStep === s.num ? 'text-[#FFB800]' : 'text-slate-400'"
+                              x-text="'0' + s.num"></span>
+                        <span x-show="activeStep === s.num" class="w-1.5 h-1.5 rounded-full bg-[#FFB800]"></span>
+                    </div>
+                    <p class="text-[11px] font-semibold leading-snug mt-2" x-text="s.title"></p>
+                </button>
+            </template>
+        </div>
+
+        {{-- Active Step Detail Showcase Card --}}
+        <div class="mt-6 bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                <div class="lg:col-span-8 space-y-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#EAF3FF] text-[#0B3B82] uppercase tracking-wide"
+                              x-text="'Tahap ' + activeStep + ' dari 5'"></span>
+                        <span class="text-xs font-medium text-[#64748B]"
+                              x-text="'Pelaku: ' + steps[activeStep - 1].actor"></span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-[#1E293B]" x-text="steps[activeStep - 1].title"></h3>
+                    <p class="text-sm text-[#64748B] leading-relaxed max-w-2xl" x-text="steps[activeStep - 1].desc"></p>
+
+                    <div class="pt-3.5 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Output / Deliverable:</span>
+                        <span class="text-[11px] font-semibold text-[#16A34A] bg-[#DCFCE7] px-2.5 py-1 rounded-lg"
+                              x-text="steps[activeStep - 1].deliverable"></span>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-4 flex flex-col gap-3">
+                    <div class="bg-[#F8FAFC] p-4 rounded-xl border border-slate-100 space-y-1.5">
+                        <p class="text-[10px] font-bold text-[#0B3B82] uppercase tracking-wide">Transparansi Penuh</p>
+                        <p class="text-xs text-[#64748B] leading-relaxed">
+                            Setiap fase terekam di sistem TEVARA sehingga Anda selalu tahu siapa yang sedang bekerja dan apa progressnya.
+                        </p>
+                    </div>
+
+                    <a href="{{ route('klien.ajukan-proyek') }}"
+                       class="w-full text-center bg-[#0B3B82] text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-[#082a5c] transition-all shadow-sm">
+                        Mulai dari Tahap 1 Sekarang →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- Section: Interactive Scope / Category Calculator --}}
+<section id="simulasi" class="scroll-mt-20 pb-10 sm:pb-12"
+         x-data="{
+            category: 'web',
+            scale: 'medium',
+            specs: {
+                web: {
+                    name: 'Aplikasi Web & SaaS',
+                    icon: '🌐',
+                    desc: 'Portal sistem internal, dashboard analytics, e-commerce, atau platform layanan berbasis web responsif.',
+                    small: { duration: '1 - 2 Bulan', team: '1 PM + 2 Developer', estBudget: 'Rp 15.000.000 - Rp 25.000.000' },
+                    medium: { duration: '2 - 4 Bulan', team: '1 PM + 3 Developer + 1 UI/UX', estBudget: 'Rp 30.000.000 - Rp 50.000.000' },
+                    large: { duration: '4 - 6 Bulan', team: '1 PM + 4-5 Dev + 1 QA', estBudget: 'Rp 60.000.000+' }
+                },
+                mobile: {
+                    name: 'Aplikasi Mobile (Android/iOS)',
+                    icon: '📱',
+                    desc: 'Aplikasi native atau cross-platform dengan antarmuka modern, push notification, dan integrasi backend API.',
+                    small: { duration: '1.5 - 2 Bulan', team: '1 PM + 2 Mobile Dev', estBudget: 'Rp 20.000.000 - Rp 35.000.000' },
+                    medium: { duration: '3 - 4 Bulan', team: '1 PM + 3 Dev + 1 UI/UX', estBudget: 'Rp 40.000.000 - Rp 65.000.000' },
+                    large: { duration: '5 - 6 Bulan', team: '1 PM + 4 Mobile Dev + 1 QA', estBudget: 'Rp 75.000.000+' }
+                },
+                iot: {
+                    name: 'IoT & Perangkat Keras Cerdas',
+                    icon: '⚡',
+                    desc: 'Sistem sensor, otomasi pabrik, telemetry tracking, dan integrasi hardware dengan dashboard monitoring real-time.',
+                    small: { duration: '2 - 3 Bulan', team: '1 PM + 2 Hardware/Firmware', estBudget: 'Rp 25.000.000 - Rp 40.000.000' },
+                    medium: { duration: '3 - 5 Bulan', team: '1 PM + 3 IoT + 1 Cloud Dev', estBudget: 'Rp 45.000.000 - Rp 70.000.000' },
+                    large: { duration: '5 - 7 Bulan', team: '1 PM + 4 Tim Gabungan Hardware/Cloud', estBudget: 'Rp 80.000.000+' }
+                },
+                desktop: {
+                    name: 'Aplikasi Desktop & Sistem Internal',
+                    icon: '🖥️',
+                    desc: 'Software offline-first, kontrol inventaris kasir (POS), atau utilitas komputasi khusus untuk lingkungan industri.',
+                    small: { duration: '1 - 2 Bulan', team: '1 PM + 2 Dev', estBudget: 'Rp 15.000.000 - Rp 30.000.000' },
+                    medium: { duration: '2 - 4 Bulan', team: '1 PM + 3 Dev', estBudget: 'Rp 35.000.000 - Rp 55.000.000' },
+                    large: { duration: '4 - 6 Bulan', team: '1 PM + 4 Dev', estBudget: 'Rp 60.000.000+' }
+                }
+            }
+         }">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto space-y-2.5">
+            <span class="inline-flex items-center gap-1.5 bg-[#FFF9ED] text-[#D97706] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full">
+                Kalkulator Interaktif
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-[#1E293B] tracking-tight">
+                Simulasikan Kebutuhan Proyek Anda
+            </h2>
+            <p class="text-sm text-[#64748B] leading-relaxed">
+                Pilih kategori teknologi dan skala kebutuhan untuk melihat gambaran komposisi tim serta estimasi durasi pengerjaan di TeFa Polines.
+            </p>
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {{-- Controls --}}
+            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6">
+                {{-- Category selection --}}
+                <div class="space-y-3">
+                    <label class="block text-[10px] font-bold uppercase tracking-wide text-slate-400">1. Pilih Kategori Proyek</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button"
+                                @click="category = 'web'"
+                                :class="category === 'web' ? 'border-[#0B3B82] bg-[#EAF3FF] text-[#0B3B82]' : 'border-slate-100 bg-white text-[#1E293B] hover:bg-[#F8FAFC]'"
+                                class="p-3.5 rounded-xl border text-left transition-all flex items-center gap-3">
+                            <span class="text-xl">🌐</span>
+                            <div>
+                                <p class="text-xs font-semibold">Web & SaaS</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Portal & Dashboard</p>
+                            </div>
+                        </button>
+
+                        <button type="button"
+                                @click="category = 'mobile'"
+                                :class="category === 'mobile' ? 'border-[#0B3B82] bg-[#EAF3FF] text-[#0B3B82]' : 'border-slate-100 bg-white text-[#1E293B] hover:bg-[#F8FAFC]'"
+                                class="p-3.5 rounded-xl border text-left transition-all flex items-center gap-3">
+                            <span class="text-xl">📱</span>
+                            <div>
+                                <p class="text-xs font-semibold">Mobile App</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Android & iOS</p>
+                            </div>
+                        </button>
+
+                        <button type="button"
+                                @click="category = 'iot'"
+                                :class="category === 'iot' ? 'border-[#0B3B82] bg-[#EAF3FF] text-[#0B3B82]' : 'border-slate-100 bg-white text-[#1E293B] hover:bg-[#F8FAFC]'"
+                                class="p-3.5 rounded-xl border text-left transition-all flex items-center gap-3">
+                            <span class="text-xl">⚡</span>
+                            <div>
+                                <p class="text-xs font-semibold">IoT & Hardware</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Sensor & Otomasi</p>
+                            </div>
+                        </button>
+
+                        <button type="button"
+                                @click="category = 'desktop'"
+                                :class="category === 'desktop' ? 'border-[#0B3B82] bg-[#EAF3FF] text-[#0B3B82]' : 'border-slate-100 bg-white text-[#1E293B] hover:bg-[#F8FAFC]'"
+                                class="p-3.5 rounded-xl border text-left transition-all flex items-center gap-3">
+                            <span class="text-xl">🖥️</span>
+                            <div>
+                                <p class="text-xs font-semibold">Desktop App</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Offline-first POS</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Scale selection --}}
+                <div class="space-y-3">
+                    <label class="block text-[10px] font-bold uppercase tracking-wide text-slate-400">2. Pilih Skala Kebutuhan</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button type="button"
+                                @click="scale = 'small'"
+                                :class="scale === 'small' ? 'border-[#FFB800] bg-[#FFF9ED] text-[#1E293B]' : 'border-slate-100 bg-white text-[#1E293B] hover:bg-[#F8FAFC]'"
+                                class="p-3 rounded-xl border text-center transition-all">
+                            <p class="text-xs font-semibold">MVP / Ringan</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">1-3 Modul Utama</p>
+                        </button>
+
+                        <button type="button"
+                                @click="scale = 'medium'"
+                                :class="scale === 'medium' ? 'border-[#FFB800] bg-[#FFF9ED] text-[#1E293B]' : 'border-slate-100 bg-white text-[#1E293B] hover:bg-[#F8FAFC]'"
+                                class="p-3 rounded-xl border text-center transition-all">
+                            <p class="text-xs font-semibold">Standar Industri</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">4-7 Modul Lengkap</p>
+                        </button>
+
+                        <button type="button"
+                                @click="scale = 'large'"
+                                :class="scale === 'large' ? 'border-[#FFB800] bg-[#FFF9ED] text-[#1E293B]' : 'border-slate-100 bg-white text-[#1E293B] hover:bg-[#F8FAFC]'"
+                                class="p-3 rounded-xl border text-center transition-all">
+                            <p class="text-xs font-semibold">Kompleks / Custom</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">8+ Modul Integrasi</p>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Simulation Result Card --}}
+            <div class="lg:col-span-5 bg-gradient-to-br from-[#0B3B82] to-[#142B57] text-white p-6 rounded-2xl shadow-sm relative overflow-hidden">
+                <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-[#FFB800]/20 rounded-full blur-2xl pointer-events-none"></div>
+
+                <div class="relative z-10 space-y-5">
+                    <div class="flex items-center justify-between border-b border-white/15 pb-3.5">
+                        <span class="text-[10px] uppercase font-bold tracking-wide text-[#FFB800]">Hasil Simulasi</span>
+                        <span class="text-xl" x-text="specs[category].icon"></span>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-bold" x-text="specs[category].name"></h3>
+                        <p class="text-xs text-white/70 mt-1 leading-relaxed" x-text="specs[category].desc"></p>
+                    </div>
+
+                    <div class="space-y-2.5 pt-1">
+                        <div class="flex items-center justify-between text-xs bg-white/10 px-3.5 py-2.5 rounded-xl">
+                            <span class="text-white/70">Estimasi Durasi</span>
+                            <span class="font-semibold text-white" x-text="specs[category][scale].duration"></span>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs bg-white/10 px-3.5 py-2.5 rounded-xl gap-3">
+                            <span class="text-white/70 flex-shrink-0">Struktur Tim</span>
+                            <span class="font-semibold text-white text-right" x-text="specs[category][scale].team"></span>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs bg-white/10 px-3.5 py-2.5 rounded-xl gap-3">
+                            <span class="text-white/70 flex-shrink-0">Kisaran Nilai TeFa</span>
+                            <span class="font-bold text-[#FFB800] text-right" x-text="specs[category][scale].estBudget"></span>
+                        </div>
+                    </div>
+
+                    <a href="{{ route('klien.ajukan-proyek') }}"
+                       class="block w-full text-center rounded-xl bg-[#FFB800] py-2.5 text-sm font-bold text-[#1E293B] hover:bg-[#e6a600] transition-all">
+                        Ajukan Proposal Kategori Ini →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- Section: Ekosistem Multi-Peran --}}
+<section id="peran" class="scroll-mt-20 pb-10 sm:pb-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto space-y-2.5">
+            <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full">
+                Kolaborasi 4 Peran
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-[#1E293B] tracking-tight">
+                Siapa Saja yang Berkolaborasi di TEVARA?
+            </h2>
+            <p class="text-sm text-[#64748B] leading-relaxed">
+                Setiap peran memiliki dashboard spesifik yang terhubung langsung ke backend untuk menjamin akuntabilitas dan efisiensi.
+            </p>
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {{-- Card 1: Klien --}}
+            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                <span class="inline-block text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[#EAF3FF] text-[#0B3B82] mb-3.5">Mitra Klien</span>
+                <h3 class="text-[15px] font-bold text-[#1E293B]">Industri & Start-up</h3>
+                <p class="text-xs text-[#64748B] mt-2 leading-relaxed">
+                    Mengajukan kebutuhan, memantau modul dan timeline, mengunduh invoice tagihan, dan memberikan umpan balik evaluasi.
+                </p>
+            </div>
+
+            {{-- Card 2: Dosen PM --}}
+            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                <span class="inline-block text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#D97706] mb-3.5">Dosen PM</span>
+                <h3 class="text-[15px] font-bold text-[#1E293B]">Project Manager</h3>
+                <p class="text-xs text-[#64748B] mt-2 leading-relaxed">
+                    Mengatur tim pengerjaan, memecah backlog modul menjadi task terukur, memantau sprint, dan memastikan kualitas output.
+                </p>
+            </div>
+
+            {{-- Card 3: Mahasiswa --}}
+            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                <span class="inline-block text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 mb-3.5">Mahasiswa</span>
+                <h3 class="text-[15px] font-bold text-[#1E293B]">Talenta Vokasi</h3>
+                <p class="text-xs text-[#64748B] mt-2 leading-relaxed">
+                    Mengerjakan task riil, mengunggah commit/deliverable, mencatat log aktivitas pengerjaan, dan mengasah portofolio kerja.
+                </p>
+            </div>
+
+            {{-- Card 4: TeFa & Jurusan --}}
+            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                <span class="inline-block text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[#DCFCE7] text-[#16A34A] mb-3.5">Pengurus & Jurusan</span>
+                <h3 class="text-[15px] font-bold text-[#1E293B]">Tata Kelola & Validasi</h3>
+                <p class="text-xs text-[#64748B] mt-2 leading-relaxed">
+                    Memvalidasi kelayakan anggaran proposal, memantau statistik proyek aktif se-Polines, dan menerbitkan laporan capaian.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- Section: FAQ Accordion (Alpine.js) --}}
+<section id="faq" class="scroll-mt-20 pb-10 sm:pb-12"
+         x-data="{
+            openFaq: null,
+            toggle(i) {
+                this.openFaq = (this.openFaq === i) ? null : i;
+            }
+         }">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center space-y-2.5">
+            <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full">
+                Pertanyaan Umum
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-[#1E293B] tracking-tight">
+                Frequently Asked Questions
+            </h2>
+            <p class="text-sm text-[#64748B]">
+                Segala hal yang sering ditanyakan mengenai platform dan kemitraan Teaching Factory Polines.
+            </p>
+        </div>
+
+        <div class="mt-8 space-y-3">
+            {{-- FAQ 1 --}}
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all">
+                <button type="button"
+                        @click="toggle(1)"
+                        class="w-full px-5 py-4 text-left flex items-center justify-between gap-4 font-semibold text-sm text-[#1E293B] hover:bg-[#F8FAFC] cursor-pointer">
+                    <span>Bagaimana cara mitra industri mengajukan proyek ke TEVARA?</span>
+                    <svg class="w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200"
+                         :class="openFaq === 1 ? 'rotate-180 text-[#0B3B82]' : ''"
+                         fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                    </svg>
+                </button>
+                <div x-show="openFaq === 1" x-cloak class="px-5 pb-5 text-xs text-[#64748B] leading-relaxed border-t border-slate-100 pt-3.5">
+                    Mitra dapat mendaftar atau login sebagai klien, lalu mengisi formulir <span class="font-semibold text-[#0B3B82]">Ajukan Proyek</span> yang mencakup judul, latar belakang, modul kebutuhan, deadline target, dan estimasi anggaran. Proposal akan langsung masuk ke antrean validasi pengurus TeFa.
+                </div>
+            </div>
+
+            {{-- FAQ 2 --}}
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all">
+                <button type="button"
+                        @click="toggle(2)"
+                        class="w-full px-5 py-4 text-left flex items-center justify-between gap-4 font-semibold text-sm text-[#1E293B] hover:bg-[#F8FAFC] cursor-pointer">
+                    <span>Apakah kerahasiaan data dan source code proyek terlindungi (NDA)?</span>
+                    <svg class="w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200"
+                         :class="openFaq === 2 ? 'rotate-180 text-[#0B3B82]' : ''"
+                         fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                    </svg>
+                </button>
+                <div x-show="openFaq === 2" x-cloak class="px-5 pb-5 text-xs text-[#64748B] leading-relaxed border-t border-slate-100 pt-3.5">
+                    Ya. Setiap kerja sama didukung oleh Memorandum of Understanding (MoU) dan Non-Disclosure Agreement (NDA) resmi institusi Politeknik Negeri Semarang untuk melindungi hak kekayaan intelektual (HAKI) dan data rahasia industri.
+                </div>
+            </div>
+
+            {{-- FAQ 3 --}}
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all">
+                <button type="button"
+                        @click="toggle(3)"
+                        class="w-full px-5 py-4 text-left flex items-center justify-between gap-4 font-semibold text-sm text-[#1E293B] hover:bg-[#F8FAFC] cursor-pointer">
+                    <span>Siapa yang mengawasi kualitas hasil pengerjaan mahasiswa?</span>
+                    <svg class="w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200"
+                         :class="openFaq === 3 ? 'rotate-180 text-[#0B3B82]' : ''"
+                         fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                    </svg>
+                </button>
+                <div x-show="openFaq === 3" x-cloak class="px-5 pb-5 text-xs text-[#64748B] leading-relaxed border-t border-slate-100 pt-3.5">
+                    Setiap tim dipimpin oleh Dosen Project Manager yang bertindak sebagai lead architect dan quality control. Dosen memeriksa modul pengerjaan, mengontrol standarisasi pengkodean, dan memverifikasi fungsionalitas sebelum diserahkan ke klien.
+                </div>
+            </div>
+
+            {{-- FAQ 4 --}}
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all">
+                <button type="button"
+                        @click="toggle(4)"
+                        class="w-full px-5 py-4 text-left flex items-center justify-between gap-4 font-semibold text-sm text-[#1E293B] hover:bg-[#F8FAFC] cursor-pointer">
+                    <span>Bagaimana mekanisme validasi proposal oleh Pengurus TeFa?</span>
+                    <svg class="w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200"
+                         :class="openFaq === 4 ? 'rotate-180 text-[#0B3B82]' : ''"
+                         fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                    </svg>
+                </button>
+                <div x-show="openFaq === 4" x-cloak class="px-5 pb-5 text-xs text-[#64748B] leading-relaxed border-t border-slate-100 pt-3.5">
+                    Pengurus TeFa memeriksa rincian proposal pada menu Validasi Proposal. Mereka dapat meninjau latar belakang, modul, target pengguna, dan anggaran, lalu memberikan keputusan: Setujui, Butuh Revisi (dengan catatan perbaikan), atau Tolak.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- Call to Action Card --}}
+<section class="pb-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="rounded-2xl bg-gradient-to-r from-[#0B3B82] via-[#16438D] to-[#0B3B82] text-white p-7 sm:p-10 text-center relative overflow-hidden shadow-sm">
+            <div class="absolute inset-0 bg-[radial-gradient(#FFB800_1px,transparent_1px)] [background-size:20px_20px] opacity-15 pointer-events-none"></div>
+
+            <div class="relative z-10 max-w-2xl mx-auto space-y-4">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-[10px] font-bold uppercase tracking-wide text-[#FFB800] border border-white/15">
+                    Mulai Kolaborasi Anda
+                </span>
+
+                <h2 class="text-2xl sm:text-3xl font-bold tracking-tight leading-snug">
+                    Siap Mengembangkan Proyek Digital Anda Bersama Polines?
+                </h2>
+
+                <p class="text-sm text-white/80 leading-relaxed">
+                    Bergabunglah dengan puluhan mitra industri yang telah mempercayakan pengembangan solusi teknologi mereka melalui Teaching Factory TEVARA.
+                </p>
+
+                <div class="pt-1 flex flex-wrap items-center justify-center gap-3">
+                    <a href="{{ $isLoggedIn ? route('dashboard') : route('klien.ajukan-proyek') }}"
+                       class="inline-flex items-center gap-2 rounded-xl bg-[#FFB800] px-5 py-2.5 text-sm font-bold text-[#1E293B] hover:bg-[#e6a600] transition-all">
+                        <span>{{ $isLoggedIn ? 'Buka Dashboard' : 'Ajukan Proyek Sekarang' }}</span>
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
+                        </svg>
+                    </a>
+
+                    <a href="{{ route('login') }}"
+                       class="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/20 transition-all">
+                        <span>Masuk ke Akun</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- Footer --}}
+<footer class="bg-white border-t border-slate-100 py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="md:col-span-2 space-y-3.5">
+                <img src="{{ asset('images/tevara-logo.png') }}" alt="TEVARA Logo" class="h-8 w-auto max-w-[170px] object-contain">
+                <p class="text-xs text-[#64748B] max-w-sm leading-relaxed">
+                    TEVARA (Teaching Factory Polines) adalah sistem integrasi proyek industri dan vokasi akademik untuk mencetak produk digital berkualitas dan talenta unggul.
+                </p>
+                <p class="text-[11px] text-slate-400 leading-relaxed">
+                    Politeknik Negeri Semarang · Jl. Prof. H. Soedarto, S.H., Tembalang, Kota Semarang, Jawa Tengah 50275
+                </p>
+            </div>
+
+            <div class="space-y-3">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-[#1E293B]">Navigasi Cepat</p>
+                <ul class="space-y-2 text-xs text-[#64748B]">
+                    <li><a href="#tentang" class="hover:text-[#0B3B82] transition-colors">Tentang TeFa</a></li>
+                    <li><a href="#alur-kerja" class="hover:text-[#0B3B82] transition-colors">Alur Kerja Proyek</a></li>
+                    <li><a href="#simulasi" class="hover:text-[#0B3B82] transition-colors">Simulasi Kebutuhan</a></li>
+                    <li><a href="#peran" class="hover:text-[#0B3B82] transition-colors">Ekosistem Peran</a></li>
+                    <li><a href="#faq" class="hover:text-[#0B3B82] transition-colors">Tanya Jawab (FAQ)</a></li>
+                </ul>
+            </div>
+
+            <div class="space-y-3">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-[#1E293B]">Akses Layanan</p>
+                <ul class="space-y-2 text-xs text-[#64748B]">
+                    <li><a href="{{ route('login') }}" class="hover:text-[#0B3B82] transition-colors">Login Akun</a></li>
+                    <li><a href="{{ route('klien.ajukan-proyek') }}" class="hover:text-[#0B3B82] transition-colors">Ajukan Proyek Baru</a></li>
+                    <li><a href="{{ route('dashboard') }}" class="hover:text-[#0B3B82] transition-colors">Dashboard Sistem</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="mt-8 pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-400">
+            <p>© {{ date('Y') }} TEVARA · Teaching Factory Politeknik Negeri Semarang. Hak Cipta Dilindungi.</p>
+            <p>Knowledge into Action</p>
+        </div>
+    </div>
+</footer>
+
 </body>
 </html>

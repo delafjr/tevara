@@ -3,8 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Masuk - Tevara</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="min-h-full bg-white font-sans antialiased text-[#1E293B]">
     <div class="min-h-screen flex flex-col lg:flex-row">
@@ -15,12 +19,12 @@
             
             <div class="relative z-10 max-w-lg flex flex-col items-center">
                 {{-- Logo --}}
-                <img src="{{ asset('images/tevara-logo.png') }}" 
+                <img src="{{ asset('images/tevara-logo-vertical.png') }}" 
                      alt="TEVARA Knowledge into Action" 
-                     class="h-14 xl:h-16 w-auto object-contain mb-8">
+                     class="w-52 xl:w-60 h-auto object-contain mb-8">
 
                 {{-- Yellow accent bar --}}
-                <div class="w-44 h-2 bg-[#F59E0B] rounded-full mb-8"></div>
+                <div class="w-44 h-1.5 bg-[#FFB800] rounded-full mb-8"></div>
 
                 {{-- Tagline Heading --}}
                 <h1 class="text-3xl xl:text-4xl font-extrabold text-[#0B254A] tracking-tight leading-snug">
@@ -28,7 +32,7 @@
                 </h1>
 
                 {{-- Subtext --}}
-                <p class="mt-6 text-sm xl:text-base text-slate-500 font-medium leading-relaxed max-w-md">
+                <p class="mt-6 text-sm xl:text-base text-slate-500 font-medium leading-relaxed max-w-sm">
                     TEVARA menghubungkan dunia akademik dengan kebutuhan industri melalui kolaborasi, proyek nyata, dan peningkatan kompetensi.
                 </p>
             </div>
@@ -138,6 +142,22 @@
                             Masuk
                         </button>
                     </div>
+
+                    {{-- Divider --}}
+                    <div class="relative my-6">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-slate-200"></div>
+                        </div>
+                        <div class="relative flex justify-center text-xs uppercase">
+                            <span class="bg-white px-3 text-slate-400 font-semibold">atau masuk dengan</span>
+                        </div>
+                    </div>
+
+                    {{-- Google Sign-In Container --}}
+                    <div class="w-full flex flex-col items-center justify-center">
+                        <div id="googleBtn" class="w-full flex justify-center min-h-[44px]"></div>
+                        <div id="googleAlert" class="hidden mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 w-full text-center"></div>
+                    </div>
                 </form>
             </div>
 
@@ -149,5 +169,114 @@
         </div>
 
     </div>
+
+    {{-- Google Identity Services Script --}}
+    <script>
+        function handleGoogleCredentialResponse(response) {
+            if (!response || !response.credential) {
+                console.error('Credential Google tidak ditemukan.');
+                return;
+            }
+
+            const alertEl = document.getElementById('googleAlert');
+            if (alertEl) {
+                alertEl.classList.add('hidden');
+                alertEl.textContent = '';
+            }
+
+            // Kirim POST /api/v1/auth/google body: { "id_token": "..." }
+            fetch('/api/v1/auth/google', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({
+                    id_token: response.credential,
+                }),
+            })
+            .then(async (res) => {
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.success) {
+                    const token = data.data?.token;
+                    const user = data.data?.user;
+
+                    // Simpan token di storage/cookie
+                    if (token) {
+                        try {
+                            localStorage.setItem('api_token', token);
+                            if (user) {
+                                localStorage.setItem('user', JSON.stringify(user));
+                            }
+                        } catch (e) {
+                            console.warn('Storage unavailable', e);
+                        }
+                        document.cookie = `api_token=${encodeURIComponent(token)}; path=/; max-age=604800; SameSite=Lax`;
+                    }
+
+                    // Redirect ke dashboard sesuai role
+                    window.location.href = data.data?.redirect_url || '/dashboard';
+                } else {
+                    const msg = data.message || 'Login dengan Google gagal.';
+                    if (alertEl) {
+                        alertEl.textContent = msg;
+                        alertEl.classList.remove('hidden');
+                    }
+                }
+            })
+            .catch((err) => {
+                console.error('Google sign-in error:', err);
+                if (alertEl) {
+                    alertEl.textContent = 'Gagal terhubung ke server backend.';
+                    alertEl.classList.remove('hidden');
+                }
+            });
+        }
+
+        function initGoogleSignIn() {
+            const clientId = '{{ config('services.google.client_id', env('VITE_GOOGLE_CLIENT_ID')) }}';
+            if (!clientId || !window.google || !google.accounts || !google.accounts.id) {
+                return;
+            }
+
+            google.accounts.id.initialize({
+                client_id: clientId,
+                callback: handleGoogleCredentialResponse,
+                auto_select: false,
+                cancel_on_tap_outside: true,
+            });
+
+            const btnContainer = document.getElementById('googleBtn');
+            if (btnContainer) {
+                const width = Math.min(Math.max(btnContainer.offsetWidth || 380, 240), 400);
+                google.accounts.id.renderButton(btnContainer, {
+                    theme: 'outline',
+                    size: 'large',
+                    text: 'signin_with',
+                    shape: 'rectangular',
+                    logo_alignment: 'left',
+                    width: width,
+                });
+            }
+
+            // One Tap popup
+            google.accounts.id.prompt();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.google && google.accounts && google.accounts.id) {
+                initGoogleSignIn();
+            } else {
+                const checkGoogleInterval = setInterval(() => {
+                    if (window.google && google.accounts && google.accounts.id) {
+                        clearInterval(checkGoogleInterval);
+                        initGoogleSignIn();
+                    }
+                }, 100);
+                setTimeout(() => clearInterval(checkGoogleInterval), 5000);
+            }
+        });
+    </script>
 </body>
 </html>
