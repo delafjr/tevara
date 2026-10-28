@@ -15,6 +15,7 @@
 @php
     $user = $user ?? session('user', []);
     $userName = $user['name'] ?? 'Budi Santoso';
+    $proposals = is_array($proposals ?? null) ? $proposals : [];
 
     $projectsData = [
         [
@@ -347,6 +348,103 @@
                 </div>
 
             </div>
+
+            {{-- Flash Messages --}}
+            @if (session('success'))
+                <div class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800">
+                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    <p class="text-sm font-medium leading-relaxed">{{ session('success') }}</p>
+                </div>
+            @endif
+
+            @if (session('error') || ($error ?? null))
+                <div class="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-700">
+                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
+                    </svg>
+                    <p class="text-sm font-medium leading-relaxed">{{ session('error') ?? $error }}</p>
+                </div>
+            @endif
+
+            {{-- == ( Proposal & Pengajuan Proyek Klien dari Backend ) == --}}
+            @if(!empty($proposals))
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#0B3B82]"></span>
+                            <h2 class="text-sm font-bold text-slate-800">Proposal &amp; Pengajuan Proyek Anda</h2>
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#EAF3FF] text-[#0B3B82]">{{ count($proposals) }}</span>
+                        </div>
+                        <a href="{{ route('klien.ajukan-proyek') }}" class="text-xs font-semibold text-[#0B3B82] hover:underline inline-flex items-center gap-1">
+                            + Ajukan Proyek Baru
+                        </a>
+                    </div>
+
+                    @foreach($proposals as $prop)
+                        @php
+                            $propStatus = (string) ($prop['status'] ?? '-');
+                            $propStatusId = (int) ($prop['status_id'] ?? 0);
+                            $isPropRevision = $propStatusId === 4 || str_contains(strtolower($propStatus), 'revision') || str_contains(strtolower($propStatus), 'improvement');
+                            $formatBudget = fn ($v) => 'Rp ' . number_format((float) $v, 0, ',', '.');
+                        @endphp
+                        <div class="bg-white rounded-2xl border {{ $isPropRevision ? 'border-amber-300 ring-2 ring-amber-200/50' : 'border-slate-100' }} shadow-xs p-6 space-y-4">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div class="space-y-1 flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-xs font-bold text-[#0B3B82] bg-[#EAF3FF] px-2.5 py-0.5 rounded-md font-mono">
+                                            {{ $prop['proposal_code'] ?? 'PRSL-' . $prop['id'] }}
+                                        </span>
+                                        <span class="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-md">
+                                            {{ $prop['category'] ?? 'Web' }}
+                                        </span>
+                                        @if($isPropRevision)
+                                            <span class="text-xs font-bold text-amber-800 bg-amber-100 px-3 py-0.5 rounded-full border border-amber-300 inline-flex items-center gap-1.5 animate-pulse">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                                                Improvement (Revisi)
+                                            </span>
+                                        @else
+                                            <span class="text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                                                {{ $propStatus }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <h3 class="text-base font-bold text-slate-800 leading-snug">
+                                        {{ $prop['title'] ?? '-' }}
+                                    </h3>
+                                    <div class="flex items-center gap-4 text-xs text-slate-400 pt-1 flex-wrap">
+                                        <span>Estimasi Anggaran: <strong class="text-slate-700">{{ $formatBudget($prop['estimated_budget'] ?? 0) }}</strong></span>
+                                        <span>&bull;</span>
+                                        <span>Deadline: <strong class="text-slate-700">{{ $prop['desired_deadline'] ?? '-' }}</strong></span>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-3 flex-shrink-0">
+                                    <a href="{{ route('klien.projek-saya.detail', $prop['id']) }}"
+                                       class="inline-flex items-center gap-2 rounded-xl {{ $isPropRevision ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-sm shadow-amber-600/30' : 'bg-[#0B3B82] hover:bg-[#082a5c] text-white' }} px-5 py-2.5 text-xs font-bold transition cursor-pointer">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                                        </svg>
+                                        Detail Projek Saya {{ $isPropRevision ? '(Perlu Revisi)' : '' }}
+                                    </a>
+                                </div>
+                            </div>
+
+                            @if($isPropRevision && !empty($prop['review_notes']))
+                                <div class="bg-amber-50/90 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-950 flex items-start gap-3">
+                                    <svg class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/>
+                                    </svg>
+                                    <div class="space-y-1 flex-1">
+                                        <p class="font-bold text-amber-900">Catatan Revisi dari Pengurus TEFA:</p>
+                                        <p class="leading-relaxed text-slate-800">{{ $prop['review_notes'] }}</p>
+                                        <p class="text-[11px] text-amber-800/80 pt-1 font-medium">Klik tombol <strong>Detail Projek Saya</strong> di atas untuk mengubah harga/data yang diminta.</p>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            @endif
 
             {{-- == ( daftar kartu proyek ) == --}}
             <div class="space-y-4">
