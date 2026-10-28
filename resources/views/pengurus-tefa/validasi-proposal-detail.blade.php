@@ -302,11 +302,11 @@
 
                             <div class="hidden sm:block h-6 w-px bg-slate-200 mx-1"></div>
 
-                            <button type="button"
-                                    class="inline-flex items-center gap-2 rounded-xl bg-[#16A34A] px-5 py-2.5 text-xs font-bold text-white shadow-sm shadow-green-600/20 hover:bg-[#15803D] hover:shadow-md transition-all">
+                            <a href="{{ route('pengurus-tefa.validasi-proposal.setujui', $proposal['id'] ?? 0) }}"
+                               class="inline-flex items-center gap-2 rounded-xl bg-[#16A34A] px-5 py-2.5 text-xs font-bold text-white shadow-sm shadow-green-600/20 hover:bg-[#15803D] hover:shadow-md transition-all">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
                                 Setujui
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>
