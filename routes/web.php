@@ -208,14 +208,83 @@ Route::middleware('auth.api')->group(function () {
 
     // Klien: Ajukan Proyek Baru & Projek Saya
     Route::middleware('auth.api:klien')->prefix('klien')->name('klien.')->group(function () {
-        Route::get('/projek-saya', fn () => view('klien.projek-saya', ['user' => session('user')]))
-            ->name('projek-saya');
+        Route::get('/projek-saya', function (ApiService $api) {
+            $handoverProjects = [];
+            $handoverProjectsAvailable = false;
+
+            try {
+                $response = $api->get('proposals/mine');
+                $proposals = $response->successful() ? $response->json() : null;
+                if (is_array($proposals)) {
+                    $handoverProjectsAvailable = true;
+                    $handoverProjects = collect($proposals)
+                        ->filter(fn ($proposal) => is_array($proposal) && !empty($proposal['bast_eligible']) && !empty($proposal['project_code']))
+                        ->values()
+                        ->all();
+                }
+            } catch (\Throwable) {
+                $handoverProjects = [];
+            }
+
+            return view('klien.projek-saya', [
+                'user' => session('user'),
+                'handoverProjects' => $handoverProjects,
+                'handoverProjectsAvailable' => $handoverProjectsAvailable,
+            ]);
+        })->name('projek-saya');
         Route::get('/proyek-saya', fn () => redirect()->route('klien.projek-saya'));
 
         Route::get('/tagihan', fn () => view('klien.tagihan', ['user' => session('user')]))
             ->name('tagihan');
         Route::get('/tagihan-pembayaran', fn () => redirect()->route('klien.tagihan'));
         Route::get('/pembayaran', fn () => redirect()->route('klien.tagihan'));
+
+        Route::post('/projek-saya/bast', function (Request $request, ApiService $api) {
+            $validated = $request->validate([
+                'project_code' => ['required', 'string', 'max:50'],
+                'handover_date' => ['required', 'date'],
+                'repository_url' => ['required', 'url', 'max:255'],
+                'documentation_url' => ['required', 'url', 'max:255'],
+                'user_manual_url' => ['required', 'url', 'max:255'],
+                'handover_notes' => ['nullable', 'string'],
+                'client_signoff_name' => ['required', 'string', 'max:255'],
+                'client_approved' => ['required', 'accepted'],
+                'maintenance_warranty_months' => ['required', 'integer', 'min:0'],
+                'maintenance_start_date' => ['required', 'date'],
+                'maintenance_end_date' => ['required', 'date', 'after_or_equal:maintenance_start_date'],
+                'maintenance_notes' => ['nullable', 'string'],
+            ]);
+
+            try {
+                $proposalsResponse = $api->get('proposals/mine');
+                $proposals = $proposalsResponse->successful() ? $proposalsResponse->json() : null;
+                $project = is_array($proposals)
+                    ? collect($proposals)->first(fn ($item) => is_array($item) && ($item['project_code'] ?? null) === $validated['project_code'])
+                    : null;
+
+                if (!$project || empty($project['id'])) {
+                    return back()->withInput()->withErrors([
+                        'project_code' => 'Proyek tidak ditemukan pada akun klien ini.',
+                    ]);
+                }
+
+                unset($validated['project_code']);
+                $response = $api->post("proposals/{$project['id']}/handover", $validated);
+
+                if ($response->successful()) {
+                    return redirect()->route('klien.projek-saya')->with('success', 'BAST berhasil disetujui.');
+                }
+
+                $errors = $response->json('errors');
+                return back()->withInput()->withErrors(is_array($errors) ? $errors : [
+                    'handover' => $response->json('message') ?? 'Pengiriman BAST gagal.',
+                ]);
+            } catch (\Throwable $e) {
+                return back()->withInput()->withErrors([
+                    'handover' => 'Tidak dapat menghubungi backend BAST. Silakan coba kembali.',
+                ]);
+            }
+        })->name('projek-saya.bast.store');
 
         Route::get('/ajukan-proyek', function (ApiService $api) {
             return view('klien.ajukan-proyek', [

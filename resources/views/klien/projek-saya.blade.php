@@ -10,11 +10,48 @@
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#F4F7FB] font-sans text-[#1E293B] antialiased min-h-screen">
+<body class="bg-[#F4F7FB] font-sans text-[#1E293B] antialiased min-h-screen"
+      x-data="{
+          searchQuery: '',
+          activeCategory: 'Semua',
+          expanded: {
+              'PRJ-2026/014': true,
+              'PRJ-2026/008': false,
+              'PRJ-2026/021': false
+          },
+          handoverModalOpen: false,
+          handoverProject: '',
+          handoverMessage: '',
+          toggle(id) {
+              this.expanded[id] = !this.expanded[id];
+          },
+          openHandoverForm(projectId) {
+              this.handoverProject = projectId;
+              this.handoverModalOpen = true;
+          },
+          matches(p) {
+              const matchCat = this.activeCategory === 'Semua' ||
+                  (this.activeCategory === 'Web Platform' && (p.category === 'Web' || p.category_badge.includes('Web') || p.title.includes('Web'))) ||
+                  (this.activeCategory === 'Mobile' && (p.category === 'Mobile' || p.title.includes('Mobile'))) ||
+                  (this.activeCategory === 'IoT & Hardware' && (p.category === 'IoT & Hardware' || p.title.includes('IoT') || p.title.includes('Sensor')));
+
+              const q = this.searchQuery.toLowerCase().trim();
+              if (!q) return matchCat;
+
+              const matchQuery = p.id.toLowerCase().includes(q) ||
+                  p.title.toLowerCase().includes(q) ||
+                  p.dosen.name.toLowerCase().includes(q) ||
+                  p.status.toLowerCase().includes(q);
+
+              return matchCat && matchQuery;
+          }
+      }">
 
 @php
     $user = $user ?? session('user', []);
     $userName = $user['name'] ?? 'Budi Santoso';
+    $handoverProjects = $handoverProjects ?? [];
+    $handoverProjectsAvailable = $handoverProjectsAvailable ?? false;
 
     $projectsData = [
         [
@@ -202,35 +239,7 @@
     {{-- == ( konten utama ) == --}}
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
 
-        <main class="flex-1 px-8 py-7 space-y-6"
-              x-data="{
-                  searchQuery: '',
-                  activeCategory: 'Semua',
-                  expanded: {
-                      'PRJ-2026/014': true,
-                      'PRJ-2026/008': false,
-                      'PRJ-2026/021': false
-                  },
-                  toggle(id) {
-                      this.expanded[id] = !this.expanded[id];
-                  },
-                  matches(p) {
-                      const matchCat = this.activeCategory === 'Semua' ||
-                          (this.activeCategory === 'Web Platform' && (p.category === 'Web' || p.category_badge.includes('Web') || p.title.includes('Web'))) ||
-                          (this.activeCategory === 'Mobile' && (p.category === 'Mobile' || p.title.includes('Mobile'))) ||
-                          (this.activeCategory === 'IoT & Hardware' && (p.category === 'IoT & Hardware' || p.title.includes('IoT') || p.title.includes('Sensor')));
-
-                      const q = this.searchQuery.toLowerCase().trim();
-                      if (!q) return matchCat;
-
-                      const matchQuery = p.id.toLowerCase().includes(q) ||
-                          p.title.toLowerCase().includes(q) ||
-                          p.dosen.name.toLowerCase().includes(q) ||
-                          p.status.toLowerCase().includes(q);
-
-                      return matchCat && matchQuery;
-                  }
-              }">
+        <main class="flex-1 px-8 py-7 space-y-6">
 
             {{-- == ( header card : judul halaman & deskripsi ) == --}}
             <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#EFF6FF] via-[#F3F7FD] to-[#FCF8EC] border border-blue-100/70 px-8 py-7 shadow-xs">
@@ -243,6 +252,50 @@
                     </p>
                 </div>
             </div>
+
+            @if(session('success'))
+                <div role="status" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+            @endif
+            @if($errors->any())
+                <div role="alert" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    <p class="font-semibold">BAST belum dapat dikirim:</p>
+                    <ul class="mt-1 list-disc pl-5">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <section class="border-b border-slate-200 pb-5" aria-labelledby="bast-ready-title">
+                <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
+                    <div>
+                        <h2 id="bast-ready-title" class="text-sm font-bold text-slate-800">Proyek siap serah terima</h2>
+                        <p class="mt-1 text-xs text-slate-500">Daftar ini mengikuti hasil UAT terbaru dari backend.</p>
+                    </div>
+                    <span class="text-xs font-medium text-slate-500">{{ count($handoverProjects) }} proyek siap</span>
+                </div>
+                @if(count($handoverProjects))
+                    <div class="mt-3 divide-y divide-slate-100 border-y border-slate-100">
+                        @foreach($handoverProjects as $handoverProjectItem)
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3">
+                                <div>
+                                    <p class="text-xs font-bold text-slate-800">{{ $handoverProjectItem['title'] }}</p>
+                                    <p class="mt-1 font-mono text-[11px] text-slate-500">{{ $handoverProjectItem['project_code'] }}</p>
+                                </div>
+                                <button type="button" @click="openHandoverForm(@js($handoverProjectItem['project_code']))"
+                                        class="inline-flex w-fit items-center gap-2 rounded-lg bg-[#0B3B82] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#082d64]">
+                                    Isi formulir BAST
+                                </button>
+                            </div>
+                        @endforeach
+                    </div>
+                @elseif($handoverProjectsAvailable)
+                    <p class="mt-3 text-xs text-slate-500">Belum ada proyek dengan hasil UAT terakhir PASSED.</p>
+                @else
+                    <p class="mt-3 text-xs text-amber-800">Data kelayakan BAST belum dapat dimuat dari backend.</p>
+                @endif
+            </section>
 
             {{-- == ( 3 kartu ringkasan metrik statistik ) == --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -601,6 +654,36 @@
 
                         </div>
 
+                        @if($proj['status_type'] === 'uat')
+                        <section class="border-t border-slate-100 pt-5 space-y-4" aria-labelledby="bast-title-{{ $proj['id'] }}">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                <div>
+                                    <h3 id="bast-title-{{ $proj['id'] }}" class="text-sm font-bold text-slate-800">Berita Acara Serah Terima (BAST)</h3>
+                                    <p class="text-xs text-slate-500 mt-1">BAST dapat disetujui setelah hasil UAT berstatus PASSED.</p>
+                                </div>
+                                <span class="inline-flex w-fit items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                                    Menunggu persetujuan UAT
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                <div class="rounded-lg border border-slate-100 bg-[#F8FAFD] p-3">
+                                    <p class="font-semibold text-slate-700">Serah terima produk</p>
+                                    <p class="mt-1 text-slate-500">Repositori source code, dokumentasi API, dan panduan pengguna</p>
+                                </div>
+                                <div class="rounded-lg border border-slate-100 bg-[#F8FAFD] p-3">
+                                    <p class="font-semibold text-slate-700">Masa pemeliharaan</p>
+                                    <p class="mt-1 text-slate-500">Lama garansi, tanggal mulai, tanggal selesai, dan catatan pemeliharaan</p>
+                                </div>
+                            </div>
+                            <button type="button" disabled
+                                    class="inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-slate-200 bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-400"
+                                    title="Gunakan daftar proyek siap serah terima setelah UAT PASSED">
+                                Menunggu hasil UAT PASSED
+                            </button>
+                        </section>
+                        @endif
+
                     </div>
 
                 </div>
@@ -627,6 +710,76 @@
 
     </div>
 
+</div>
+
+<div x-show="handoverModalOpen" x-cloak style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="handover-modal-title">
+    <div class="fixed inset-0 bg-slate-900/50" @click="handoverModalOpen = false"></div>
+    <div class="min-h-screen px-4 py-8 flex items-center justify-center">
+        <div class="relative z-10 w-full max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div class="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                    <h2 id="handover-modal-title" class="text-base font-bold text-slate-800">Formulir Berita Acara Serah Terima</h2>
+                    <p class="mt-1 text-xs text-slate-500">Proyek <span x-text="handoverProject"></span></p>
+                </div>
+                <button type="button" @click="handoverModalOpen = false" aria-label="Tutup formulir BAST" class="text-xl leading-none text-slate-500 hover:text-slate-800">&times;</button>
+            </div>
+            <form method="POST" action="{{ route('klien.projek-saya.bast.store') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                @csrf
+                <input type="hidden" name="project_code" :value="handoverProject">
+                <div>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Nomor BAST</label>
+                    <input type="text" value="Diterbitkan sistem setelah UAT disetujui" disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-slate-500">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tanggal serah terima</label>
+                    <input type="date" name="handover_date" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tautan repositori</label>
+                    <input type="url" name="repository_url" placeholder="https://" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tautan dokumentasi</label>
+                    <input type="url" name="documentation_url" placeholder="https://" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tautan panduan pengguna</label>
+                    <input type="url" name="user_manual_url" placeholder="https://" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Nama penandatangan klien</label>
+                    <input type="text" name="client_signoff_name" required maxlength="255" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Masa garansi (bulan)</label>
+                    <input type="number" name="maintenance_warranty_months" min="0" value="3" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tanggal mulai pemeliharaan</label>
+                    <input type="date" name="maintenance_start_date" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tanggal selesai pemeliharaan</label>
+                    <input type="date" name="maintenance_end_date" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                </div>
+                <label class="flex items-center gap-2 text-xs font-medium text-slate-700">
+                    <input type="checkbox" name="client_approved" value="1" required class="rounded border-slate-300 text-[#0B3B82]">
+                    Saya menyetujui serah terima produk
+                </label>
+                <div class="md:col-span-2">
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Catatan serah terima / pemeliharaan</label>
+                    <textarea name="handover_notes" rows="3" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700"></textarea>
+                </div>
+                <div class="md:col-span-2 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-t border-slate-100 pt-4">
+                    <p class="text-xs text-amber-800" role="status">Pengiriman hanya berhasil jika hasil UAT terakhir berstatus PASSED.</p>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" @click="handoverModalOpen = false" class="rounded-lg px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
+                        <button type="submit" class="rounded-lg bg-[#0B3B82] px-4 py-2 text-xs font-semibold text-white hover:bg-[#082d64]">Kirim persetujuan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 </body>
