@@ -26,13 +26,13 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Dosen Pembimbing &amp; <span class="text-[#FFB800]">PM</span>
                     </h1>
-                    <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
+                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
                         Kelola data dosen yang berperan sebagai pembimbing dan project manager di TeFa.
                     </p>
                 </div>
 
                 <div class="relative z-10 flex-shrink-0">
-                    <a href="#" class="flex items-center gap-2 bg-[#FFB800] text-[#1E293B] font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-yellow-300 transition-colors shadow-sm">
+                    <a href="#" class="flex items-center gap-2 bg-[#0B3B82] text-white font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-[#082a5c] transition-colors shadow-sm">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                         Tambah Dosen
                     </a>
@@ -40,13 +40,17 @@
             </div>
 
             {{-- Stats --}}
-            <div class="grid grid-cols-4 gap-4">
-                @foreach([['18','Total Dosen','#0B3B82'],['12','Aktif Mengajar','#16A34A'],['8','Project Manager','#6366F1'],['3','Jurusan','#F59E0B']] as [$v,$l,$c])
-                <div class="bg-white rounded-xl px-5 py-5 border border-slate-100 shadow-sm">
-                    <p class="text-3xl font-bold text-[#1E293B] leading-none">{{ $v }}</p>
-                    <p class="text-xs text-slate-400 mt-1.5 font-medium">{{ $l }}</p>
-                    <div class="h-1 rounded-full mt-3" style="background:{{ $c }}30"><div class="h-full rounded-full w-3/4" style="background:{{ $c }}"></div></div>
-                </div>
+            <div class="grid grid-cols-4 gap-4 items-stretch">
+                @php
+                $dosenStats = [
+                    ['label' => 'Total Dosen',     'value' => '18', 'sub' => 'Terdaftar',       'color' => '#0B3B82', 'icon' => 'academic'],
+                    ['label' => 'Aktif Mengajar',  'value' => '12', 'sub' => 'Sedang Mengajar', 'color' => '#0B3B82', 'icon' => 'play'],
+                    ['label' => 'Project Manager', 'value' => '8',  'sub' => 'Aktif PM',        'color' => '#0B3B82', 'icon' => 'folder'],
+                    ['label' => 'Jurusan',         'value' => '3',  'sub' => 'Program Studi',   'color' => '#F59E0B', 'icon' => 'users'],
+                ];
+                @endphp
+                @foreach($dosenStats as $stat)
+                    <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
                 @endforeach
             </div>
 
