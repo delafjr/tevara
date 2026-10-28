@@ -122,6 +122,10 @@ class DashboardAccessTest extends TestCase
 
     public function test_pm_can_access_project_and_task_timeline_pages(): void
     {
+        Http::fake([
+            '*' => Http::response(['success' => true, 'data' => []], 200),
+        ]);
+
         $session = [
             'api_token' => 'dummy-token',
             'user' => [
@@ -146,6 +150,10 @@ class DashboardAccessTest extends TestCase
 
     public function test_dosen_pm_sidebar_links_open_pm_pages(): void
     {
+        Http::fake([
+            '*' => Http::response(['success' => true, 'data' => []], 200),
+        ]);
+
         $session = [
             'api_token' => 'dummy-token',
             'user' => [
@@ -170,6 +178,10 @@ class DashboardAccessTest extends TestCase
 
     public function test_dosen_can_open_project_and_task_pages_when_no_project_is_assigned(): void
     {
+        Http::fake([
+            '*' => Http::response(['success' => true, 'data' => []], 200),
+        ]);
+
         $response = $this->withSession([
             'api_token' => 'dummy-token',
             'user' => [
@@ -226,6 +238,6 @@ class DashboardAccessTest extends TestCase
         ])->get(route('pm.task-timeline'));
 
         $taskResponse->assertOk();
-        $taskResponse->assertSee('PRJ-2026/001');
+        $taskResponse->assertSee('Belum ada proyek terdaftar');
     }
 }
