@@ -176,4 +176,93 @@ class ValidasiProposalTest extends TestCase
         $response->assertOk();
         $response->assertSee('Belum ada proposal yang menunggu validasi');
     }
+
+    public function test_tombol_setujui_mengarahkan_ke_halaman_lanjutan_persetujuan(): void
+    {
+        $this->fakeDetailApi();
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->get('/pengurus-tefa/validasi-proposal/13');
+
+        $response->assertOk();
+        $response->assertSee(route('pengurus-tefa.validasi-proposal.setujui', 13), false);
+    }
+
+    public function test_halaman_setujui_proposal_dapat_diakses_dan_memuat_semua_kolom(): void
+    {
+        $this->fakeDetailApi();
+        Http::fake([
+            '*/api/v1/proposals/13/pending' => Http::response([
+                'id'               => 13,
+                'proposal_code'    => 'PRSL-2026-490',
+                'title'            => 'Portal Berita Digital',
+                'client_name'      => 'PT. Maju Bersama Sentosa',
+                'estimated_budget' => '100000.00',
+                'desired_deadline' => '2027-05-25',
+                'background'       => 'Scope kerja sistem informasi.',
+            ]),
+            '*/api/v1/users?role=dosen' => Http::response([
+                'success' => true,
+                'data'    => [
+                    ['id' => 3, 'name' => 'Prof. Kurnia', 'email' => 'kurnia@polines.ac.id', 'nidn' => '12345'],
+                ],
+            ]),
+            '*/api/v1/users?role=mahasiswa' => Http::response([
+                'success' => true,
+                'data'    => [
+                    ['id' => 50, 'name' => 'Andi Pratama', 'email' => 'andi@mhs.polines.ac.id', 'nim' => '226411001', 'study_program' => 'D3 TI'],
+                ],
+            ]),
+            '*/api/v1/master/project-roles' => Http::response([
+                'success' => true,
+                'data'    => [
+                    ['id' => 1, 'name' => 'UI/UX'],
+                    ['id' => 2, 'name' => 'Frontend'],
+                    ['id' => 3, 'name' => 'Backend'],
+                ],
+            ]),
+        ]);
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->get('/pengurus-tefa/validasi-proposal/13/setujui');
+
+        $response->assertOk();
+        $response->assertSee('Persetujuan Proposal &amp; Pembentukan Proyek', false);
+        $response->assertSee('Surat Perjanjian Kerja Sama &amp; SPK', false);
+        $response->assertSee('Biaya yang Disepakati &amp; Skema Termin', false);
+        $response->assertSee('Pembentukan Tim Pengembang TeFa', false);
+        $response->assertSee('Project Manager (Dosen TeFa)', false);
+        $response->assertSee('Berkas Surat Perjanjian / Kontrak (SPK)', false);
+    }
+
+    public function test_proses_setujui_proposal_berhasil_menyimpan_dan_redirect(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals/13/contract' => Http::response([
+                'message' => 'Data SPK/kontrak berhasil disimpan',
+            ], 200),
+        ]);
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->post('/pengurus-tefa/validasi-proposal/13/setujui', [
+                'spk_number'                  => 'SPK/TEFA/2026/013',
+                'scope_of_work'               => 'Pengerjaan modul frontend dan backend.',
+                'total_amount'                => 50000000,
+                'payment_terms_description'   => '3 Termin pembayaran',
+                'maintenance_warranty_months' => 3,
+                'start_date'                  => '2026-11-01',
+                'target_completion_date'      => '2027-02-28',
+                'pm_id'                       => 3,
+                'terms'                       => json_encode([
+                    ['term_sequence' => 1, 'amount' => 15000000, 'name' => 'Termin 1 (DP)'],
+                    ['term_sequence' => 2, 'amount' => 35000000, 'name' => 'Termin 2 (Pelunasan)'],
+                ]),
+                'members'                     => json_encode([
+                    ['student_id' => 50, 'role_id' => 2, 'joined_at' => '2026-11-01'],
+                ]),
+            ]);
+
+        $response->assertRedirect(route('pengurus-tefa.validasi-proposal'));
+        $response->assertSessionHas('success');
+    }
 }
