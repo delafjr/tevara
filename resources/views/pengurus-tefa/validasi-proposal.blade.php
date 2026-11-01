@@ -54,6 +54,21 @@
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
         <main class="flex-1 px-8 py-7 space-y-7">
 
+            {{-- Flash Alert --}}
+            @if (session('success'))
+                <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-xs text-emerald-800 shadow-xs">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-bold">Berhasil!</p>
+                        <p class="text-emerald-700 mt-0.5">{{ session('success') }}</p>
+                    </div>
+                </div>
+            @endif
+
             {{-- Hero Card --}}
             <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
                 {{-- gradient dekoratif --}}
