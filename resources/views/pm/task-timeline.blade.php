@@ -29,14 +29,30 @@
         };
     };
 
-    $pmStatusMeta = function (?string $pmStatus): array {
+    $isSubmitted = function (array $task): bool {
+        return filled($task['achieved_summary'] ?? null)
+            || ! empty($task['report_attachment_url'])
+            || (float) ($task['progress_percentage'] ?? 0) > 0;
+    };
+
+    $pmStatusMeta = function (?string $pmStatus, bool $submitted = true, string $taskStatus = ''): array {
         return match (strtoupper((string) $pmStatus)) {
-            'APPROVED'           => ['label' => 'Approved',          'pill' => 'bg-[#DCFCE7] text-[#16A34A]'],
-            'NEEDS_IMPROVEMENT'  => ['label' => 'Perlu Perbaikan',   'pill' => 'bg-[#FEE2E2] text-[#B91C1C]'],
-            'PENDING'            => ['label' => 'Menunggu Review',   'pill' => 'bg-[#FEF3C7] text-[#B45309]'],
-            default              => ['label' => 'Belum Direview',    'pill' => 'bg-slate-100 text-slate-500'],
+            'APPROVED' => strtoupper($taskStatus) === 'DONE'
+                ? ['label' => 'Selesai',           'pill' => 'bg-[#DCFCE7] text-[#16A34A]']
+                : ['label' => 'Laporan Disetujui', 'pill' => 'bg-[#DCFCE7] text-[#16A34A]'],
+            'NEEDS_IMPROVEMENT' => ['label' => 'Perlu Perbaikan', 'pill' => 'bg-[#FEE2E2] text-[#B91C1C]'],
+            'PENDING' => $submitted
+                ? ['label' => 'Menunggu Review', 'pill' => 'bg-[#FEF3C7] text-[#B45309]']
+                : ['label' => 'Belum Submit',    'pill' => 'bg-slate-50 text-slate-400 ring-1 ring-slate-200'],
+            default => ['label' => 'Belum Submit', 'pill' => 'bg-slate-50 text-slate-400 ring-1 ring-slate-200'],
         };
     };
+
+    // PENDING dipakai backend sebagai default task baru, jadi hanya hitung
+    // task yang benar-benar sudah punya laporan progres sebagai "perlu review".
+    $pendingReviewCount = collect($tasks)->filter(function ($task) use ($isSubmitted) {
+        return strtoupper((string) ($task['pm_status'] ?? '')) === 'PENDING' && $isSubmitted($task);
+    })->count();
 
     $priorityMeta = function (?string $priority): array {
         return match (strtoupper((string) $priority)) {
@@ -103,6 +119,32 @@
                 const d = new Date(value);
                 if (isNaN(d.getTime())) return value;
                 return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            },
+            hasSubmittedReport(task) {
+                if (!task) return false;
+                return !!((task.achieved_summary && task.achieved_summary.trim())
+                    || task.report_attachment_url
+                    || (task.progress_percentage ?? 0) > 0);
+            },
+            reportStatusLabel(task) {
+                if (!task) return '—';
+                if (task.pm_status === 'APPROVED') {
+                    return task.status === 'DONE' ? 'Selesai' : 'Laporan Disetujui';
+                }
+                if (task.pm_status === 'NEEDS_IMPROVEMENT') return 'Perlu Perbaikan';
+                if (task.pm_status === 'PENDING') {
+                    return this.hasSubmittedReport(task) ? 'Menunggu Review' : 'Belum Submit';
+                }
+                return 'Belum Submit';
+            },
+            reportStatusClass(task) {
+                if (!task) return 'bg-slate-100 text-slate-500';
+                if (task.pm_status === 'APPROVED') return 'bg-[#DCFCE7] text-[#16A34A]';
+                if (task.pm_status === 'NEEDS_IMPROVEMENT') return 'bg-[#FEE2E2] text-[#B91C1C]';
+                if (task.pm_status === 'PENDING' && this.hasSubmittedReport(task)) {
+                    return 'bg-[#FEF3C7] text-[#B45309]';
+                }
+                return 'bg-slate-50 text-slate-400 ring-1 ring-slate-200';
             }
           }">
 
@@ -245,7 +287,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ (int) ($summary['total'] ?? count($tasks)) }}</p>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none" data-stat="total">{{ (int) ($summary['total'] ?? count($tasks)) }}</p>
                 <p class="text-[11px] text-slate-400 font-medium mt-1">seluruh task proyek</p>
             </div>
 
@@ -259,7 +301,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ (int) ($summary['pending_review'] ?? 0) }}</p>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none" data-stat="pending-review">{{ $pendingReviewCount }}</p>
                 <p class="text-[11px] text-[#F59E0B] font-semibold mt-1">menunggu keputusan PM</p>
             </div>
 
@@ -272,21 +314,21 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ (int) ($summary['in_progress'] ?? 0) }}</p>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none" data-stat="in-progress">{{ (int) ($summary['in_progress'] ?? 0) }}</p>
                 <p class="text-[11px] text-[#2563EB] font-semibold mt-1">{{ (int) ($summary['testing'] ?? 0) }} sedang testing</p>
             </div>
 
             <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
                 <div class="flex items-center justify-between mb-3">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Disetujui / Selesai</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Task Selesai</p>
                     <div class="w-8 h-8 rounded-lg bg-[#DCFCE7] flex items-center justify-center text-[#16A34A]">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ (int) ($summary['approved'] ?? 0) }}</p>
-                <p class="text-[11px] text-slate-400 font-medium mt-1">{{ (int) ($summary['done'] ?? 0) }} task done</p>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none" data-stat="done">{{ (int) ($summary['done'] ?? 0) }}</p>
+                <p class="text-[11px] text-slate-400 font-medium mt-1">{{ (int) ($summary['approved'] ?? 0) }} laporan disetujui</p>
             </div>
         </div>
 
@@ -318,7 +360,7 @@
                         @forelse($columnTasks as $task)
                             @php
                                 $taskStatus  = $statusMeta((string) ($task['status'] ?? 'TODO'));
-                                $pmStatus    = $pmStatusMeta($task['pm_status'] ?? null);
+                                $pmStatus    = $pmStatusMeta($task['pm_status'] ?? null, $isSubmitted($task), (string) ($task['status'] ?? ''));
                                 $priority    = $priorityMeta($task['priority'] ?? null);
                                 $taskProgress = (int) round((float) ($task['progress_percentage'] ?? 0));
                                 $assignee    = is_array($task['assignee'] ?? null) ? $task['assignee'] : null;
@@ -440,7 +482,12 @@
                             <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Progress</p>
                             <p class="text-xl font-extrabold text-[#0B254A]" x-text="(selectedTask?.progress_percentage ?? 0) + '%'"></p>
                         </div>
-                        <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#0B3B82]" x-text="selectedTask?.status ?? '—'"></span>
+                        <div class="flex flex-col items-end gap-1">
+                            <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#0B3B82]" x-text="'Task: ' + (selectedTask?.status ?? '—')"></span>
+                            <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full"
+                                  :class="reportStatusClass(selectedTask)"
+                                  x-text="'Laporan: ' + reportStatusLabel(selectedTask)"></span>
+                        </div>
                     </div>
 
                     <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -476,6 +523,19 @@
                         <p class="text-[13px] font-extrabold text-[#0B254A]">Form Evaluasi Project Manager</p>
                     </div>
 
+                    <div x-show="!hasSubmittedReport(selectedTask)" x-cloak class="mb-4 flex items-start gap-2 rounded-xl border border-amber-100 bg-amber-50 px-3.5 py-3">
+                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+                        </svg>
+                        <p class="text-[10px] text-amber-700 leading-relaxed font-medium">
+                            Mahasiswa belum mengirim laporan progres. Review dinonaktifkan sampai ada laporan yang bisa dievaluasi.
+                        </p>
+                    </div>
+
+                    <p class="text-[10px] text-slate-400 leading-relaxed mb-3">
+                        Keputusan review berlaku untuk laporan progres terakhir. Status task di kanban tidak otomatis berubah menjadi selesai.
+                    </p>
+
                     <form method="POST"
                           :action="'{{ url('/pm/proposals/' . ($currentProposalId ?? 0) . '/tasks') }}/' + (selectedTask?.id ?? 0) + '/review'"
                           class="space-y-4">
@@ -502,7 +562,8 @@
                                 type="submit"
                                 name="decision"
                                 value="revision"
-                                class="w-full flex items-center justify-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold py-2.5 rounded-xl transition-colors cursor-pointer"
+                                :disabled="!hasSubmittedReport(selectedTask)"
+                                class="w-full flex items-center justify-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold py-2.5 rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
@@ -513,12 +574,13 @@
                                 type="submit"
                                 name="decision"
                                 value="approve"
-                                class="w-full flex items-center justify-center gap-2 bg-[#0B254A] hover:bg-[#0d2f5e] text-white text-xs font-extrabold py-2.5 rounded-xl transition-colors cursor-pointer"
+                                :disabled="!hasSubmittedReport(selectedTask)"
+                                class="w-full flex items-center justify-center gap-2 bg-[#0B254A] hover:bg-[#0d2f5e] text-white text-xs font-extrabold py-2.5 rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                 </svg>
-                                Setujui Task (Approve)
+                                Setujui Laporan
                             </button>
                         </div>
                     </form>
