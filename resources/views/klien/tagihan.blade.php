@@ -31,6 +31,8 @@
             'termins' => [
                 [
                     'name'         => 'Termin 1 — Down Payment (30%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 1,
                     'desc'         => 'Kick-off, Spesifikasi Teknis, dan Persetujuan Arsitektur Sistem',
                     'nominal'      => 'Rp 22.500.000',
                     'channel'      => 'Virtual Account BCA',
@@ -43,6 +45,8 @@
                 ],
                 [
                     'name'         => 'Termin 2 — Progres Lapangan & Integrasi IoT (40%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 2,
                     'desc'         => 'Implementasi Firmware Sensor, Broker MQTT, dan Visualisasi Web',
                     'nominal'      => 'Rp 30.000.000',
                     'channel'      => 'Virtual Account BCA',
@@ -55,6 +59,8 @@
                 ],
                 [
                     'name'         => 'Termin 3 — Final UAT & Serah Terima (30%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 3,
                     'desc'         => 'Uji Terima Pengguna (UAT) Final, Pelatihan Operator, & Handover',
                     'nominal'      => 'Rp 22.500.000',
                     'channel'      => 'BCA VA / Mandiri Giro',
@@ -83,6 +89,8 @@
             'termins' => [
                 [
                     'name'         => 'Termin 1 — Down Payment (50%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 1,
                     'desc'         => 'Kick-off & Approval System Architecture & UI/UX',
                     'nominal'      => 'Rp 30.000.000',
                     'channel'      => 'Virtual Account BCA',
@@ -95,6 +103,8 @@
                 ],
                 [
                     'name'         => 'Termin 2 — Pelunasan & Deployment (50%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 2,
                     'is_urgent'    => true,
                     'desc'         => 'UAT Final, User Training, & Penyerahan Source Code',
                     'nominal'      => 'Rp 30.000.000',
@@ -122,6 +132,8 @@
             'termins' => [
                 [
                     'name'         => 'Termin 1 — Down Payment (40%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 1,
                     'desc'         => 'Pengadaan Perangkat Keras Sensor & Desain Arsitektur Hardware',
                     'nominal'      => 'Rp 20.000.000',
                     'channel'      => 'Mandiri Giro',
@@ -134,6 +146,8 @@
                 ],
                 [
                     'name'         => 'Termin 2 — Progres Pengerjaan & Modul Desktop (30%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 2,
                     'desc'         => 'Pengembangan GUI Desktop & Uji Kalibrasi Sensor Suhu Gudang',
                     'nominal'      => 'Rp 15.000.000',
                     'channel'      => 'BCA VA / Mandiri Giro',
@@ -146,6 +160,8 @@
                 ],
                 [
                     'name'         => 'Termin 3 — UAT & Deployment Akhir (30%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 3,
                     'desc'         => 'Instalasi Lapangan & Serah Terima Unit Kendali Desktop',
                     'nominal'      => 'Rp 15.000.000',
                     'channel'      => 'Mandiri Giro',
@@ -528,7 +544,7 @@
                             <table class="w-full text-left text-xs">
                                 <thead>
                                     <tr class="bg-[#F8FAFD] text-slate-500 uppercase tracking-wider text-[10.5px] border-b border-slate-100 font-bold">
-                                        <th class="px-5 py-3.5">TERMIN & URAIAN BOBOT</th>
+                                        <th class="px-5 py-3.5">INVOICE & TERMIN</th>
                                         <th class="px-5 py-3.5">NOMINAL SPK</th>
                                         <th class="px-5 py-3.5">KANAL PEMBAYARAN</th>
                                         <th class="px-5 py-3.5">STATUS TRANSAKSI</th>
@@ -553,6 +569,13 @@
                                             </div>
                                             <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
                                                 {{ $termin['desc'] }}
+                                            </p>
+                                            <p class="mt-2 text-[11px] text-slate-500">
+                                                Invoice: <span class="font-semibold text-slate-700">{{ $termin['invoice_number'] }}</span>
+                                                <span class="mx-1">•</span> Termin {{ $termin['term_sequence'] }}
+                                            </p>
+                                            <p class="mt-1 text-[11px] text-slate-500">
+                                                Jatuh tempo: <span class="font-medium text-slate-700">{{ $termin['due_date'] ?? 'Belum ditetapkan' }}</span>
                                             </p>
                                         </td>
 
@@ -600,7 +623,7 @@
                                                         {{ $termin['status_label'] }}
                                                     </span>
                                                     @if(!empty($termin['due_date']))
-                                                        <p class="text-[10px] text-red-600 font-semibold pl-1">
+                                                            <p class="text-[10px] text-red-600 font-semibold pl-1">
                                                             {{ $termin['due_date'] }}
                                                         </p>
                                                     @endif
