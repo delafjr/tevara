@@ -50,12 +50,9 @@
 @php
     $user = $user ?? session('user', []);
     $userName = $user['name'] ?? 'Budi Santoso';
-<<<<<<< HEAD
     $proposals = is_array($proposals ?? null) ? $proposals : [];
-=======
     $handoverProjects = $handoverProjects ?? [];
     $handoverProjectsAvailable = $handoverProjectsAvailable ?? false;
->>>>>>> 97d3ab119aa16f9ffd5523925e5fea8535363f50
 
     $projectsData = [
         [
