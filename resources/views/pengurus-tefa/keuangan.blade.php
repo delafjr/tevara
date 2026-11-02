@@ -17,7 +17,15 @@
 <div class="flex min-h-screen"
      x-data="{
          showCreateModal: false,
-         createProposalId: ''
+         showVerifyModal: false,
+         createProposalId: '',
+         verifyActionUrl: '',
+         selectedPayment: null,
+         openVerify(p) {
+             this.selectedPayment = p;
+             this.verifyActionUrl = '/pengurus-tefa/proposals/' + p.proposal_id + '/payments/' + p.id + '/verify';
+             this.showVerifyModal = true;
+         }
      }">
 
     <x-sidebar active="keuangan" />
@@ -142,15 +150,12 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 text-right whitespace-nowrap">
-                                            @php
-                                                $propId = $p['proposal_id'] ?? ($p['proposal']['id'] ?? 1);
-                                                $payId = $p['id'] ?? 1;
-                                            @endphp
-                                            <a href="{{ route('pengurus-tefa.payments.verifikasi', ['proposal' => $propId, 'payment' => $payId]) }}"
-                                               class="inline-flex items-center gap-1.5 rounded-xl bg-[#0B3B82] hover:bg-[#082a5c] px-3.5 py-2 text-xs font-bold text-white shadow-xs transition">
+                                            <button type="button"
+                                                    @click="openVerify(@js($p))"
+                                                    class="inline-flex items-center gap-1.5 rounded-xl bg-[#0B3B82] hover:bg-[#082a5c] px-3.5 py-2 text-xs font-bold text-white shadow-xs transition cursor-pointer">
                                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
                                                 Periksa & Verifikasi
-                                            </a>
+                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -385,6 +390,122 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL VERIFIKASI PEMBAYARAN (F-09: PATCH /proposals/{id}/payments/{paymentId}/verify) --}}
+    <div x-show="showVerifyModal"
+         x-cloak
+         style="display: none;"
+         class="fixed inset-0 z-50 overflow-y-auto"
+         role="dialog"
+         aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs" @click="showVerifyModal = false"></div>
+        <div class="min-h-screen px-4 text-center flex items-center justify-center">
+            <div class="inline-block w-full max-w-2xl p-6 my-8 text-left align-middle bg-white rounded-3xl shadow-2xl border border-slate-100 transform transition-all relative z-10">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Verifikasi Bukti Transfer Klien</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            Termin <span class="font-bold text-[#0B3B82]" x-text="selectedPayment?.term_sequence"></span> —
+                            <span x-text="selectedPayment?.proposal?.title || 'Proyek'"></span>
+                        </p>
+                    </div>
+                    <button type="button" @click="showVerifyModal = false" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4">
+                    {{-- Kiri: Bukti Gambar / Berkas --}}
+                    <div>
+                        <p class="text-xs font-bold text-slate-700 mb-2">Berkas Bukti Transfer:</p>
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2 flex flex-col items-center justify-center min-h-[220px] overflow-hidden">
+                            <template x-if="selectedPayment?.proof_url">
+                                <div class="text-center w-full">
+                                    <img :src="selectedPayment?.proof_url"
+                                         alt="Bukti Transfer"
+                                         class="max-h-56 mx-auto rounded-xl object-contain shadow-xs border border-slate-100 hover:scale-105 transition cursor-zoom-in"
+                                         @click="window.open(selectedPayment?.proof_url, '_blank')">
+                                    <a :href="selectedPayment?.proof_url" target="_blank" class="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-[#0B3B82] hover:underline">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                        Buka Gambar Penuh (Tab Baru)
+                                    </a>
+                                </div>
+                            </template>
+                            <template x-if="!selectedPayment?.proof_url">
+                                <p class="text-xs text-slate-400">Berkas bukti tidak ditemukan.</p>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- Kanan: Detail Pembayaran & Form Verifikasi --}}
+                    <div>
+                        <div class="bg-[#F8FAFC] rounded-2xl p-4 border border-slate-100 space-y-2 mb-4 text-xs">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Nominal Tagihan:</span>
+                                <span class="font-extrabold text-emerald-600 text-sm" x-text="'Rp ' + Number(selectedPayment?.amount || 0).toLocaleString('id-ID')"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Tanggal Transfer:</span>
+                                <span class="font-semibold text-slate-700" x-text="selectedPayment?.payment_date || '-'"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Metode:</span>
+                                <span class="font-semibold text-slate-700" x-text="selectedPayment?.payment_method || '-'"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">No. Referensi:</span>
+                                <span class="font-mono font-semibold text-slate-700" x-text="selectedPayment?.transfer_reference || '-'"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Klien Pengirim:</span>
+                                <span class="font-semibold text-slate-700" x-text="selectedPayment?.proposal?.client?.name || '-'"></span>
+                            </div>
+                        </div>
+
+                        <form method="POST" :action="verifyActionUrl" class="space-y-4">
+                            @csrf
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-2">Keputusan Verifikasi <span class="text-red-500">*</span></label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-emerald-500 cursor-pointer bg-white transition has-checked:border-emerald-500 has-checked:bg-emerald-50/50">
+                                        <input type="radio" name="status" value="VERIFIED" checked class="text-emerald-600 focus:ring-emerald-500">
+                                        <div>
+                                            <p class="text-xs font-bold text-emerald-800">Setujui (Lunas)</p>
+                                            <p class="text-[10px] text-emerald-600">Bukti valid & dana masuk</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-red-500 cursor-pointer bg-white transition has-checked:border-red-500 has-checked:bg-red-50/50">
+                                        <input type="radio" name="status" value="REJECTED" class="text-red-600 focus:ring-red-500">
+                                        <div>
+                                            <p class="text-xs font-bold text-red-800">Tolak Bukti</p>
+                                            <p class="text-[10px] text-red-600">Minta klien upload ulang</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Catatan Verifikasi (Opsional bila valid, wajib bila ditolak):</label>
+                                <textarea name="verification_notes" rows="2" placeholder="Contoh: Bukti transfer terkonfirmasi di rekening Giro Mandiri TEFA."
+                                          class="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl p-2.5 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82]"></textarea>
+                            </div>
+
+                            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                                <button type="button" @click="showVerifyModal = false" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl transition cursor-pointer">
+                                    Tutup
+                                </button>
+                                <button type="submit" class="px-5 py-2.5 text-xs font-semibold text-white bg-[#0B3B82] hover:bg-[#082a5c] rounded-xl shadow-xs transition cursor-pointer">
+                                    Simpan Hasil Verifikasi
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
