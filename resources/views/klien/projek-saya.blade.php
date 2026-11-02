@@ -601,6 +601,19 @@
                                 </div>
                             </div>
 
+                            {{-- Lembar UAT Button --}}
+                            @php
+                                $propIdNum = (int) (preg_replace('/[^0-9]/', '', $proj['id'] ?? '') ?: 1);
+                            @endphp
+                            <a href="{{ route('klien.projek-saya.uat', $propIdNum) }}"
+                               class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold px-3.5 py-2 rounded-xl inline-flex items-center gap-1.5 transition flex-shrink-0 shadow-2xs">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.5 2h7M7 16h10"/>
+                                </svg>
+                                Lembar UAT
+                            </a>
+
                             {{-- Accordion Toggle Button --}}
                             <button type="button"
                                     @click="toggle('{{ $proj['id'] }}')"
