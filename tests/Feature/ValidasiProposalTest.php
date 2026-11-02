@@ -58,6 +58,32 @@ class ValidasiProposalTest extends TestCase
         ]);
     }
 
+    private function fakeDetailApi(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals/13/pending' => Http::response([
+                'id'               => 13,
+                'proposal_code'    => 'PRSL-2026-490',
+                'title'            => 'Portal Berita Digital',
+                'background'       => 'Scope kerja sistem informasi.',
+                'target_audience'  => 'Masyarakat umum dan tim redaksi',
+                'category_name'    => 'Web',
+                'status'           => 'Submitted',
+                'desired_deadline' => '2027-05-25',
+                'estimated_budget' => '100000.00',
+                'client_name'      => 'PT. Maju Bersama Sentosa',
+                'pic'              => [
+                    'name'  => 'Budi Santoso',
+                    'email' => 'budi.santoso@majubersamasentosa.co.id',
+                    'no_hp' => '6281234567890',
+                ],
+                'modules' => [
+                    ['id' => 17, 'title' => 'Portal', 'description' => 'Modul berita'],
+                ],
+            ]),
+        ]);
+    }
+
     public function test_halaman_validasi_proposal_mengambil_data_pending_dari_api(): void
     {
         $this->fakeApi();
@@ -227,7 +253,8 @@ class ValidasiProposalTest extends TestCase
             ->get('/pengurus-tefa/validasi-proposal/13/setujui');
 
         $response->assertOk();
-        $response->assertSee('Persetujuan Proposal &amp; Pembentukan Proyek', false);
+        $response->assertSee('Persetujuan Proposal', false);
+        $response->assertSee('Pembentukan Proyek', false);
         $response->assertSee('Surat Perjanjian Kerja Sama &amp; SPK', false);
         $response->assertSee('Biaya yang Disepakati &amp; Skema Termin', false);
         $response->assertSee('Pembentukan Tim Pengembang TeFa', false);
