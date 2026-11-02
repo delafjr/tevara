@@ -169,6 +169,50 @@ class ApiService
     }
 
     // ==========================================
+    // F-06 : UAT (User Acceptance Testing)
+    // ==========================================
+
+    /**
+     * Detail UAT proyek + semua item (klien, pengurus_tefa, dosen).
+     */
+    public function getUat(int $proposalId): Response
+    {
+        return $this->get("proposals/{$proposalId}/uat");
+    }
+
+    /**
+     * Buat sesi UAT + item sekaligus (pengurus_tefa, dosen).
+     */
+    public function createUat(int $proposalId, array $data): Response
+    {
+        return $this->post("proposals/{$proposalId}/uat", $data);
+    }
+
+    /**
+     * Update UAT / revisi item (pengurus_tefa, dosen).
+     */
+    public function updateUat(int $proposalId, array $data): Response
+    {
+        return $this->put("proposals/{$proposalId}/uat", $data);
+    }
+
+    /**
+     * Sign-off UAT oleh klien (klien).
+     */
+    public function signoffUat(int $proposalId, array $data): Response
+    {
+        return $this->patch("proposals/{$proposalId}/uat/signoff", $data);
+    }
+
+    /**
+     * Tandai proyek masuk fase Testing (pengurus_tefa, dosen).
+     */
+    public function setProposalTesting(int $proposalId): Response
+    {
+        return $this->patch("proposals/{$proposalId}/status/testing");
+    }
+
+    // ==========================================
     // F-09 : Pembayaran
     // ==========================================
 

@@ -346,7 +346,7 @@
                         }
                     @endphp
                     @if($urgentProposalId && $urgentPaymentId)
-                        <a href="{{ route('tagihan.unggah', ['proposal' => $urgentProposalId, 'payment' => $urgentPaymentId]) }}"
+                        <a href="{{ route('klien.tagihan.unggah', ['proposal' => $urgentProposalId, 'payment' => $urgentPaymentId]) }}"
                            class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-5 py-3 rounded-xl flex items-center gap-2 shadow-sm transition">
                     @else
                         <a href="{{ route('klien.tagihan') }}"
@@ -637,7 +637,7 @@
                                                     <span>Unduh Kwitansi</span>
                                                 </button>
                                             @elseif($termin['can_upload'])
-                                                <a href="{{ route('tagihan.unggah', ['proposal' => $termin['proposal_id'] ?? ($p['proposal_id'] ?? 0), 'payment' => $termin['id'] ?? 0]) }}"
+                                                <a href="{{ route('klien.tagihan.unggah', ['proposal' => $termin['proposal_id'] ?? ($proj['proposal_id'] ?? 0), 'payment' => $termin['id'] ?? 0]) }}"
                                                    class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 shadow-xs transition">
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/>
