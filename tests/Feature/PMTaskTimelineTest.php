@@ -55,6 +55,8 @@ class PMTaskTimelineTest extends TestCase
                         'progress_percentage' => 100,
                         'pm_status'           => 'APPROVED',
                         'pm_notes'            => 'Pekerjaan sesuai spesifikasi.',
+                        'proof_url'           => 'https://github.com/polines-tefa/sim-tefa-2025/pull/1',
+                        'report_attachment_url' => 'https://example.com/attachment.pdf',
                         'assignee'            => [
                             'id'            => 34,
                             'name'          => 'Dela Fajar Mulia',
@@ -98,6 +100,11 @@ class PMTaskTimelineTest extends TestCase
         $response->assertSee('4.33.25.2.07');
         $response->assertSee('Pekerjaan sesuai spesifikasi.');
         $response->assertSee('100%');
+        $response->assertSee('Todo');
+        $response->assertSee('Sedang Berjalan');
+        $response->assertSee('Testing / Review');
+        $response->assertSee('Selesai');
+        $response->assertSee('Bukti Pengerjaan');
 
         Http::assertSent(function ($request) {
             return $request->method() === 'GET'

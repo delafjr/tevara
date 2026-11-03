@@ -103,6 +103,30 @@
                 const d = new Date(value);
                 if (isNaN(d.getTime())) return value;
                 return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            },
+            getProofUrl() {
+                const attach = this.selectedTask?.report_attachment_url;
+                if (attach && (attach.startsWith('http://') || attach.startsWith('https://'))) {
+                    return attach;
+                }
+                if (this.selectedTask?.achieved_summary) {
+                    const match = this.selectedTask.achieved_summary.match(/(https?:\/\/[^\s]+)/);
+                    if (match) return match[0];
+                }
+                return null;
+            },
+            isLocalFile() {
+                const attach = this.selectedTask?.report_attachment_url;
+                return !!attach && !attach.startsWith('http://') && !attach.startsWith('https://');
+            },
+            isGitHub(url) {
+                return !!url && url.includes('github.com');
+            },
+            isGitLab(url) {
+                return !!url && url.includes('gitlab.com');
+            },
+            isFigma(url) {
+                return !!url && url.includes('figma.com');
             }
           }">
 
@@ -234,33 +258,19 @@
             </div>
         </div>
 
-        {{-- ── 3. STAT CARDS (dari summary backend) ── --}}
+        {{-- ── 3. STAT CARDS (sesuai 4 kolom kanban di bawah) ── --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
                 <div class="flex items-center justify-between mb-3">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Total Task</p>
-                    <div class="w-8 h-8 rounded-lg bg-[#EBF3FE] flex items-center justify-center text-[#2563EB]">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Todo</p>
+                    <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/>
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ (int) ($summary['total'] ?? count($tasks)) }}</p>
-                <p class="text-[11px] text-slate-400 font-medium mt-1">seluruh task proyek</p>
-            </div>
-
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between mb-3">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Perlu Review</p>
-                    <div class="w-8 h-8 rounded-lg bg-[#FEF3C7] flex items-center justify-center text-[#F59E0B]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ (int) ($summary['pending_review'] ?? 0) }}</p>
-                <p class="text-[11px] text-[#F59E0B] font-semibold mt-1">menunggu keputusan PM</p>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $groupedTasks->get('TODO', collect())->count() }}</p>
+                <p class="text-[11px] text-slate-400 font-medium mt-1">antrean pengerjaan</p>
             </div>
 
             <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
@@ -272,8 +282,22 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ (int) ($summary['in_progress'] ?? 0) }}</p>
-                <p class="text-[11px] text-[#2563EB] font-semibold mt-1">{{ (int) ($summary['testing'] ?? 0) }} sedang testing</p>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $groupedTasks->get('IN_PROGRESS', collect())->count() }}</p>
+                <p class="text-[11px] text-[#2563EB] font-medium mt-1">dalam pengerjaan tim</p>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Testing / Review</p>
+                    <div class="w-8 h-8 rounded-lg bg-[#FEF3C7] flex items-center justify-center text-[#F59E0B]">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $groupedTasks->get('TESTING', collect())->count() }}</p>
+                <p class="text-[11px] text-[#F59E0B] font-semibold mt-1">menunggu review PM</p>
             </div>
 
             <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
@@ -285,8 +309,8 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ (int) ($summary['approved'] ?? 0) }}</p>
-                <p class="text-[11px] text-slate-400 font-medium mt-1">{{ (int) ($summary['done'] ?? 0) }} task done</p>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $groupedTasks->get('DONE', collect())->count() }}</p>
+                <p class="text-[11px] text-[#16A34A] font-medium mt-1">telah disetujui PM</p>
             </div>
         </div>
 
@@ -457,13 +481,61 @@
                         <p class="text-xs text-slate-600 leading-relaxed bg-[#F8FAFC] border border-slate-100 rounded-xl p-3.5" x-text="selectedTask?.blockers_summary || 'Tidak ada kendala yang dilaporkan.'"></p>
                     </div>
 
-                    <div x-show="selectedTask?.report_attachment_url">
-                        <a :href="selectedTask?.report_attachment_url" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-[11px] text-[#2563EB] font-semibold hover:underline">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
-                            </svg>
-                            Lihat lampiran laporan
-                        </a>
+                    {{-- Bukti Pengerjaan Mahasiswa --}}
+                    <div class="border-t border-slate-100 pt-3 space-y-2.5">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Bukti Pengerjaan / Hasil Kerja</p>
+
+                        {{-- Tautan Repositori / Demo / Figma (URL dari report_attachment_url atau teks capaian) --}}
+                        <template x-if="getProofUrl()">
+                            <a :href="getProofUrl()" target="_blank" rel="noopener"
+                               class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all shadow-2xs group">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0 group-hover:bg-[#0B254A] group-hover:text-white transition-colors">
+                                        <template x-if="isGitHub(getProofUrl())">
+                                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                                        </template>
+                                        <template x-if="!isGitHub(getProofUrl())">
+                                            <svg class="w-4 h-4 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                        </template>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-bold text-[#0B254A] truncate" x-text="isGitHub(getProofUrl()) ? 'Repository / Pull Request GitHub' : (isFigma(getProofUrl()) ? 'Tautan Desain Figma' : 'Tautan Bukti Pengerjaan')"></p>
+                                        <p class="text-[11px] text-slate-400 truncate" x-text="getProofUrl()"></p>
+                                    </div>
+                                </div>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#2563EB] group-hover:underline flex-shrink-0">
+                                    Buka
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                </span>
+                            </a>
+                        </template>
+
+                        {{-- File Lampiran Fisik (jika di-upload sebagai file lokal) --}}
+                        <template x-if="isLocalFile()">
+                            <a :href="selectedTask?.report_attachment_url" target="_blank" rel="noopener"
+                               class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all shadow-2xs group">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-bold text-[#0B254A]">Berkas Lampiran Laporan</p>
+                                        <p class="text-[11px] text-slate-400">Dokumen / Bukti / Screenshot</p>
+                                    </div>
+                                </div>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#2563EB] group-hover:underline flex-shrink-0">
+                                    Unduh / Lihat
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                </span>
+                            </a>
+                        </template>
+
+                        {{-- Kosong / Belum ada bukti --}}
+                        <template x-if="!getProofUrl() && !isLocalFile()">
+                            <p class="text-xs text-slate-400 italic bg-[#F8FAFC] border border-slate-100 rounded-xl p-3">
+                                Mahasiswa belum mencantumkan tautan repository (GitHub/Figma) atau berkas lampiran.
+                            </p>
+                        </template>
                     </div>
                 </div>
 
@@ -480,6 +552,46 @@
                           :action="'{{ url('/pm/proposals/' . ($currentProposalId ?? 0) . '/tasks') }}/' + (selectedTask?.id ?? 0) + '/review'"
                           class="space-y-4">
                         @csrf
+
+                        {{-- Bukti Pengerjaan Quick Links di Form Review --}}
+                        <div class="bg-[#F8FAFC] border border-slate-200/80 rounded-xl p-3.5 space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Bukti Pengerjaan Mahasiswa</span>
+                                <template x-if="getProofUrl() || selectedTask?.report_attachment_url">
+                                    <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                        Siap diperiksa
+                                    </span>
+                                </template>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <template x-if="getProofUrl()">
+                                    <a :href="getProofUrl()" target="_blank" rel="noopener"
+                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-[#0B254A] hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-2xs">
+                                        <template x-if="isGitHub(getProofUrl())">
+                                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                                        </template>
+                                        <template x-if="!isGitHub(getProofUrl())">
+                                            <svg class="w-3.5 h-3.5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                        </template>
+                                        <span x-text="isGitHub(getProofUrl()) ? 'Buka GitHub Mahasiswa' : 'Buka Tautan Bukti'"></span>
+                                        <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                    </a>
+                                </template>
+                                <template x-if="selectedTask?.report_attachment_url">
+                                    <a :href="selectedTask?.report_attachment_url" target="_blank" rel="noopener"
+                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-[#0B254A] hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-2xs">
+                                        <svg class="w-3.5 h-3.5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                                        <span>Lihat Lampiran</span>
+                                        <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                    </a>
+                                </template>
+                                <template x-if="!getProofUrl() && !selectedTask?.report_attachment_url">
+                                    <span class="text-[11px] text-slate-400 italic">Tidak ada tautan/lampiran bukti yang dilampirkan mahasiswa.</span>
+                                </template>
+                            </div>
+                        </div>
 
                         <div>
                             <div class="flex items-center justify-between mb-1.5">
