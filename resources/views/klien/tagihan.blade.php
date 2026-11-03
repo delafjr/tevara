@@ -587,7 +587,7 @@
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
                         </svg>
-                        <span>Unggah Bukti Bayar Sekarang</span>
+                        <span>Unggah Bukti Pembayaran Termin Berjalan</span>
                     </a>
                 </div>
 
@@ -906,6 +906,164 @@
 
                 </div>
                 @endforeach
+
+            </div>
+
+            {{-- == ( area bawah : rekening resmi & prosedur sla ) == --}}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
+
+                {{-- Kolom Kiri (2 Kolom): Rekening Pembayaran Resmi TEVARA --}}
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-base font-bold text-slate-800">
+                            Rekening Pembayaran Resmi TEVARA
+                        </h4>
+                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
+                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
+                            </svg>
+                            Rekening Terverifikasi TEFA
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        {{-- Kartu Bank Mandiri --}}
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-5 flex flex-col justify-between hover:shadow-md transition">
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="bg-blue-50 text-[#0B3B82] text-[10.5px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wide">
+                                        BANK MANDIRI (GIRO)
+                                    </span>
+                                    <div class="w-7 h-7 rounded-lg bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5M4.5 21V10.5M3 21h18"/>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p class="text-[11px] text-slate-400 font-medium">Nomor Rekening:</p>
+                                    <div class="text-lg font-extrabold text-slate-800 font-mono tracking-wide mt-0.5">
+                                        142-00-9928172-1
+                                    </div>
+                                    <p class="text-xs text-slate-500 font-medium mt-1">
+                                        a.n. Teaching Factory Politeknik
+                                    </p>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">
+                                        Kode Bank Mandiri: 008
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button type="button"
+                                    @click="copyText('1420099281721', 'Nomor Rekening Mandiri')"
+                                    class="mt-5 w-full bg-[#EAF3FF] hover:bg-[#D9E9FF] text-[#0B3B82] text-xs font-semibold py-2.5 rounded-xl inline-flex items-center justify-center gap-1.5 transition cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"/>
+                                </svg>
+                                <span>Salin Rekening</span>
+                            </button>
+                        </div>
+
+                        {{-- Kartu BCA Virtual Account --}}
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-5 flex flex-col justify-between hover:shadow-md transition">
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="bg-emerald-50 text-emerald-700 text-[10.5px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wide">
+                                        BCA VIRTUAL ACCOUNT
+                                    </span>
+                                    <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p class="text-[11px] text-slate-400 font-medium">Nomor Virtual Account Klien:</p>
+                                    <div class="text-lg font-extrabold text-slate-800 font-mono tracking-wide mt-0.5">
+                                        88720-08123456789
+                                    </div>
+                                    <p class="text-xs text-slate-500 font-medium mt-1">
+                                        a.n. TEVARA - {{ $userName }}
+                                    </p>
+                                    <p class="text-[11px] text-emerald-600 font-semibold mt-0.5 inline-flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        Auto-verifikasi otomatis 5 menit
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button type="button"
+                                    @click="copyText('8872008123456789', 'Nomor Virtual Account BCA')"
+                                    class="mt-5 w-full bg-[#EAF3FF] hover:bg-[#D9E9FF] text-[#0B3B82] text-xs font-semibold py-2.5 rounded-xl inline-flex items-center justify-center gap-1.5 transition cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"/>
+                                </svg>
+                                <span>Salin No. VA</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+                {{-- Kolom Kanan (1 Kolom): Prosedur & Standar SLA Keuangan --}}
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-5 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3.5">
+                        <h4 class="text-sm font-bold text-slate-800">
+                            Prosedur & Standar SLA Keuangan
+                        </h4>
+
+                        <div class="space-y-3">
+                            {{-- Item 1 --}}
+                            <div class="flex items-start gap-2.5">
+                                <div class="w-6 h-6 rounded-md bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                </div>
+                                <p class="text-xs text-slate-500 leading-relaxed">
+                                    <strong class="text-slate-700">Verifikasi Cepat 1x24 Jam Kerja:</strong> Bukti transfer bank giro diverifikasi manual oleh Bagian Keuangan TEFA dalam 24 jam.
+                                </p>
+                            </div>
+
+                            {{-- Item 2 --}}
+                            <div class="flex items-start gap-2.5">
+                                <div class="w-6 h-6 rounded-md bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                                    </svg>
+                                </div>
+                                <p class="text-xs text-slate-500 leading-relaxed">
+                                    <strong class="text-slate-700">Kwitansi & Faktur Pajak Otomatis:</strong> Dokumen kwitansi sah bermeterai registrasi langsung tersedia unduh setelah terverifikasi.
+                                </p>
+                            </div>
+
+                            {{-- Item 3 --}}
+                            <div class="flex items-start gap-2.5">
+                                <div class="w-6 h-6 rounded-md bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
+                                    </svg>
+                                </div>
+                                <p class="text-xs text-slate-500 leading-relaxed">
+                                    <strong class="text-slate-700">Rekonsiliasi & Bantuan:</strong> Jika membutuhkan faktur pajak khusus instansi, silakan hubungi unit akuntansi melalui bantuan ticket.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Security Alert Card Bottom --}}
+                    <div class="bg-[#EFF5FF] rounded-xl p-3 flex items-start gap-2.5 border border-blue-100/60">
+                        <svg class="w-4 h-4 text-[#0B3B82] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
+                        </svg>
+                        <p class="text-[11px] text-[#0B3B82] leading-relaxed">
+                            Seluruh transaksi terlindungi protokol kepatuhan audit Teaching Factory dan terintegrasi langsung dengan sistem pembukuan resmi Politeknik.
+                        </p>
+                    </div>
+                </div>
 
             </div>
 

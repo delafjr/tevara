@@ -725,7 +725,121 @@ Route::middleware('auth.api')->group(function () {
     })->name('dashboard-mahasiswa');
 
     Route::get('/mahasiswa/project', fn () => view('mahasiswa.project', ['user' => session('user')]))->name('mahasiswa.project');
-    Route::get('/mahasiswa/task', fn () => view('mahasiswa.task', ['user' => session('user')]))->name('mahasiswa.task');
+
+    Route::get('/mahasiswa/task', function (Request $request, ApiService $api) {
+        $projects = [];
+
+        try {
+            $response = $api->get('mahasiswa/dashboard');
+            if ($response->successful()) {
+                $projects = $response->json('data.projects', []);
+            }
+        } catch (\Throwable) {
+            $projects = [];
+        }
+
+        $projects = is_array($projects) ? $projects : [];
+
+        // Proposal yang dipilih lewat ?proposal_id=..., fallback ke proyek pertama.
+        $requestedId = $request->query('proposal_id')
+            ?? $request->query('proposal')
+            ?? $request->query('project');
+        $proposalId = null;
+        $selectedProject = null;
+
+        foreach ($projects as $project) {
+            if ($requestedId !== null && (string) ($project['id'] ?? '') === (string) $requestedId) {
+                $proposalId = $project['id'];
+                $selectedProject = $project;
+                break;
+            }
+        }
+
+        if ($proposalId === null && !empty($projects)) {
+            $proposalId = $projects[0]['id'] ?? null;
+            $selectedProject = $projects[0] ?? null;
+        }
+
+        $tasks = [];
+        $summary = [];
+        $error = null;
+
+        if ($proposalId !== null) {
+            try {
+                $tasksRes = $api->get('proposals/' . rawurlencode((string) $proposalId) . '/tasks');
+                if ($tasksRes->successful()) {
+                    $tasks = $tasksRes->json('data', []);
+                } else {
+                    $error = $tasksRes->json('message') ?? 'Gagal mengambil data task mahasiswa.';
+                }
+
+                $summaryRes = $api->get('proposals/' . rawurlencode((string) $proposalId) . '/tasks/summary');
+                if ($summaryRes->successful()) {
+                    $summary = $summaryRes->json('data', []);
+                }
+            } catch (\Throwable $e) {
+                $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
+            }
+        }
+
+        return view('mahasiswa.task', [
+            'user'            => session('user'),
+            'projects'        => $projects,
+            'selectedProject' => $selectedProject,
+            'proposalId'      => $proposalId,
+            'tasks'           => is_array($tasks) ? $tasks : [],
+            'summary'         => is_array($summary) ? $summary : [],
+            'error'           => $error,
+        ]);
+    })->name('mahasiswa.task');
+
+    Route::post('/mahasiswa/proposals/{proposal}/tasks/{task}/progress', function (Request $request, ApiService $api, string $proposal, string $task) {
+        $validated = $request->validate([
+            'progress_percentage'   => ['required', 'numeric', 'min:0', 'max:100'],
+            'status'                => ['required', 'string', 'in:TODO,IN_PROGRESS,TESTING,DONE'],
+            'achieved_summary'      => ['required', 'string'],
+            'blockers_summary'      => ['nullable', 'string'],
+            'report_attachment_url' => ['nullable', 'string', 'max:500'],
+            'report_attachment'     => ['nullable', 'file', 'max:10240'],
+        ]);
+
+        $progress = (float) $validated['progress_percentage'];
+        $status = $validated['status'];
+
+        if ($progress >= 100) {
+            $status = 'TESTING';
+        }
+
+        $payload = [
+            'progress_percentage'   => $progress,
+            'status'                => $status,
+            'achieved_summary'      => $validated['achieved_summary'],
+            'blockers_summary'      => $validated['blockers_summary'] ?? null,
+            'report_attachment_url' => $validated['report_attachment_url'] ?? null,
+        ];
+
+        try {
+            if ($request->hasFile('report_attachment')) {
+                $response = $api->sendWithFile(
+                    'proposals/' . rawurlencode($proposal) . '/tasks/' . rawurlencode($task) . '/progress',
+                    'report_attachment',
+                    $request->file('report_attachment'),
+                    $payload
+                );
+            } else {
+                $response = $api->post(
+                    'proposals/' . rawurlencode($proposal) . '/tasks/' . rawurlencode($task) . '/progress',
+                    $payload
+                );
+            }
+
+            return $response->successful()
+                ? back()->with('success', 'Laporan progres berhasil dikirim dan menunggu review PM.')
+                : back()->with('error', $response->json('message') ?? 'Gagal mengirim laporan progres.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Backend tidak dapat dihubungi: ' . $e->getMessage());
+        }
+    })->name('mahasiswa.task.progress');
 
     // PM sub-pages (Protected by role pm)
     Route::middleware('auth.api:pm|dosen')->prefix('pm')->name('pm.')->group(function () {

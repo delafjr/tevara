@@ -1,483 +1,764 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Task &amp; Progres Saya - Tevara</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="bg-[#F4F7FB] font-sans text-[#1E293B] antialiased min-h-screen">
+
 @php
-    $user = $user ?? session('user', []);
+    $user            = $user ?? session('user');
+    $projects        = is_array($projects ?? null) ? $projects : [];
+    $selectedProject = is_array($selectedProject ?? null) ? $selectedProject : [];
+    $summary         = is_array($summary ?? null) ? $summary : [];
+    $tasks           = is_array($tasks ?? null) ? $tasks : [];
+    $hasProject      = ! empty($selectedProject);
+
+    $statusMeta = function (string $status): array {
+        return match (strtoupper($status)) {
+            'TODO'        => ['label' => 'Todo',        'dot' => 'bg-slate-400',   'pill' => 'bg-slate-100 text-slate-600'],
+            'IN_PROGRESS' => ['label' => 'In Progress', 'dot' => 'bg-[#0B3B82]',  'pill' => 'bg-[#EFF6FF] text-[#0B3B82]'],
+            'TESTING'     => ['label' => 'Testing',     'dot' => 'bg-[#F59E0B]',  'pill' => 'bg-[#FEF3C7] text-[#B45309]'],
+            'DONE'        => ['label' => 'Done',        'dot' => 'bg-[#16A34A]',  'pill' => 'bg-[#DCFCE7] text-[#16A34A]'],
+            default       => ['label' => ucfirst(strtolower($status ?: '—')), 'dot' => 'bg-slate-400', 'pill' => 'bg-slate-100 text-slate-600'],
+        };
+    };
+
+    $pmStatusMeta = function (?string $pmStatus): array {
+        return match (strtoupper((string) $pmStatus)) {
+            'APPROVED'           => ['label' => 'Approved',          'pill' => 'bg-[#DCFCE7] text-[#16A34A]'],
+            'NEEDS_IMPROVEMENT'  => ['label' => 'Perlu Perbaikan',   'pill' => 'bg-[#FEE2E2] text-[#B91C1C]'],
+            'PENDING'            => ['label' => 'Menunggu Review',   'pill' => 'bg-[#FEF3C7] text-[#B45309]'],
+            default              => ['label' => 'Belum Direview',    'pill' => 'bg-slate-100 text-slate-500'],
+        };
+    };
+
+    $priorityMeta = function (?string $priority): array {
+        return match (strtoupper((string) $priority)) {
+            'CRITICAL' => ['label' => 'Critical', 'pill' => 'bg-[#FEE2E2] text-[#B91C1C]'],
+            'HIGH'     => ['label' => 'High',     'pill' => 'bg-[#FEF3C7] text-[#B45309]'],
+            'LOW'      => ['label' => 'Low',      'pill' => 'bg-slate-100 text-slate-500'],
+            default    => ['label' => 'Medium',   'pill' => 'bg-[#EFF6FF] text-[#0B3B82]'],
+        };
+    };
+
+    $columns = [
+        ['key' => 'TODO',        'label' => 'Todo',             'dot' => 'bg-slate-400',  'text' => 'text-slate-500',  'badge' => 'bg-slate-100 text-slate-500'],
+        ['key' => 'IN_PROGRESS', 'label' => 'In Progress',      'dot' => 'bg-[#0B3B82]', 'text' => 'text-[#0B3B82]', 'badge' => 'bg-[#EFF6FF] text-[#0B3B82]'],
+        ['key' => 'TESTING',     'label' => 'Testing & Review', 'dot' => 'bg-[#F59E0B]', 'text' => 'text-[#B45309]', 'badge' => 'bg-[#FEF3C7] text-[#B45309]'],
+        ['key' => 'DONE',        'label' => 'Done',             'dot' => 'bg-[#16A34A]', 'text' => 'text-[#16A34A]', 'badge' => 'bg-[#DCFCE7] text-[#16A34A]'],
+    ];
+
+    $groupedTasks = collect($tasks)->groupBy(fn ($task) => strtoupper((string) ($task['status'] ?? 'TODO')));
+
+    $formatDate = function (?string $date): string {
+        if (! $date) {
+            return '—';
+        }
+
+        try {
+            return \Illuminate\Support\Carbon::parse($date)->format('d M Y');
+        } catch (\Throwable) {
+            return $date;
+        }
+    };
+
+    $overallProgress = (int) round((float) ($selectedProject['progress'] ?? (collect($tasks)->avg('progress_percentage') ?? 0)));
+    $initialTask     = $tasks[0] ?? null;
+
+    $currentProposalId = $selectedProject['id'] ?? ($proposalId ?? null);
 @endphp
 
-<x-student-layout active="task-saya" title="Task & Progres Saya">
+<div class="flex min-h-screen">
 
-    {{-- ===== HEADER CARD ===== --}}
-    <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
-        {{-- gradient dekoratif --}}
-        <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+    {{-- Sidebar Mahasiswa --}}
+    <x-sidebar active="task-saya" />
 
-        <div class="relative z-10">
-            <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                Workspace Mahasiswa
-            </span>
-            <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
-                Task &amp; Progres <span class="text-[#FFB800]">Saya</span>
-            </h1>
-            <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
-                Kelola daftar tugas proyek Teaching Factory, laporkan capaian &amp; kendala pengerjaan, serta pantau catatan evaluasi dari Dosen PM secara terstruktur dan transparan.
-            </p>
-        </div>
-    </div>
+    {{-- ===== MAIN CONTENT ===== --}}
+    <main class="flex-1 ml-64 p-8 min-h-screen flex flex-col gap-5"
+          x-data="{
+            selectedTask: @js($initialTask),
+            progressPercentage: @js((float) ($initialTask['progress_percentage'] ?? 0)),
+            status: @js($initialTask['status'] ?? 'TODO'),
+            achievedSummary: @js($initialTask['achieved_summary'] ?? ''),
+            blockersSummary: @js($initialTask['blockers_summary'] ?? ''),
+            reportUrl: @js((isset($initialTask['report_attachment_url']) && (str_starts_with($initialTask['report_attachment_url'], 'http://') || str_starts_with($initialTask['report_attachment_url'], 'https://'))) ? $initialTask['report_attachment_url'] : ''),
+            detailOpen: true,
+            projectMenu: false,
+            selectTask(task) {
+                this.selectedTask = task;
+                this.progressPercentage = Number(task.progress_percentage || 0);
+                this.status = task.status || 'TODO';
+                this.achievedSummary = task.achieved_summary || '';
+                this.blockersSummary = task.blockers_summary || '';
+                const attach = task.report_attachment_url;
+                this.reportUrl = (attach && (attach.startsWith('http://') || attach.startsWith('https://'))) ? attach : '';
+                this.detailOpen = true;
+            },
+            setProgress(val) {
+                this.progressPercentage = Number(val);
+                if (this.progressPercentage >= 100) {
+                    this.status = 'TESTING';
+                } else if (this.progressPercentage > 0 && this.status === 'TODO') {
+                    this.status = 'IN_PROGRESS';
+                }
+            },
+            formatDate(value) {
+                if (!value) return '—';
+                const d = new Date(value);
+                if (isNaN(d.getTime())) return value;
+                return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            },
+            getProofUrl() {
+                const attach = this.selectedTask?.report_attachment_url;
+                if (attach && (attach.startsWith('http://') || attach.startsWith('https://'))) {
+                    return attach;
+                }
+                if (this.selectedTask?.achieved_summary) {
+                    const match = this.selectedTask.achieved_summary.match(/(https?:\/\/[^\s]+)/);
+                    if (match) return match[0];
+                }
+                return null;
+            },
+            isLocalFile() {
+                const attach = this.selectedTask?.report_attachment_url;
+                return !!attach && !attach.startsWith('http://') && !attach.startsWith('https://');
+            },
+            isGitHub(url) {
+                return !!url && url.includes('github.com');
+            },
+            isGitLab(url) {
+                return !!url && url.includes('gitlab.com');
+            },
+            isFigma(url) {
+                return !!url && url.includes('figma.com');
+            },
+            isApproved() {
+                return (this.selectedTask?.status === 'DONE' && this.selectedTask?.pm_status === 'APPROVED')
+                    || this.selectedTask?.pm_status === 'APPROVED';
+            }
+          }">
 
-    {{-- ===== 4 STAT CARDS ===== --}}
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" aria-label="Ringkasan task">
-        {{-- Card 1: Total Tugas Terdaftar --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-400 text-xs font-bold tracking-wider uppercase">
-                <span>TOTAL TUGAS TERDAFTAR</span>
-                <span class="w-9 h-9 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                </span>
-            </div>
-            <div>
-                <strong class="text-3xl font-extrabold text-[#0F172A] tracking-tight block">14</strong>
-                <span class="text-xs text-slate-400 mt-1 block">Tugas Aktif <span class="mx-1">·</span> 2 Proyek Terdaftar Semester Ini</span>
-            </div>
-        </div>
-
-        {{-- Card 2: Sedang Dikerjakan --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-400 text-xs font-bold tracking-wider uppercase">
-                <span>SEDANG DIKERJAKAN</span>
-                <span class="w-9 h-9 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                    </svg>
-                </span>
-            </div>
-            <div>
-                <strong class="text-3xl font-extrabold text-[#0F172A] tracking-tight block">5</strong>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-bold">IN_PROGRESS</span>
-                    <div class="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                        <div class="bg-blue-600 h-full rounded-full" style="width: 36%"></div>
-                    </div>
-                    <span class="text-[11px] font-semibold text-slate-500">36%</span>
+        {{-- ── 1. PAGE HEADER & ALERTS ── --}}
+        @if(session('success') || session('error'))
+            <div class="rounded-xl border {{ session('success') ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700' }} px-4 py-3 text-xs font-semibold" x-data="{ visible: true }" x-show="visible">
+                <div class="flex items-center justify-between gap-3">
+                    <span>{{ session('success') ?? session('error') }}</span>
+                    <button type="button" @click="visible = false" class="text-current/60 hover:text-current cursor-pointer">&times;</button>
                 </div>
             </div>
+        @endif
+
+        @if(!empty($error))
+            <div class="rounded-xl border border-rose-200 bg-rose-50 text-rose-700 px-4 py-3 text-xs font-semibold">
+                {{ $error }}
+            </div>
+        @endif
+
+        <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+            {{-- gradient dekoratif --}}
+            <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+            <div class="relative z-10">
+                <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                    Workspace Mahasiswa
+                </span>
+                <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                    Task &amp; <span class="text-[#FFB800]">Timeline Saya</span>
+                </h1>
+                <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
+                    Kelola tugas proyek Anda, laporkan capaian &amp; hasil kerja (GitHub/Figma/file), serta pantau catatan evaluasi dari Dosen PM secara terstruktur.
+                </p>
+            </div>
         </div>
 
-        {{-- Card 3: Review Dosen PM --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-400 text-xs font-bold tracking-wider uppercase">
-                <span>REVIEW DOSEN PM</span>
-                <span class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        @if(!$hasProject)
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs px-8 py-14 text-center">
+                <div class="w-12 h-12 rounded-full bg-[#F8FAFC] text-slate-400 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
                     </svg>
-                </span>
-            </div>
-            <div>
-                <strong class="text-3xl font-extrabold text-[#0F172A] tracking-tight block">3</strong>
-                <span class="text-xs text-slate-400 mt-1 block">Menunggu Evaluasi <span class="mx-1">·</span> Status PENDING / TESTING</span>
-            </div>
-        </div>
-
-        {{-- Card 4: Perlu Revisi Mahasiswa --}}
-        <div class="bg-white border border-amber-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-400 text-xs font-bold tracking-wider uppercase">
-                <span>PERLU REVISI MAHASISWA</span>
-                <span class="w-9 h-9 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                </span>
-            </div>
-            <div>
-                <strong class="text-3xl font-extrabold text-amber-500 tracking-tight block">2</strong>
-                <div class="flex items-center gap-1.5 mt-1">
-                    <span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px] font-bold">NEEDS_IMPROVEMENT</span>
-                    <span class="text-xs text-slate-400">Prioritas tindakan</span>
                 </div>
+                <h2 class="text-lg font-bold text-[#0B254A]">Belum Ada Proyek Terdaftar</h2>
+                <p class="text-sm text-slate-500 mt-2">Daftar tugas akan muncul setelah Anda dimasukkan ke dalam tim proyek oleh Pengurus TeFa atau Dosen PM.</p>
             </div>
-        </div>
-    </section>
+        @else
+        {{-- ── 2. PROYEK AKTIF BANNER ── --}}
+        <div class="bg-[#0B254A] rounded-2xl px-6 py-5 flex flex-col xl:flex-row xl:items-center gap-5">
+            {{-- Ikon --}}
+            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
+                </svg>
+            </div>
 
-    {{-- ===== ACTIVE TASK DETAIL CARD ===== --}}
-    <article class="bg-white border border-slate-200/80 rounded-2xl p-7 shadow-xs space-y-6">
-
-        {{-- Header Badges & Meta --}}
-        <div>
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="px-3 py-1 rounded-lg bg-blue-50 border border-blue-200/60 text-[#2563EB] text-xs font-semibold">
-                        PRJ-2026/001 · Sistem Informasi UMKM &amp; Inventaris Digital
-                    </span>
-                    <span class="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            {{-- Info --}}
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap mb-1.5">
+                    <span class="inline-block px-2 py-0.5 rounded-full bg-[#F59E0B] text-[#0B254A] text-[9px] font-extrabold tracking-wider uppercase">Proyek Saya</span>
+                    <span class="text-[10px] font-semibold text-blue-200">{{ $selectedProject['proposal_code'] ?? ('PRJ-' . $currentProposalId) }}</span>
+                    @if(!empty($selectedProject['role']))
+                        <span class="inline-block px-2 py-0.5 rounded-full bg-white/10 text-white text-[9px] font-medium">Peran: {{ $selectedProject['role'] }}</span>
+                    @endif
+                </div>
+                <p class="text-white font-extrabold text-sm leading-tight truncate">{{ $selectedProject['title'] ?? '—' }}</p>
+                <div class="flex items-center gap-4 mt-2 text-[11px] text-blue-200 flex-wrap">
+                    @if(!empty($selectedProject['category']))
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z"/>
+                            </svg>
+                            {{ $selectedProject['category'] }}
+                        </span>
+                        <span>·</span>
+                    @endif
+                    <span class="flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
                         </svg>
-                        <span>PM: NEEDS_IMPROVEMENT</span>
+                        Tenggat: {{ $formatDate($selectedProject['deadline'] ?? null) }}
+                    </span>
+                    <span>·</span>
+                    <span class="flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#FFB800]"></span>
+                        Status Proyek: {{ $selectedProject['status'] ?? '—' }}
                     </span>
                 </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-3 text-xs text-slate-400 mt-3">
-                <span class="flex items-center gap-1.5">
-                    <span class="text-slate-500 font-medium">Status Tugas:</span>
-                    <span class="px-2 py-0.5 rounded bg-blue-600 text-white font-extrabold text-[10px] tracking-wide">IN_PROGRESS</span>
-                </span>
-                <span>·</span>
-                <span>Jatuh Tempo: <strong class="text-slate-700 font-bold">12 Okt 2026</strong></span>
-                <span>·</span>
-                <span>Task ID: <code class="text-slate-700 font-semibold font-mono">#TSK-00384</code></span>
-                <span>·</span>
-                <span class="uppercase tracking-wider font-semibold text-slate-400">Kategori: Integrasi Backend Payment</span>
+            {{-- Progress ringkas --}}
+            <div class="w-full xl:w-48 flex-shrink-0">
+                <div class="flex items-center justify-between text-[10px] text-blue-200 mb-1.5">
+                    <span class="uppercase tracking-wide">Progress Proyek</span>
+                    <span class="font-bold text-white">{{ $overallProgress }}%</span>
+                </div>
+                <div class="h-2 bg-white/15 rounded-full overflow-hidden">
+                    <div class="h-full bg-[#FFB800] rounded-full transition-all duration-500" style="width: {{ $overallProgress }}%"></div>
+                </div>
             </div>
 
-            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-3">
-                Implementasi Integrasi Payment Gateway QRIS &amp; Callback Webhook
-            </h2>
-            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mt-1.5">
-                Membuat endpoint webhook handler untuk menerima notifikasi settlement pembayaran QRIS dinamis dari Midtrans/Xendit, melakukan verifikasi signature hash SHA512, serta memperbarui status transaksi invoice secara realtime di database PostgreSQL.
-            </p>
+            {{-- Actions --}}
+            <div class="flex items-center gap-2 flex-shrink-0 relative">
+                <button type="button" @click="projectMenu = !projectMenu" class="inline-flex items-center gap-1.5 border border-white/30 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
+                    </svg>
+                    Ganti Proyek
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                    </svg>
+                </button>
+
+                <div x-show="projectMenu" x-cloak @click.outside="projectMenu = false" class="absolute top-full mt-2 right-0 z-30 w-80 rounded-xl bg-white p-2 shadow-xl ring-1 ring-slate-200">
+                    <p class="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Pilih Proyek Anda</p>
+                    @foreach($projects as $project)
+                        <a href="{{ route('mahasiswa.task', ['proposal_id' => $project['id'] ?? '']) }}"
+                           class="block rounded-lg px-2.5 py-2 hover:bg-[#F8FAFC] transition-colors {{ (string) ($project['id'] ?? '') === (string) $currentProposalId ? 'bg-[#EAF3FF]' : '' }}">
+                            <p class="text-xs font-semibold text-[#1E293B] leading-snug truncate">{{ $project['title'] ?? '—' }}</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5 truncate">
+                                {{ $project['role'] ?? '—' }} · {{ $project['status'] ?? '—' }} · {{ (int) ($project['progress'] ?? 0) }}%
+                            </p>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
         </div>
 
-        {{-- Progress Bar Section --}}
-        <div class="space-y-2">
-            <div class="flex items-center justify-between text-xs">
-                <span class="font-semibold text-slate-600">Progres Pengerjaan Aktual</span>
-                <span class="font-bold text-slate-800">75% Selesai</span>
-            </div>
-            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                <div class="bg-[#0B3B82] h-full rounded-full transition-all duration-300" style="width: 75%"></div>
-            </div>
-            <div class="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
-                <span>0% Mulai</span>
-                <span class="text-slate-500 font-medium">50% Mid-Phase Testing</span>
-                <span>100% Production Ready</span>
-            </div>
-        </div>
-
-        {{-- 2-Column Split: Mahasiswa vs Dosen PM --}}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
-
-            {{-- ── LEFT: LAPORAN PROGRES MAHASISWA ── --}}
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-[#2563EB]"></span>
-                        <h3 class="text-xs font-bold text-slate-900">Laporan Progres Pengerjaan (Mahasiswa)</h3>
-                    </div>
-                    <span class="text-[11px] text-slate-400">Terakhir diubah: Kemarin, 21:00</span>
-                </div>
-
-                {{-- Box 1: Capaian Selesai --}}
-                <div class="space-y-1.5">
-                    <label class="block text-[11px] font-bold text-slate-500">
-                        Capaian yang Telah Diselesaikan <code class="text-slate-400 font-mono text-[10px]">[ACHIEVED_SUMMARY]</code>
-                    </label>
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-700 leading-relaxed font-normal">
-                        Berhasil membuat signature verification SHA512 dan tautan endpoint <code class="bg-slate-200/70 text-slate-800 px-1 py-0.5 rounded font-mono text-[11px]">/api/v1/payments/webhook</code>. Pengujian simulasi sukses untuk 12 skenario transaksi di sandbox environment tanpa kendala deserialization.
-                    </div>
-                </div>
-
-                {{-- Box 2: Kendala / Blocker --}}
-                <div class="space-y-1.5">
-                    <label class="block text-[11px] font-bold text-amber-800">
-                        Kendala / Blocker yang Dihadapi <code class="text-amber-600 font-mono text-[10px]">[BLOCKERS_SUMMARY]</code> · Diberitahukan ke dosen/tim
-                    </label>
-                    <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 leading-relaxed">
-                        Dokumentasi simulasi refund otomatis dari sandbox pihak ketiga masih membutuhkan akses konfigurasi sistem tambahan dari PIC mitra UMKM.
-                    </div>
-                </div>
-
-                {{-- Box 3: Lampiran Dokumen & Repositori --}}
-                <div class="space-y-2">
-                    <label class="block text-[11px] font-bold text-slate-500">
-                        Lampiran Dokumen &amp; Repositori <code class="text-slate-400 font-mono text-[10px]">[REPORT_ATTACHMENTS]</code>
-                    </label>
-                    <div class="flex flex-wrap items-center gap-2">
-                        {{-- Attachment 1 --}}
-                        <div class="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-700 shadow-2xs transition cursor-pointer">
-                            <svg class="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                            <span class="font-medium">webhook-test-result-v2.pdf</span>
-                            <span class="text-slate-400 text-[10px]">3.2 MB</span>
-                            <svg class="w-3.5 h-3.5 text-slate-400 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                        </div>
-
-                        {{-- Attachment 2 --}}
-                        <div class="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-700 shadow-2xs transition cursor-pointer">
-                            <svg class="w-4 h-4 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                            </svg>
-                            <span class="font-medium">PR #42: feat/payment-qris-webhook</span>
-                            <span class="text-[#2563EB]">↗</span>
-                        </div>
-                    </div>
-
-                    {{-- Add Link Form --}}
-                    <div class="flex items-center gap-2 pt-1">
-                        <input
-                            type="text"
-                            placeholder="Tambahkan link URL (commit GitHub, Figma, atau cloud drive)..."
-                            class="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-hidden focus:border-[#2563EB] transition"
-                        />
-                        <button type="button" class="px-3.5 py-2 rounded-xl bg-blue-50 text-[#2563EB] hover:bg-blue-100 font-semibold text-xs transition cursor-pointer whitespace-nowrap">
-                            + Tautkan
-                        </button>
-                    </div>
-                </div>
-
-                {{-- Action Buttons --}}
-                <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-                    <button type="button" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition cursor-pointer">
-                        Batal Perubahan
-                    </button>
-                    <button type="button" class="px-5 py-2.5 bg-[#0B3B82] hover:bg-[#082a5c] text-white rounded-xl text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-2">
+        {{-- ── 3. STAT CARDS (1-to-1 sinkronisasi dengan 4 kolom kanban di bawah) ── --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Todo</p>
+                    <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/>
                         </svg>
-                        <span>Perbarui Progres &amp; Simpan Laporan</span>
-                    </button>
+                    </div>
                 </div>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $groupedTasks->get('TODO', collect())->count() }}</p>
+                <p class="text-[11px] text-slate-400 font-medium mt-1">antrean tugas saya</p>
             </div>
 
-            {{-- ── RIGHT: REVIEW & EVALUASI DOSEN PM ── --}}
-            <div class="bg-[#F0F6FF] border border-[#D0E2FC] rounded-2xl p-5 space-y-4 flex flex-col justify-between">
-                <div class="space-y-4">
-                    {{-- Heading --}}
-                    <div class="flex items-center justify-between">
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Sedang Berjalan</p>
+                    <div class="w-8 h-8 rounded-lg bg-[#DBEAFE] flex items-center justify-center text-[#2563EB]">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $groupedTasks->get('IN_PROGRESS', collect())->count() }}</p>
+                <p class="text-[11px] text-[#2563EB] font-medium mt-1">sedang saya kerjakan</p>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Testing / Review</p>
+                    <div class="w-8 h-8 rounded-lg bg-[#FEF3C7] flex items-center justify-center text-[#F59E0B]">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $groupedTasks->get('TESTING', collect())->count() }}</p>
+                <p class="text-[11px] text-[#F59E0B] font-semibold mt-1">menunggu review Dosen PM</p>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Task Selesai</p>
+                    <div class="w-8 h-8 rounded-lg bg-[#DCFCE7] flex items-center justify-center text-[#16A34A]">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $groupedTasks->get('DONE', collect())->count() }}</p>
+                <p class="text-[11px] text-[#16A34A] font-medium mt-1">disetujui oleh Dosen PM</p>
+            </div>
+        </div>
+
+        {{-- ── 4. KANBAN BOARD MAHASISWA ── --}}
+        @if(empty($tasks))
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs px-8 py-14 text-center">
+                <div class="w-12 h-12 rounded-full bg-[#F8FAFC] text-slate-400 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/>
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-[#0B254A]">Belum Ada Tugas untuk Anda di Proyek Ini</h2>
+                <p class="text-sm text-slate-500 mt-2">Dosen PM belum mengalokasikan task kepada Anda pada proyek ini.</p>
+            </div>
+        @else
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
+                @foreach($columns as $column)
+                    @php $columnTasks = $groupedTasks->get($column['key'], collect()); @endphp
+                    <div class="flex flex-col gap-3">
                         <div class="flex items-center gap-2">
-                            <span class="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                </svg>
-                            </span>
-                            <h3 class="text-xs font-bold text-slate-900">Review &amp; Evaluasi Dosen PM</h3>
+                            <span class="w-2 h-2 rounded-full {{ $column['dot'] }} inline-block"></span>
+                            <span class="text-xs font-extrabold {{ $column['text'] }} uppercase tracking-wide">{{ $column['label'] }}</span>
+                            <span class="ml-auto text-[10px] font-bold {{ $column['badge'] }} px-2 py-0.5 rounded-full">{{ $columnTasks->count() }}</span>
                         </div>
-                        <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-extrabold text-[10px]">
-                            NEEDS_IMPROVEMENT
+
+                        @forelse($columnTasks as $task)
+                            @php
+                                $taskStatus   = $statusMeta((string) ($task['status'] ?? 'TODO'));
+                                $pmStatus     = $pmStatusMeta($task['pm_status'] ?? null);
+                                $priority     = $priorityMeta($task['priority'] ?? null);
+                                $taskProgress = (int) round((float) ($task['progress_percentage'] ?? 0));
+                                $assignee     = is_array($task['assignee'] ?? null) ? $task['assignee'] : null;
+                                $initials     = $assignee
+                                    ? collect(explode(' ', trim((string) ($assignee['name'] ?? 'U'))))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->implode('')
+                                    : '—';
+                                $isNeedsImprovement = strtoupper((string) ($task['pm_status'] ?? '')) === 'NEEDS_IMPROVEMENT';
+                            @endphp
+                            <button type="button"
+                                    @click="selectTask(@js($task))"
+                                    :class="selectedTask?.id === {{ (int) ($task['id'] ?? 0) }} ? 'border-[#0B3B82] ring-1 ring-[#0B3B82]' : 'border-slate-100 hover:border-slate-200'"
+                                    class="w-full text-left bg-white rounded-xl border shadow-2xs p-4 hover:shadow-sm transition-all cursor-pointer relative {{ $isNeedsImprovement ? 'border-l-4 border-l-rose-500' : '' }}">
+                                
+                                @if($isNeedsImprovement)
+                                    <div class="flex items-center gap-1 text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md mb-2">
+                                        <svg class="w-3 h-3 text-rose-500" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>PM: Perlu Perbaikan</span>
+                                    </div>
+                                @endif
+
+                                <div class="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $priority['pill'] }}">{{ $priority['label'] }}</span>
+                                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full {{ $pmStatus['pill'] }}">{{ $pmStatus['label'] }}</span>
+                                </div>
+
+                                <p class="text-[13px] font-bold text-[#0B254A] leading-tight mb-2.5">{{ $task['title'] ?? '—' }}</p>
+
+                                <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mb-2.5">
+                                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+                                    </svg>
+                                    Tenggat: {{ $formatDate($task['due_date'] ?? null) }}
+                                </div>
+
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-[10px] text-slate-400">Progres Capaian</span>
+                                    <span class="text-[10px] font-bold {{ $taskProgress >= 100 ? 'text-[#16A34A]' : 'text-[#2563EB]' }}">{{ $taskProgress }}%</span>
+                                </div>
+                                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3">
+                                    <div class="h-full {{ $taskProgress >= 100 ? 'bg-[#16A34A]' : 'bg-[#2563EB]' }} rounded-full" style="width: {{ max(0, min(100, $taskProgress)) }}%"></div>
+                                </div>
+
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <div class="w-6 h-6 rounded-full bg-[#0B254A] text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0">
+                                            {{ mb_strtoupper($initials) }}
+                                        </div>
+                                        <span class="text-[11px] text-slate-500 font-medium truncate">{{ $assignee['name'] ?? 'Saya' }}</span>
+                                    </div>
+                                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full {{ $taskStatus['pill'] }}">{{ $taskStatus['label'] }}</span>
+                                </div>
+                            </button>
+                        @empty
+                            <div class="rounded-xl border border-dashed border-slate-200 bg-white/60 px-4 py-8 text-center">
+                                <p class="text-[11px] text-slate-400">Tidak ada task</p>
+                            </div>
+                        @endforelse
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
+        {{-- ── 5. TASK DETAIL & LAPORAN PROGRES DOCK ── --}}
+        <div
+            x-show="selectedTask && detailOpen"
+            x-cloak
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 translate-y-2"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+        >
+            <div class="px-6 py-4 border-b border-slate-100 flex items-start justify-between gap-4">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <svg class="w-4 h-4 text-[#2563EB] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                        </svg>
+                        <p class="text-sm font-extrabold text-[#0B254A] truncate" x-text="selectedTask?.title ?? 'Pilih task'"></p>
+                    </div>
+                    <div class="flex items-center gap-4 text-[11px] text-slate-400 flex-wrap">
+                        <span class="flex items-center gap-1">
+                            <span class="text-slate-500 font-medium">Prioritas:</span>
+                            <strong class="text-slate-700" x-text="selectedTask?.priority ?? 'MEDIUM'"></strong>
+                        </span>
+                        <span>·</span>
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+                            </svg>
+                            Tenggat: <strong class="text-slate-600" x-text="formatDate(selectedTask?.due_date)"></strong>
+                        </span>
+                        <span>·</span>
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                            </svg>
+                            Direview PM: <strong class="text-slate-600" x-text="formatDate(selectedTask?.pm_reviewed_at)"></strong>
                         </span>
                     </div>
+                </div>
+                <button
+                    type="button"
+                    @click="detailOpen = false"
+                    class="inline-flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex-shrink-0"
+                >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"/>
+                    </svg>
+                    Sembunyikan Panel
+                </button>
+            </div>
 
-                    {{-- Evaluator Profile --}}
-                    <div class="bg-white border border-blue-100 rounded-xl p-3 flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-[#0F274A] text-white font-bold text-xs flex items-center justify-center flex-shrink-0">
-                            DS
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <strong class="text-xs font-bold text-slate-900 block truncate">Dr. Dimas Setiawan, S.T., M.Cs.</strong>
-                            <span class="text-[10px] text-slate-400 block truncate mt-0.5">Dosen/Project Manager &amp; Evaluator Teknis</span>
-                        </div>
-                    </div>
-
-                    {{-- Timestamp info --}}
-                    <div class="flex items-center gap-1.5 text-[11px] text-slate-500">
-                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+                {{-- LEFT: Detail Task & Evaluasi PM --}}
+                <div class="px-6 py-5 space-y-4">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/>
                         </svg>
-                        <span>Divalidasi pada: <strong class="text-slate-700 font-medium">30 Sep 2026, 16:40 WIB</strong></span>
+                        <p class="text-[13px] font-extrabold text-[#0B254A]">Catatan &amp; Evaluasi Dosen PM</p>
                     </div>
 
-                    {{-- Catatan Revisi Card (Yellow accent card) --}}
-                    <div class="bg-amber-50/80 border border-amber-200 border-l-4 border-l-amber-400 rounded-r-xl p-3.5 space-y-1.5">
-                        <div class="flex items-center gap-1.5 text-amber-900 font-bold text-xs">
-                            <svg class="w-3.5 h-3.5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zm-4 0h-2v2h2V9z" clip-rule="evenodd"/>
-                            </svg>
-                            <span>Catatan Revisi dari Dosen PM</span>
+                    {{-- Feedback Callout dari PM --}}
+                    <template x-if="selectedTask?.pm_status === 'NEEDS_IMPROVEMENT'">
+                        <div class="rounded-xl border border-rose-200 bg-rose-50/80 p-3.5 space-y-2">
+                            <div class="flex items-center gap-2 text-rose-800 text-xs font-bold">
+                                <svg class="w-4 h-4 text-rose-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Permintaan Perbaikan / Revisi dari PM:</span>
+                            </div>
+                            <p class="text-xs text-rose-900 leading-relaxed font-medium bg-white/70 rounded-lg p-2.5 border border-rose-100" x-text="selectedTask?.pm_notes || 'Silakan perbaiki hasil pengerjaan sesuai arahan PM.'"></p>
                         </div>
-                        <p class="text-xs text-amber-900/90 leading-relaxed italic">
-                            &ldquo;Logika webhook sudah rapi, Alvian. Namun <strong class="text-amber-950 font-bold">idempotency key handling</strong> pada database repository harus ada agar tidak terjadi duplicate processing jika webhook dikirim ulang oleh payment gateway saat terjadi timeout jaringan.&rdquo;
-                        </p>
+                    </template>
+
+                    <template x-if="selectedTask?.pm_status === 'APPROVED'">
+                        <div class="rounded-xl border border-emerald-200 bg-emerald-50/80 p-3.5 space-y-2">
+                            <div class="flex items-center gap-2 text-emerald-800 text-xs font-bold">
+                                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                                </svg>
+                                <span>Telah Disetujui Dosen PM</span>
+                            </div>
+                            <p class="text-xs text-emerald-900 leading-relaxed" x-text="selectedTask?.pm_notes || 'Tugas telah diverifikasi dan disetujui penuh oleh PM.'"></p>
+                        </div>
+                    </template>
+
+                    <template x-if="selectedTask?.pm_status === 'PENDING' && (selectedTask?.progress_percentage > 0 || selectedTask?.achieved_summary)">
+                        <div class="rounded-xl border border-amber-200 bg-amber-50/80 p-3.5 space-y-1">
+                            <div class="flex items-center gap-2 text-amber-800 text-xs font-bold">
+                                <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                </svg>
+                                <span>Menunggu Review PM</span>
+                            </div>
+                            <p class="text-xs text-amber-900 leading-relaxed">Laporan progres Anda telah diterima dan sedang menunggu giliran review dari Dosen PM.</p>
+                        </div>
+                    </template>
+
+                    <div class="flex items-center justify-between gap-3 pt-1">
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Progress Saat Ini</p>
+                            <p class="text-xl font-extrabold text-[#0B254A]" x-text="(selectedTask?.progress_percentage ?? 0) + '%'"></p>
+                        </div>
+                        <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#0B3B82]" x-text="selectedTask?.status ?? '—'"></span>
+                    </div>
+
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-[#2563EB] rounded-full transition-all duration-500" :style="'width: ' + Math.max(0, Math.min(100, selectedTask?.progress_percentage ?? 0)) + '%'"></div>
+                    </div>
+
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1">Ringkasan Capaian Terakhir</p>
+                        <p class="text-xs text-slate-600 leading-relaxed bg-[#F8FAFC] border border-slate-100 rounded-xl p-3.5" x-text="selectedTask?.achieved_summary || 'Anda belum pernah mengirim laporan capaian untuk tugas ini.'"></p>
+                    </div>
+
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1">Kendala / Blocker Terakhir</p>
+                        <p class="text-xs text-slate-600 leading-relaxed bg-[#F8FAFC] border border-slate-100 rounded-xl p-3.5" x-text="selectedTask?.blockers_summary || 'Tidak ada kendala yang dilaporkan.'"></p>
+                    </div>
+
+                    {{-- Bukti Pengerjaan yang Tersimpan --}}
+                    <div class="border-t border-slate-100 pt-3 space-y-2.5">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Bukti Pengerjaan yang Tersimpan</p>
+
+                        <template x-if="getProofUrl()">
+                            <a :href="getProofUrl()" target="_blank" rel="noopener"
+                               class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all shadow-2xs group">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0 group-hover:bg-[#0B254A] group-hover:text-white transition-colors">
+                                        <template x-if="isGitHub(getProofUrl())">
+                                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                                        </template>
+                                        <template x-if="!isGitHub(getProofUrl())">
+                                            <svg class="w-4 h-4 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                        </template>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-bold text-[#0B254A] truncate" x-text="isGitHub(getProofUrl()) ? 'Repository / Pull Request GitHub' : (isFigma(getProofUrl()) ? 'Tautan Desain Figma' : 'Tautan Bukti Pengerjaan')"></p>
+                                        <p class="text-[11px] text-slate-400 truncate" x-text="getProofUrl()"></p>
+                                    </div>
+                                </div>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#2563EB] group-hover:underline flex-shrink-0">
+                                    Buka
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                </span>
+                            </a>
+                        </template>
+
+                        <template x-if="isLocalFile()">
+                            <a :href="selectedTask?.report_attachment_url" target="_blank" rel="noopener"
+                               class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all shadow-2xs group">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-bold text-[#0B254A]">Berkas Lampiran Laporan</p>
+                                        <p class="text-[11px] text-slate-400">Dokumen / Bukti / Screenshot</p>
+                                    </div>
+                                </div>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#2563EB] group-hover:underline flex-shrink-0">
+                                    Unduh / Lihat
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                </span>
+                            </a>
+                        </template>
+
+                        <template x-if="!getProofUrl() && !isLocalFile()">
+                            <p class="text-xs text-slate-400 italic bg-[#F8FAFC] border border-slate-100 rounded-xl p-3">
+                                Belum ada bukti pengerjaan (GitHub/Figma/file) yang dilampirkan.
+                            </p>
+                        </template>
                     </div>
                 </div>
 
-                {{-- SLA info & Link --}}
-                <div class="flex items-center justify-between text-xs pt-3 border-t border-blue-200/60">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        SLA EVALUASI: MAKS. 2x24 Jam
-                    </span>
-                    <a href="#" class="text-xs font-semibold text-[#2563EB] hover:underline">
-                        Lihat Riwayat Verifikasi Lain
-                    </a>
+                {{-- RIGHT: Form Lapor Capaian Mahasiswa / Read-Only Locked State --}}
+                <div class="px-6 py-5 space-y-4">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/>
+                        </svg>
+                        <p class="text-[13px] font-extrabold text-[#0B254A]" x-text="isApproved() ? 'Status Laporan Capaian (Terkunci)' : 'Form Lapor Progres & Capaian'"></p>
+                    </div>
+
+                    {{-- JIKA SUDAH APPROVED & DONE: TAMPILAN READ-ONLY --}}
+                    <template x-if="isApproved()">
+                        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6 text-center space-y-3.5">
+                            <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-2xs">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-extrabold text-emerald-900">Task Selesai &amp; Disetujui PM</h4>
+                                <p class="text-xs text-emerald-700 mt-1 max-w-sm mx-auto leading-relaxed">
+                                    Tugas ini telah diverifikasi dan disetujui penuh oleh Project Manager. 
+                                </p>
+                            </div>
+                        </div>
+                    </template>
+
+                    {{-- JIKA BELUM APPROVED: FORM AKTIF LAPOR PROGRES --}}
+                    <template x-if="!isApproved()">
+                    <form method="POST"
+                          :action="'{{ url('/mahasiswa/proposals/' . ($currentProposalId ?? 0) . '/tasks') }}/' + (selectedTask?.id ?? 0) + '/progress'"
+                          enctype="multipart/form-data"
+                          class="space-y-4">
+                        @csrf
+
+                        {{-- Input 1: Slider & Progres Persentase --}}
+                        <div class="bg-[#F8FAFC] border border-slate-200/80 rounded-xl p-3.5 space-y-2.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <label for="progress-range" class="text-xs font-bold text-[#0B254A]">Persentase Capaian:</label>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-sm font-extrabold text-[#2563EB]" x-text="progressPercentage + '%'"></span>
+                                </div>
+                            </div>
+
+                            <input
+                                id="progress-range"
+                                type="range"
+                                min="0"
+                                max="100"
+                                step="5"
+                                x-model.number="progressPercentage"
+                                @input="if (progressPercentage >= 100) status = 'TESTING'"
+                                class="w-full accent-[#2563EB] cursor-pointer"
+                            />
+
+                            <input type="hidden" name="progress_percentage" :value="progressPercentage">
+
+                            {{-- Preset tombol cepat persentase --}}
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <button type="button" @click="setProgress(25)" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer" :class="progressPercentage === 25 ? 'bg-[#2563EB] text-white border-[#2563EB]' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'">25%</button>
+                                <button type="button" @click="setProgress(50)" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer" :class="progressPercentage === 50 ? 'bg-[#2563EB] text-white border-[#2563EB]' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'">50%</button>
+                                <button type="button" @click="setProgress(75)" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer" :class="progressPercentage === 75 ? 'bg-[#2563EB] text-white border-[#2563EB]' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'">75%</button>
+                                <button type="button" @click="setProgress(100)" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer" :class="progressPercentage >= 100 ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'">100% (Selesai)</button>
+                            </div>
+
+                            <p class="text-[10px] text-slate-400 italic">
+                                *Progres 100% otomatis mengalihkan status ke <strong class="text-amber-600">TESTING</strong> agar ditinjau oleh PM. Keputusan DONE ditentukan oleh PM.
+                            </p>
+                        </div>
+
+                        {{-- Input 2: Pilihan Status --}}
+                        <div>
+                            <label class="block text-xs font-bold text-[#0B254A] mb-1.5">Status Pengerjaan:</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all"
+                                       :class="status === 'TODO' ? 'border-slate-400 bg-slate-100 text-slate-800 ring-1 ring-slate-400' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'">
+                                    <input type="radio" name="status" value="TODO" x-model="status" class="sr-only">
+                                    <span>Todo</span>
+                                </label>
+
+                                <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all"
+                                       :class="status === 'IN_PROGRESS' ? 'border-[#0B3B82] bg-[#EFF6FF] text-[#0B3B82] ring-1 ring-[#0B3B82]' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'">
+                                    <input type="radio" name="status" value="IN_PROGRESS" x-model="status" class="sr-only">
+                                    <span>In Progress</span>
+                                </label>
+
+                                <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all"
+                                       :class="status === 'TESTING' ? 'border-[#F59E0B] bg-[#FEF3C7] text-[#B45309] ring-1 ring-[#F59E0B]' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'">
+                                    <input type="radio" name="status" value="TESTING" x-model="status" class="sr-only">
+                                    <span>Testing / Review</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- Input 3: Ringkasan Capaian (Wajib) --}}
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label for="mhs-achieved" class="text-xs font-bold text-[#0B254A]">Ringkasan Capaian <span class="text-rose-500">*</span></label>
+                                <span class="text-[10px] text-slate-400">Jelaskan hasil pengerjaan Anda</span>
+                            </div>
+                            <textarea
+                                id="mhs-achieved"
+                                name="achieved_summary"
+                                x-model="achievedSummary"
+                                rows="3"
+                                required
+                                placeholder="Contoh: Menyelesaikan slicing halaman task, integrasi API overview, dan testing lifecycle status..."
+                                class="w-full text-xs text-slate-600 bg-[#F8FAFC] border border-slate-200 rounded-xl p-3.5 focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/20 resize-none placeholder:text-slate-300 leading-relaxed transition"
+                            ></textarea>
+                        </div>
+
+                        {{-- Input 4: Kendala / Blocker (Opsional) --}}
+                        <div>
+                            <label for="mhs-blockers" class="block text-xs font-bold text-[#0B254A] mb-1.5">Kendala / Blocker Pengerjaan (opsional)</label>
+                            <textarea
+                                id="mhs-blockers"
+                                name="blockers_summary"
+                                x-model="blockersSummary"
+                                rows="2"
+                                placeholder="Tuliskan kendala teknis atau kebutuhan koordinasi jika ada..."
+                                class="w-full text-xs text-slate-600 bg-[#F8FAFC] border border-slate-200 rounded-xl p-3.5 focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/20 resize-none placeholder:text-slate-300 leading-relaxed transition"
+                            ></textarea>
+                        </div>
+
+                        {{-- Input 5: Tautan Bukti (GitHub / PR / Figma / Link Demo) --}}
+                        <div>
+                            <label for="mhs-proof" class="block text-xs font-bold text-[#0B254A] mb-1.5">Tautan Bukti Pengerjaan (GitHub / Figma / Demo):</label>
+                            <input
+                                id="mhs-proof"
+                                type="url"
+                                name="report_attachment_url"
+                                x-model="reportUrl"
+                                placeholder="https://github.com/organisasi/repo/pull/1 atau https://figma.com/..."
+                                class="w-full text-xs text-slate-600 bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/20 placeholder:text-slate-300 transition"
+                            />
+                        </div>
+
+                        {{-- Input 6: Berkas Lampiran / File (Opsional) --}}
+                        <div>
+                            <label for="mhs-file" class="block text-xs font-bold text-[#0B254A] mb-1.5">Atau Unggah Berkas Lampiran (Screenshot/PDF/ZIP maks 10MB):</label>
+                            <input
+                                id="mhs-file"
+                                type="file"
+                                name="report_attachment"
+                                class="w-full text-xs text-slate-500 bg-[#F8FAFC] border border-slate-200 rounded-xl p-2.5 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-[#0B3B82] file:text-white hover:file:bg-[#082a5c] cursor-pointer"
+                            />
+                        </div>
+
+                        {{-- Tombol Kirim --}}
+                        <div class="pt-2">
+                            <button
+                                type="submit"
+                                class="w-full inline-flex items-center justify-center gap-2 bg-[#F59E0B] hover:bg-yellow-400 text-[#0B254A] text-xs font-extrabold px-4 py-3 rounded-xl shadow-2xs transition-all cursor-pointer"
+                            >
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"/>
+                                </svg>
+                                Kirim Laporan Progres
+                            </button>
+                        </div>
+                    </form>
+                    </template>
+                </div>
                 </div>
             </div>
-
         </div>
+        @endif
 
-    </article>
+    </main>
+</div>
 
-    {{-- ===== LOWER TASK LIST ===== --}}
-    <section class="space-y-4">
-        {{-- Task Row 1: Konfigurasi MQTT Broker --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-slate-300 transition">
-            <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-2 text-xs">
-                    <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold text-[11px]">
-                        PRJ-2026/004 · Smart Farming IoT
-                    </span>
-                    <span class="px-2 py-0.5 rounded bg-blue-50 text-[#2563EB] font-bold text-[10px]">
-                        TESTING
-                    </span>
-                </div>
-                <h3 class="text-base font-bold text-slate-900 mt-1.5">
-                    Konfigurasi MQTT Broker &amp; Telemetri Sensor Tanah
-                </h3>
-                <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                    Setup EMQX cloud broker, implementasi TLS/SSL certificates, dan penanganan auto-reconnect packet MQTT...
-                </p>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-6">
-                {{-- Progress --}}
-                <div class="w-32">
-                    <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1">
-                        <span>Progres</span>
-                        <strong class="text-slate-800">75%</strong>
-                    </div>
-                    <div class="bg-slate-100 rounded-full h-2 overflow-hidden">
-                        <div class="bg-[#0B3B82] h-full rounded-full" style="width: 75%"></div>
-                    </div>
-                </div>
-
-                {{-- Jatuh Tempo --}}
-                <div class="text-left md:text-right min-w-[90px]">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 block">JATUH TEMPO</span>
-                    <strong class="text-xs font-bold text-slate-800 block mt-0.5">05 Okt 2026</strong>
-                </div>
-
-                {{-- Status Revisi PM --}}
-                <div class="text-left md:text-right min-w-[110px]">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">STATUS REVISI PM</span>
-                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-xs font-bold">
-                        <span>✓</span> APPROVED
-                    </span>
-                </div>
-
-                {{-- Button Detail --}}
-                <button type="button" class="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition cursor-pointer">
-                    Detail ⌄
-                </button>
-            </div>
-        </div>
-
-        {{-- Task Row 2: Slicing UI Responsive --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-slate-300 transition">
-            <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-2 text-xs">
-                    <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold text-[11px]">
-                        PRJ-2026/001 · Sistem Informasi UMKM
-                    </span>
-                    <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold text-[10px]">
-                        TODO
-                    </span>
-                </div>
-                <h3 class="text-base font-bold text-slate-900 mt-1.5">
-                    Slicing UI Responsive Halaman Dashboard Inventori
-                </h3>
-                <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                    Penerjemahan mockup Figma ke komponen Tailwind CSS dengan modular view dan chart visualisasi...
-                </p>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-6">
-                {{-- Progress --}}
-                <div class="w-32">
-                    <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1">
-                        <span>Progres</span>
-                        <strong class="text-slate-800">0%</strong>
-                    </div>
-                    <div class="bg-slate-100 rounded-full h-2 overflow-hidden">
-                        <div class="bg-[#0B3B82] h-full rounded-full" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                {{-- Jatuh Tempo --}}
-                <div class="text-left md:text-right min-w-[90px]">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 block">JATUH TEMPO</span>
-                    <strong class="text-xs font-bold text-slate-800 block mt-0.5">18 Okt 2026</strong>
-                </div>
-
-                {{-- Status Revisi PM --}}
-                <div class="text-left md:text-right min-w-[110px]">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">STATUS REVISI PM</span>
-                    <span class="text-xs text-slate-400 font-medium">PENDING</span>
-                </div>
-
-                {{-- Button Detail --}}
-                <button type="button" class="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition cursor-pointer">
-                    Detail ⌄
-                </button>
-            </div>
-        </div>
-
-        {{-- Task Row 3: Penyusunan API Documentation --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-slate-300 transition">
-            <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-2 text-xs">
-                    <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold text-[11px]">
-                        PRJ-2026/001 · Sistem Informasi UMKM
-                    </span>
-                    <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold text-[10px]">
-                        DONE
-                    </span>
-                </div>
-                <h3 class="text-base font-bold text-slate-900 mt-1.5">
-                    Penyusunan API Documentation Swagger / OpenAPI v3
-                </h3>
-                <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                    Dokumentasi lengkap seluruh route API auth, inventory, dan reports beserta format payload schema...
-                </p>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-6">
-                {{-- Progress --}}
-                <div class="w-32">
-                    <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1">
-                        <span>Progres</span>
-                        <strong class="text-slate-800">100%</strong>
-                    </div>
-                    <div class="bg-slate-100 rounded-full h-2 overflow-hidden">
-                        <div class="bg-emerald-500 h-full rounded-full" style="width: 100%"></div>
-                    </div>
-                </div>
-
-                {{-- Selesai / Dilepaskan --}}
-                <div class="text-left md:text-right min-w-[90px]">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 block">DILEPASKAN</span>
-                    <strong class="text-xs font-bold text-slate-800 block mt-0.5">28 Sep 2026</strong>
-                </div>
-
-                {{-- Status Revisi PM --}}
-                <div class="text-left md:text-right min-w-[110px]">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">STATUS REVISI PM</span>
-                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-xs font-bold">
-                        <span>✓</span> APPROVED
-                    </span>
-                </div>
-
-                {{-- Button Detail --}}
-                <button type="button" class="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition cursor-pointer">
-                    Detail ⌄
-                </button>
-            </div>
-        </div>
-
-        {{-- Pagination footer bar --}}
-        <div class="flex flex-wrap items-center justify-between gap-4 pt-3 text-xs text-slate-400">
-            <div>
-                Menampilkan <strong>1 - 4</strong> dari total <strong>14</strong> Tugas Aktif <span class="mx-1">·</span> Tampilkan: <span class="text-slate-600 font-semibold">10/hlm</span>
-            </div>
-            <div class="flex items-center gap-1">
-                <button type="button" class="w-8 h-8 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 flex items-center justify-center transition cursor-pointer">‹</button>
-                <button type="button" class="w-8 h-8 rounded-lg bg-[#0B3B82] text-white font-bold flex items-center justify-center shadow-2xs">1</button>
-                <button type="button" class="w-8 h-8 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 flex items-center justify-center transition cursor-pointer">2</button>
-                <button type="button" class="w-8 h-8 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 flex items-center justify-center transition cursor-pointer">3</button>
-                <button type="button" class="w-8 h-8 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 flex items-center justify-center transition cursor-pointer">›</button>
-            </div>
-        </div>
-    </section>
-
-</x-student-layout>
+</body>
+</html>
