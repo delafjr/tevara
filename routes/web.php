@@ -209,50 +209,32 @@ Route::middleware('auth.api')->group(function () {
     // Klien: Ajukan Proyek Baru & Projek Saya
     Route::middleware('auth.api:klien')->prefix('klien')->name('klien.')->group(function () {
         Route::get('/projek-saya', function (ApiService $api) {
-<<<<<<< HEAD
-=======
             $proposals = [];
             $error = null;
->>>>>>> 3898f74d58e3175bcc8ac80db43db4786bb3ce53
             $handoverProjects = [];
             $handoverProjectsAvailable = false;
 
             try {
                 $response = $api->get('proposals/mine');
-<<<<<<< HEAD
-                $proposals = $response->successful() ? $response->json() : null;
-                if (is_array($proposals)) {
-=======
                 if ($response->successful() && is_array($response->json())) {
                     $proposals = $response->json();
->>>>>>> 3898f74d58e3175bcc8ac80db43db4786bb3ce53
                     $handoverProjectsAvailable = true;
                     $handoverProjects = collect($proposals)
                         ->filter(fn ($proposal) => is_array($proposal) && !empty($proposal['bast_eligible']) && !empty($proposal['project_code']))
                         ->values()
                         ->all();
                 }
-<<<<<<< HEAD
-            } catch (\Throwable) {
-=======
             } catch (\Throwable $e) {
                 $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
->>>>>>> 3898f74d58e3175bcc8ac80db43db4786bb3ce53
                 $handoverProjects = [];
             }
 
             return view('klien.projek-saya', [
-<<<<<<< HEAD
-                'user' => session('user'),
-                'handoverProjects' => $handoverProjects,
-                'handoverProjectsAvailable' => $handoverProjectsAvailable,
-=======
                 'user'                      => session('user'),
                 'proposals'                 => $proposals,
                 'handoverProjects'          => $handoverProjects,
                 'handoverProjectsAvailable' => $handoverProjectsAvailable,
                 'error'                     => $error,
->>>>>>> 3898f74d58e3175bcc8ac80db43db4786bb3ce53
             ]);
         })->name('projek-saya');
         Route::get('/proyek-saya', fn () => redirect()->route('klien.projek-saya'));
@@ -953,8 +935,6 @@ Route::middleware('auth.api')->group(function () {
             ]);
         })->whereNumber('proposal')->name('validasi-proposal.detail');
 
-<<<<<<< HEAD
-=======
         Route::get('/validasi-proposal/{proposal}/revisi', function (ApiService $api, int $proposal) {
             $detail = [];
             $error = null;
@@ -1024,8 +1004,6 @@ Route::middleware('auth.api')->group(function () {
                     ->with('error', 'Tidak dapat terhubung ke backend: ' . $e->getMessage());
             }
         })->whereNumber('proposal')->name('validasi-proposal.revisi.store');
-
->>>>>>> 3898f74d58e3175bcc8ac80db43db4786bb3ce53
         // Form Lanjutan Persetujuan Proposal (SPK, Termin Biaya & Tim Pengembang)
         Route::get('/validasi-proposal/{proposal}/setujui', function (ApiService $api, int $proposal) {
             $detail = [];
@@ -1287,8 +1265,6 @@ Route::middleware('auth.api')->group(function () {
             return redirect()->route('pengurus-tefa.validasi-proposal')
                 ->with('success', 'Proposal berhasil disetujui! Surat perjanjian (SPK), skema termin pembayaran, dan tim pengembang proyek resmi ditetapkan.');
         })->whereNumber('proposal')->name('validasi-proposal.setujui.store');
-<<<<<<< HEAD
-=======
 
         Route::get('/keuangan', function (ApiService $api) {
             $pendingPayments = [];
@@ -1753,7 +1729,6 @@ Route::middleware('auth.api')->group(function () {
             }
         })->whereNumber('proposal')->name('uat.update');
 
->>>>>>> 3898f74d58e3175bcc8ac80db43db4786bb3ce53
         Route::get('/monitoring', fn () => view('pengurus-tefa.monitoring', ['user' => session('user')]))->name('monitoring');
     });
 });
