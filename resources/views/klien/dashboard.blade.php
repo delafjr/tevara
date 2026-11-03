@@ -32,7 +32,11 @@
         $bar = 'bg-[#0B3B82]';
         $label = ucfirst($status);
 
-        if (str_contains($s, 'reject') || str_contains($s, 'cancel') || str_contains($s, 'batal') || str_contains($s, 'tolak')) {
+        if (str_contains($s, 'revision') || str_contains($s, 'improvement')) {
+            $pill = 'bg-[#FEF3C7] text-amber-800 border border-amber-300 font-bold';
+            $bar = 'bg-amber-500';
+            $label = 'Improvement (Revisi)';
+        } elseif (str_contains($s, 'reject') || str_contains($s, 'cancel') || str_contains($s, 'batal') || str_contains($s, 'tolak')) {
             $pill = 'bg-[#FFE4E6] text-[#E11D48]';
             $bar = 'bg-[#E11D48]';
             $label = 'Ditolak';
@@ -263,11 +267,13 @@
                                 <th class="px-6 py-3.5">Nama Project</th>
                                 <th class="px-4 py-3.5 w-36">Status</th>
                                 <th class="px-4 py-3.5 w-44">Progress</th>
+                                <th class="px-4 py-3.5 w-40 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="project-tbody" class="divide-y divide-slate-100 text-sm">
                             @forelse($projects as $project)
                             @php
+                                $projectId = $project['id'] ?? null;
                                 $projectTitle = (string) ($project['title'] ?? '-');
                                 $projectCategory = (string) ($project['category'] ?? '');
                                 $projectStatus = (string) ($project['status'] ?? '-');
@@ -297,10 +303,26 @@
                                         <span class="text-xs font-semibold text-slate-500 w-8 text-right">{{ $projectProgress }}%</span>
                                     </div>
                                 </td>
+                                <td class="px-4 py-4 text-right whitespace-nowrap">
+                                    @if($projectId)
+                                        <a href="{{ route('klien.projek-saya.detail', $projectId) }}"
+                                           class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors {{ str_contains(strtolower($projectStatus), 'revision') ? 'bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300' : 'bg-[#EAF3FF] text-[#0B3B82] hover:bg-[#DCEBFF]' }}">
+                                            Detail Projek Saya
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
+                                            </svg>
+                                        </a>
+                                    @else
+                                        <a href="{{ route('klien.projek-saya') }}"
+                                           class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0B3B82] bg-[#EAF3FF] hover:bg-[#DCEBFF] px-3 py-1.5 rounded-lg transition-colors">
+                                            Detail Projek Saya
+                                        </a>
+                                    @endif
+                                </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="3" class="px-6 py-12 text-center">
+                                <td colspan="4" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center justify-center">
                                         <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-2.5">
                                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -314,7 +336,7 @@
                             </tr>
                             @endforelse
                             <tr id="no-search-match-row" class="hidden">
-                                <td colspan="3" class="px-6 py-12 text-center">
+                                <td colspan="4" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center justify-center">
                                         <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-2.5">
                                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>

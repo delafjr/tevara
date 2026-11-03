@@ -65,7 +65,7 @@ class ValidasiProposalTest extends TestCase
                 'id'               => 13,
                 'proposal_code'    => 'PRSL-2026-490',
                 'title'            => 'Portal Berita Digital',
-                'background'       => 'Kami membutuhkan portal berita digital yang mudah dikelola redaksi.',
+                'background'       => 'Scope kerja sistem informasi.',
                 'target_audience'  => 'Masyarakat umum dan tim redaksi',
                 'category_name'    => 'Web',
                 'status'           => 'Submitted',
@@ -77,7 +77,9 @@ class ValidasiProposalTest extends TestCase
                     'email' => 'budi.santoso@majubersamasentosa.co.id',
                     'no_hp' => '6281234567890',
                 ],
-                'modules' => [],
+                'modules' => [
+                    ['id' => 17, 'title' => 'Portal', 'description' => 'Modul berita'],
+                ],
             ]),
         ]);
     }
