@@ -136,6 +136,10 @@
             },
             isFigma(url) {
                 return !!url && url.includes('figma.com');
+            },
+            isApproved() {
+                return (this.selectedTask?.status === 'DONE' && this.selectedTask?.pm_status === 'APPROVED')
+                    || this.selectedTask?.pm_status === 'APPROVED';
             }
           }">
 
@@ -586,15 +590,34 @@
                     </div>
                 </div>
 
-                {{-- RIGHT: Form Lapor Capaian Mahasiswa --}}
+                {{-- RIGHT: Form Lapor Capaian Mahasiswa / Read-Only Locked State --}}
                 <div class="px-6 py-5 space-y-4">
                     <div class="flex items-center gap-2">
                         <svg class="w-4 h-4 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/>
                         </svg>
-                        <p class="text-[13px] font-extrabold text-[#0B254A]">Form Lapor Progres &amp; Capaian</p>
+                        <p class="text-[13px] font-extrabold text-[#0B254A]" x-text="isApproved() ? 'Status Laporan Capaian (Terkunci)' : 'Form Lapor Progres & Capaian'"></p>
                     </div>
 
+                    {{-- JIKA SUDAH APPROVED & DONE: TAMPILAN READ-ONLY --}}
+                    <template x-if="isApproved()">
+                        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6 text-center space-y-3.5">
+                            <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-2xs">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-extrabold text-emerald-900">Task Selesai &amp; Disetujui PM</h4>
+                                <p class="text-xs text-emerald-700 mt-1 max-w-sm mx-auto leading-relaxed">
+                                    Tugas ini telah diverifikasi dan disetujui penuh oleh Project Manager. 
+                                </p>
+                            </div>
+                        </div>
+                    </template>
+
+                    {{-- JIKA BELUM APPROVED: FORM AKTIF LAPOR PROGRES --}}
+                    <template x-if="!isApproved()">
                     <form method="POST"
                           :action="'{{ url('/mahasiswa/proposals/' . ($currentProposalId ?? 0) . '/tasks') }}/' + (selectedTask?.id ?? 0) + '/progress'"
                           enctype="multipart/form-data"
@@ -727,6 +750,8 @@
                             </button>
                         </div>
                     </form>
+                    </template>
+                </div>
                 </div>
             </div>
         </div>

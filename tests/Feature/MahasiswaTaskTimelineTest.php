@@ -167,6 +167,10 @@ class MahasiswaTaskTimelineTest extends TestCase
         // Feedback PM
         $response->assertSee('PM: Perlu Perbaikan');
         $response->assertSee('Perbaiki penanganan error boundary saat backend offline.');
+
+        // Locked read-only state for completed task
+        $response->assertSee('Task Selesai &amp; Disetujui PM', false);
+        $response->assertSee('read-only');
     }
 
     public function test_halaman_task_mahasiswa_bisa_ganti_proyek_via_query_param(): void
