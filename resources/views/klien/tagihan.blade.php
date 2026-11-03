@@ -16,6 +16,163 @@
     $user = $user ?? session('user', []);
     $userName = $user['name'] ?? 'Budi Santoso';
 
+<<<<<<< HEAD
+    $projectsBilling = [
+        [
+            'id'             => 'PRJ-2026/014',
+            'spk'            => 'SPK/TEFA/2026/008',
+            'spk_status'     => 'SPK Ditandatangani',
+            'spk_status_type'=> 'success',
+            'title'          => 'Sistem Monitoring Rantai Pasok Terpadu (IoT & Web)',
+            'period'         => 'Periode: 01 Agt 2026 s.d. 30 Nov 2026 • Skema: 3 Termin (30% - 40% - 30%)',
+            'total_value'    => 'Rp 75.000.000',
+            'paid_percent'   => 66.6,
+            'paid_status'    => '66.6% Terbayar',
+            'has_open'       => false,
+            'termins' => [
+                [
+                    'name'         => 'Termin 1 — Down Payment (30%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 1,
+                    'desc'         => 'Kick-off, Spesifikasi Teknis, dan Persetujuan Arsitektur Sistem',
+                    'nominal'      => 'Rp 22.500.000',
+                    'channel'      => 'Virtual Account BCA',
+                    'channel_icon' => 'bank',
+                    'status'       => 'verified',
+                    'status_label' => 'VERIFIED (Lunas)',
+                    'due_date'     => null,
+                    'can_download' => true,
+                    'can_upload'   => false,
+                ],
+                [
+                    'name'         => 'Termin 2 — Progres Lapangan & Integrasi IoT (40%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 2,
+                    'desc'         => 'Implementasi Firmware Sensor, Broker MQTT, dan Visualisasi Web',
+                    'nominal'      => 'Rp 30.000.000',
+                    'channel'      => 'Virtual Account BCA',
+                    'channel_icon' => 'bank',
+                    'status'       => 'verified',
+                    'status_label' => 'VERIFIED (Lunas)',
+                    'due_date'     => null,
+                    'can_download' => true,
+                    'can_upload'   => false,
+                ],
+                [
+                    'name'         => 'Termin 3 — Final UAT & Serah Terima (30%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 3,
+                    'desc'         => 'Uji Terima Pengguna (UAT) Final, Pelatihan Operator, & Handover',
+                    'nominal'      => 'Rp 22.500.000',
+                    'channel'      => 'BCA VA / Mandiri Giro',
+                    'channel_icon' => 'card',
+                    'status'       => 'pending',
+                    'status_label' => 'BELUM TERBUKA',
+                    'due_date'     => 'Est. 25 Nov 2026',
+                    'can_download' => false,
+                    'can_upload'   => false,
+                ],
+            ],
+        ],
+        [
+            'id'             => 'PRJ-2026/009',
+            'spk'            => 'SPK/TEFA/2026/005',
+            'spk_status'     => 'SPK Aktif',
+            'spk_status_type'=> 'success',
+            'has_open'       => true,
+            'open_badge'     => '! Tagihan Terbuka',
+            'title'          => 'Aplikasi Mobile Portal Layanan Nasabah & Pembayaran Digital',
+            'period'         => 'Periode: 10 Mei 2026 s.d. 30 Okt 2026 • Skema: 2 Termin (DP 50% & Pelunasan 50%)',
+            'total_value'    => 'Kontrak: Rp 60.000.000',
+            'paid_percent'   => 50.0,
+            'paid_status'    => '50.0%',
+            'active_action'  => 'Bayar Termin 2',
+            'termins' => [
+                [
+                    'name'         => 'Termin 1 — Down Payment (50%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 1,
+                    'desc'         => 'Kick-off & Approval System Architecture & UI/UX',
+                    'nominal'      => 'Rp 30.000.000',
+                    'channel'      => 'Virtual Account BCA',
+                    'channel_icon' => 'bank',
+                    'status'       => 'verified',
+                    'status_label' => 'VERIFIED (Lunas)',
+                    'due_date'     => null,
+                    'can_download' => true,
+                    'can_upload'   => false,
+                ],
+                [
+                    'name'         => 'Termin 2 — Pelunasan & Deployment (50%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 2,
+                    'is_urgent'    => true,
+                    'desc'         => 'UAT Final, User Training, & Penyerahan Source Code',
+                    'nominal'      => 'Rp 30.000.000',
+                    'channel'      => 'BCA VA / Mandiri Giro',
+                    'channel_icon' => 'card',
+                    'status'       => 'unpaid',
+                    'status_label' => 'MENUNGGU PEMBAYARAN',
+                    'due_date'     => 'Jatuh Tempo: 15 Okt 2026',
+                    'can_download' => false,
+                    'can_upload'   => true,
+                ],
+            ],
+        ],
+        [
+            'id'             => 'PRJ-2026/021',
+            'spk'            => 'SPK/TEFA/2026/012',
+            'spk_status'     => 'Kontrak Aktif',
+            'spk_status_type'=> 'success',
+            'title'          => 'Smart Warehouse Environmental Sensor & Desktop Control Unit',
+            'period'         => 'Periode: 01 Sep 2026 s.d. 15 Jan 2027 • Skema: 3 Termin (DP 40% - Progres 30% - UAT 30%)',
+            'total_value'    => 'Nilai: Rp 50.000.000',
+            'paid_percent'   => 40.0,
+            'paid_status'    => '40.0% Terbayar',
+            'has_open'       => false,
+            'termins' => [
+                [
+                    'name'         => 'Termin 1 — Down Payment (40%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 1,
+                    'desc'         => 'Pengadaan Perangkat Keras Sensor & Desain Arsitektur Hardware',
+                    'nominal'      => 'Rp 20.000.000',
+                    'channel'      => 'Mandiri Giro',
+                    'channel_icon' => 'bank',
+                    'status'       => 'verified',
+                    'status_label' => 'VERIFIED (Lunas)',
+                    'due_date'     => null,
+                    'can_download' => true,
+                    'can_upload'   => false,
+                ],
+                [
+                    'name'         => 'Termin 2 — Progres Pengerjaan & Modul Desktop (30%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 2,
+                    'desc'         => 'Pengembangan GUI Desktop & Uji Kalibrasi Sensor Suhu Gudang',
+                    'nominal'      => 'Rp 15.000.000',
+                    'channel'      => 'BCA VA / Mandiri Giro',
+                    'channel_icon' => 'card',
+                    'status'       => 'verifying',
+                    'status_label' => 'DALAM VERIFIKASI',
+                    'due_date'     => 'Sedang Diverifikasi Keuangan TEFA',
+                    'can_download' => false,
+                    'can_upload'   => false,
+                ],
+                [
+                    'name'         => 'Termin 3 — UAT & Deployment Akhir (30%)',
+                    'invoice_number' => 'Belum tersedia',
+                    'term_sequence'  => 3,
+                    'desc'         => 'Instalasi Lapangan & Serah Terima Unit Kendali Desktop',
+                    'nominal'      => 'Rp 15.000.000',
+                    'channel'      => 'Mandiri Giro',
+                    'channel_icon' => 'card',
+                    'status'       => 'pending',
+                    'status_label' => 'BELUM TERBUKA',
+                    'due_date'     => 'Est. 15 Jan 2027',
+                    'can_download' => false,
+                    'can_upload'   => false,
+=======
     $hasRealBilling = !empty($projectsBilling);
     if (!$hasRealBilling) {
         $projectsBilling = [
@@ -193,6 +350,7 @@
                         'can_download' => false,
                         'can_upload'   => false,
                     ],
+>>>>>>> 3898f74d58e3175bcc8ac80db43db4786bb3ce53
                 ],
             ],
         ];
@@ -621,6 +779,13 @@
                                             </div>
                                             <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
                                                 {{ $termin['desc'] ?? ($termin['name'] ?? '-') }}
+                                            </p>
+                                            <p class="mt-2 text-[11px] text-slate-500">
+                                                Invoice: <span class="font-semibold text-slate-700">{{ $termin['invoice_number'] }}</span>
+                                                <span class="mx-1">•</span> Termin {{ $termin['term_sequence'] }}
+                                            </p>
+                                            <p class="mt-1 text-[11px] text-slate-500">
+                                                Jatuh tempo: <span class="font-medium text-slate-700">{{ $termin['due_date'] ?? 'Belum ditetapkan' }}</span>
                                             </p>
                                             <p class="mt-2 text-[11px] text-slate-500">
                                                 Invoice: <span class="font-semibold text-slate-700">{{ $termin['invoice_number'] }}</span>
