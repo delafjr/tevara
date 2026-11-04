@@ -11,9 +11,9 @@ class PMTaskTimelineTest extends TestCase
     {
         return [
             'api_token' => 'dummy-token',
-            'user'      => [
-                'id'    => 23,
-                'name'  => 'Budi Santoso',
+            'user' => [
+                'id' => 23,
+                'name' => 'Budi Santoso',
                 'roles' => ['dosen', 'pm'],
             ],
             'active_role' => 'pm',
@@ -25,42 +25,42 @@ class PMTaskTimelineTest extends TestCase
         return [
             'success' => true,
             'message' => 'Data monitoring task proyek',
-            'data'    => [
+            'data' => [
                 'proposal' => [
-                    'id'                     => $proposalId,
-                    'proposal_code'          => 'PRSL-2025-001',
-                    'title'                  => $title,
-                    'status'                 => 'Completed',
-                    'category'               => 'Web',
-                    'start_date'             => '2025-03-25',
+                    'id' => $proposalId,
+                    'proposal_code' => 'PRSL-2025-001',
+                    'title' => $title,
+                    'status' => 'Completed',
+                    'category' => 'Web',
+                    'start_date' => '2025-03-25',
                     'target_completion_date' => '2025-12-15',
-                    'pm_id'                  => 23,
+                    'pm_id' => 23,
                 ],
                 'summary' => [
-                    'total'             => 12,
-                    'todo'              => 0,
-                    'in_progress'       => 0,
-                    'testing'           => 0,
-                    'done'              => 12,
-                    'pending_review'    => 0,
-                    'approved'          => 12,
+                    'total' => 12,
+                    'todo' => 0,
+                    'in_progress' => 0,
+                    'testing' => 0,
+                    'done' => 12,
+                    'pending_review' => 0,
+                    'approved' => 12,
                     'needs_improvement' => 0,
-                    'overall_progress'  => 100,
+                    'overall_progress' => 100,
                 ],
                 'tasks' => [
                     [
-                        'id'                  => 1,
-                        'title'               => 'Setup project Laravel & Vue.js',
-                        'status'              => 'DONE',
+                        'id' => 1,
+                        'title' => 'Setup project Laravel & Vue.js',
+                        'status' => 'DONE',
                         'progress_percentage' => 100,
-                        'pm_status'           => 'APPROVED',
-                        'pm_notes'            => 'Pekerjaan sesuai spesifikasi.',
-                        'proof_url'           => 'https://github.com/polines-tefa/sim-tefa-2025/pull/1',
+                        'pm_status' => 'APPROVED',
+                        'pm_notes' => 'Pekerjaan sesuai spesifikasi.',
+                        'proof_url' => 'https://github.com/polines-tefa/sim-tefa-2025/pull/1',
                         'report_attachment_url' => 'https://example.com/attachment.pdf',
-                        'assignee'            => [
-                            'id'            => 34,
-                            'name'          => 'Dela Fajar Mulia',
-                            'nim'           => '4.33.25.2.07',
+                        'assignee' => [
+                            'id' => 34,
+                            'name' => 'Dela Fajar Mulia',
+                            'nim' => '4.33.25.2.07',
                             'study_program' => 'D3 Teknik Informatika',
                         ],
                     ],
@@ -74,15 +74,15 @@ class PMTaskTimelineTest extends TestCase
         Http::fake([
             '*/api/v1/dosen/dashboard' => Http::response([
                 'success' => true,
-                'data'    => [
+                'data' => [
                     'projects' => [
                         [
-                            'id'          => 1,
-                            'title'       => 'Sistem Informasi Manajemen Teaching Factory',
+                            'id' => 1,
+                            'title' => 'Sistem Informasi Manajemen Teaching Factory',
                             'client_name' => 'PT. ABC Indonesia',
-                            'status'      => 'Completed',
-                            'progress'    => 100,
-                            'deadline'    => '2025-12-15',
+                            'status' => 'Completed',
+                            'progress' => 100,
+                            'deadline' => '2025-12-15',
                         ],
                     ],
                 ],
@@ -102,7 +102,7 @@ class PMTaskTimelineTest extends TestCase
         $response->assertSee('100%');
         $response->assertSee('Todo');
         $response->assertSee('Sedang Berjalan');
-        $response->assertSee('Testing / Review');
+        $response->assertSee('Testing &amp; Review', false);
         $response->assertSee('Selesai');
         $response->assertSee('Bukti Pengerjaan');
 
@@ -117,7 +117,7 @@ class PMTaskTimelineTest extends TestCase
         Http::fake([
             '*/api/v1/dosen/dashboard' => Http::response([
                 'success' => true,
-                'data'    => [
+                'data' => [
                     'projects' => [
                         ['id' => 1, 'title' => 'Proyek Pertama', 'status' => 'Active', 'progress' => 40],
                         ['id' => 2, 'title' => 'Proyek Kedua', 'status' => 'Testing', 'progress' => 80],
@@ -138,19 +138,25 @@ class PMTaskTimelineTest extends TestCase
         });
     }
 
-    public function test_halaman_task_timeline_menampilkan_empty_state_tanpa_proyek(): void
+    public function test_halaman_task_timeline_menampilkan_data_demo_saat_api_tidak_memiliki_proyek(): void
     {
         Http::fake([
             '*/api/v1/dosen/dashboard' => Http::response([
                 'success' => true,
-                'data'    => ['projects' => []],
+                'data' => ['projects' => []],
             ], 200),
         ]);
 
         $response = $this->withSession($this->sessionData())->get('/pm/task-timeline');
 
         $response->assertOk();
-        $response->assertSee('Belum ada proyek terdaftar');
+        $response->assertSee('Preview data demo')
+            ->assertSee('Sistem Informasi Pengelolaan UMKM')
+            ->assertSee('Integrasi Payment Gateway QRIS Midtrans')
+            ->assertSee('Total Task')
+            ->assertSee('Disetujui / Selesai')
+            ->assertSee('18')
+            ->assertSee('disabled', false);
         Http::assertNotSent(function ($request) {
             return str_contains($request->url(), '/tasks/overview');
         });
@@ -162,14 +168,14 @@ class PMTaskTimelineTest extends TestCase
             '*/api/v1/proposals/1/tasks/5/review' => Http::response([
                 'success' => true,
                 'message' => 'Review task berhasil disimpan',
-                'data'    => ['id' => 5],
+                'data' => ['id' => 5],
             ], 200),
         ]);
 
         $response = $this->withSession($this->sessionData())
             ->post('/pm/proposals/1/tasks/5/review', [
                 'decision' => 'approve',
-                'note'     => 'Sudah sesuai standar industri.',
+                'note' => 'Sudah sesuai standar industri.',
             ]);
 
         $response->assertRedirect();
@@ -189,13 +195,13 @@ class PMTaskTimelineTest extends TestCase
             '*/api/v1/proposals/1/tasks' => Http::response([
                 'success' => true,
                 'message' => 'Task berhasil dibuat',
-                'data'    => ['id' => 9],
+                'data' => ['id' => 9],
             ], 201),
         ]);
 
         $response = $this->withSession($this->sessionData())
             ->post('/pm/proposals/1/tasks', [
-                'title'    => 'Integrasi API pembayaran',
+                'title' => 'Integrasi API pembayaran',
                 'priority' => 'HIGH',
                 'due_date' => '2026-11-20',
             ]);

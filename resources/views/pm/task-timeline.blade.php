@@ -54,6 +54,95 @@
         ['key' => 'DONE',        'label' => 'Done',                'dot' => 'bg-[#16A34A]', 'text' => 'text-[#16A34A]', 'badge' => 'bg-[#DCFCE7] text-[#16A34A]'],
     ];
 
+    $usingDemoData = empty($proposal) && empty($tasks) && empty($error);
+    if ($usingDemoData) {
+        $proposal = [
+            'id'                     => 'demo',
+            'proposal_code'          => 'PRJ-2026/001',
+            'title'                  => 'Sistem Informasi Pengelolaan UMKM',
+            'status'                 => 'Aktif',
+            'category'               => 'Web',
+            'client_name'            => 'PT. ABC Indonesia',
+            'team_size'              => 4,
+            'start_date'             => '2026-09-01',
+            'target_completion_date' => '2026-11-15',
+        ];
+        $projects = [[
+            'id'          => 'demo',
+            'title'       => $proposal['title'],
+            'client_name' => 'PT. ABC Indonesia',
+            'status'      => $proposal['status'],
+            'progress'    => 72,
+        ]];
+
+        $demoAssignees = [
+            ['id' => 101, 'name' => 'Ahmad Rahman', 'nim' => '4.33.25.2.11', 'study_program' => 'D3 Teknik Informatika'],
+            ['id' => 102, 'name' => 'Dimas Prasetyo', 'nim' => '4.33.25.2.07', 'study_program' => 'D3 Teknik Informatika'],
+            ['id' => 103, 'name' => 'Siti Nurhaliza', 'nim' => '4.33.25.2.18', 'study_program' => 'D3 Teknik Informatika'],
+            ['id' => 104, 'name' => 'Kevin Sanjaya', 'nim' => '4.33.25.2.25', 'study_program' => 'D3 Teknik Informatika'],
+        ];
+        $demoTaskDefinitions = [
+            ['TESTING', 'Integrasi Payment Gateway QRIS Midtrans', 100, 'HIGH', 'PENDING', 'Ahmad Rahman', '4.33.25.2.11'],
+            ['TODO', 'Konfigurasi Mail Server Notifikasi Transaksi', 0, 'MEDIUM', 'PENDING', 'Kevin Sanjaya', '4.33.25.2.25'],
+            ['TODO', 'Dokumentasi API Swagger Endpoint Pembayaran', 0, 'LOW', 'PENDING', 'Ahmad Rahman', '4.33.25.2.11'],
+            ['TODO', 'Finalisasi UAT Modul Inventori', 0, 'MEDIUM', 'PENDING', 'Siti Nurhaliza', '4.33.25.2.18'],
+            ['IN_PROGRESS', 'Perbaikan Sinkronisasi Stok Realtime', 65, 'HIGH', 'PENDING', 'Dimas Prasetyo', '4.33.25.2.07'],
+            ['IN_PROGRESS', 'Komponen Filter Kategori Mobile View', 40, 'MEDIUM', 'PENDING', 'Siti Nurhaliza', '4.33.25.2.18'],
+            ['IN_PROGRESS', 'Integrasi Notifikasi WhatsApp', 55, 'HIGH', 'PENDING', 'Ahmad Rahman', '4.33.25.2.11'],
+            ['IN_PROGRESS', 'Dashboard Monitoring UMKM', 70, 'MEDIUM', 'PENDING', 'Dimas Prasetyo', '4.33.25.2.07'],
+            ['IN_PROGRESS', 'Optimasi Query Laporan Penjualan', 35, 'LOW', 'PENDING', 'Kevin Sanjaya', '4.33.25.2.25'],
+            ['TESTING', 'Pengujian Integrasi API Pembayaran', 85, 'HIGH', 'PENDING', 'Ahmad Rahman', '4.33.25.2.11'],
+            ['DONE', 'Skema Basis Data Relasional', 100, 'LOW', 'APPROVED', 'Dimas Prasetyo', '4.33.25.2.07'],
+            ['DONE', 'Design System & Token UI', 100, 'MEDIUM', 'APPROVED', 'Siti Nurhaliza', '4.33.25.2.18'],
+            ['DONE', 'Autentikasi dan Hak Akses Pengguna', 100, 'HIGH', 'APPROVED', 'Ahmad Rahman', '4.33.25.2.11'],
+            ['DONE', 'Setup Repository dan CI Pipeline', 100, 'MEDIUM', 'APPROVED', 'Kevin Sanjaya', '4.33.25.2.25'],
+            ['DONE', 'Halaman Katalog Produk UMKM', 100, 'MEDIUM', 'APPROVED', 'Siti Nurhaliza', '4.33.25.2.18'],
+            ['DONE', 'Form Pengelolaan Data Produk', 100, 'HIGH', 'APPROVED', 'Dimas Prasetyo', '4.33.25.2.07'],
+            ['DONE', 'Implementasi Pencarian Produk', 100, 'LOW', 'APPROVED', 'Ahmad Rahman', '4.33.25.2.11'],
+            ['DONE', 'Layout Responsif Dashboard', 100, 'MEDIUM', 'APPROVED', 'Siti Nurhaliza', '4.33.25.2.18'],
+        ];
+
+        foreach ($demoTaskDefinitions as $index => [$status, $title, $progress, $priority, $pmStatus, $assigneeName, $assigneeNim]) {
+            $assignee = collect($demoAssignees)->firstWhere('name', $assigneeName);
+            $tasks[] = [
+                'id'                    => 9001 + $index,
+                'title'                 => $title,
+                'status'                => $status,
+                'priority'              => $priority,
+                'progress_percentage'   => $progress,
+                'pm_status'             => $pmStatus,
+                'pm_notes'              => $status === 'TESTING'
+                    ? 'Implementasi dan verifikasi sudah rapi. Pastikan seluruh skenario uji pembayaran berhasil sebelum rilis.'
+                    : '',
+                'achieved_summary'      => $status === 'TESTING'
+                    ? 'Integrasi API Midtrans sandbox sudah lolos uji simulasi pembayaran QRIS dinamis dan statis. Webhook tervalidasi.'
+                    : ($status === 'DONE' ? 'Pekerjaan selesai dan sudah diverifikasi oleh Project Manager.' : ''),
+                'blockers_summary'      => 'Tidak ada kendala yang dilaporkan.',
+                'report_attachment_url' => $status === 'TESTING' && $index === 0
+                    ? 'https://example.com/demo-payment-proof'
+                    : null,
+                'due_date'              => '2026-10-' . str_pad((string) min(30, 8 + $index), 2, '0', STR_PAD_LEFT),
+                'pm_reviewed_at'        => $status === 'DONE' ? '2026-10-28T10:00:00Z' : null,
+                'assignee'              => $assignee
+                    ? array_merge($assignee, ['nim' => $assigneeNim])
+                    : null,
+            ];
+        }
+
+        $summary = [
+            'total'             => 18,
+            'todo'              => 3,
+            'in_progress'       => 5,
+            'testing'           => 2,
+            'done'              => 8,
+            'pending_review'    => 3,
+            'approved'          => 8,
+            'needs_improvement' => 0,
+            'overall_progress'  => round(collect($tasks)->avg('progress_percentage'), 2),
+        ];
+        $hasProject = true;
+    }
+
     $groupedTasks = collect($tasks)->groupBy(fn ($task) => strtoupper((string) ($task['status'] ?? 'TODO')));
 
     $teamMembers = collect($tasks)
@@ -145,6 +234,11 @@
                 {{ $error }}
             </div>
         @endif
+        @if($usingDemoData)
+            <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-800" role="status">
+                Preview data demo — aksi tambah task dan review dinonaktifkan; data ini tidak tersimpan ke backend.
+            </div>
+        @endif
 
         <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
             {{-- gradient dekoratif --}}
@@ -189,9 +283,20 @@
                 <div class="flex items-center gap-2 flex-wrap mb-1.5">
                     <span class="inline-block px-2 py-0.5 rounded-full bg-[#F59E0B] text-[#0B254A] text-[9px] font-extrabold tracking-wider uppercase">Proyek PM</span>
                     <span class="text-[10px] font-semibold text-blue-200">{{ $proposal['proposal_code'] ?? '—' }}</span>
+                    @if($usingDemoData)
+                        <span class="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-200">Demo</span>
+                    @endif
                 </div>
                 <p class="text-white font-extrabold text-sm leading-tight">{{ $proposal['title'] ?? '—' }}</p>
                 <div class="flex items-center gap-4 mt-2 text-[11px] text-blue-200 flex-wrap">
+                    @if(!empty($proposal['client_name']))
+                        <span>Klien: {{ $proposal['client_name'] }}</span>
+                        <span>·</span>
+                    @endif
+                    @if(!empty($proposal['team_size']))
+                        <span>Tim: {{ $proposal['team_size'] }} Mahasiswa</span>
+                        <span>·</span>
+                    @endif
                     <span class="flex items-center gap-1">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/>
@@ -227,7 +332,7 @@
 
             {{-- Actions --}}
             <div class="flex items-center gap-2 flex-shrink-0 relative">
-                <button type="button" @click="taskModal = true" class="inline-flex items-center gap-1.5 bg-[#F59E0B] hover:bg-yellow-400 text-[#0B254A] text-xs font-extrabold px-4 py-2 rounded-xl transition-colors cursor-pointer">
+                <button type="button" @click="taskModal = true" @disabled($usingDemoData) class="inline-flex items-center gap-1.5 bg-[#F59E0B] hover:bg-yellow-400 text-[#0B254A] text-xs font-extrabold px-4 py-2 rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                     </svg>
@@ -258,37 +363,37 @@
             </div>
         </div>
 
-        {{-- ── 3. STAT CARDS (sesuai 4 kolom kanban di bawah) ── --}}
+        {{-- ── 3. STAT CARDS ── --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
                 <div class="flex items-center justify-between mb-3">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Todo</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Total Task</p>
                     <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/>
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $groupedTasks->get('TODO', collect())->count() }}</p>
-                <p class="text-[11px] text-slate-400 font-medium mt-1">antrean pengerjaan</p>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $summary['total'] ?? count($tasks) }}</p>
+                <p class="text-[11px] text-slate-400 font-medium mt-1">task pada proyek ini</p>
             </div>
 
             <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
                 <div class="flex items-center justify-between mb-3">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Sedang Berjalan</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Perlu Review</p>
                     <div class="w-8 h-8 rounded-lg bg-[#DBEAFE] flex items-center justify-center text-[#2563EB]">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $groupedTasks->get('IN_PROGRESS', collect())->count() }}</p>
-                <p class="text-[11px] text-[#2563EB] font-medium mt-1">dalam pengerjaan tim</p>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $summary['pending_review'] ?? $groupedTasks->get('TESTING', collect())->count() }}</p>
+                <p class="text-[11px] text-[#F59E0B] font-semibold mt-1">menunggu review PM</p>
             </div>
 
             <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
                 <div class="flex items-center justify-between mb-3">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Testing / Review</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Sedang Berjalan</p>
                     <div class="w-8 h-8 rounded-lg bg-[#FEF3C7] flex items-center justify-center text-[#F59E0B]">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
@@ -296,13 +401,13 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $groupedTasks->get('TESTING', collect())->count() }}</p>
-                <p class="text-[11px] text-[#F59E0B] font-semibold mt-1">menunggu review PM</p>
+                <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $groupedTasks->get('IN_PROGRESS', collect())->count() + $groupedTasks->get('TESTING', collect())->count() }}</p>
+                <p class="text-[11px] text-[#2563EB] font-medium mt-1">aktif dikerjakan tim</p>
             </div>
 
             <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
                 <div class="flex items-center justify-between mb-3">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Task Selesai</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Disetujui / Selesai</p>
                     <div class="w-8 h-8 rounded-lg bg-[#DCFCE7] flex items-center justify-center text-[#16A34A]">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -310,7 +415,7 @@
                     </div>
                 </div>
                 <p class="text-3xl font-extrabold text-[#0B254A] leading-none">{{ $groupedTasks->get('DONE', collect())->count() }}</p>
-                <p class="text-[11px] text-[#16A34A] font-medium mt-1">telah disetujui PM</p>
+                <p class="text-[11px] text-[#16A34A] font-medium mt-1">task telah disetujui PM</p>
             </div>
         </div>
 
@@ -604,6 +709,7 @@
                                 x-model="note"
                                 rows="6"
                                 maxlength="500"
+                                @disabled($usingDemoData)
                                 placeholder="Tulis arahan perbaikan atau catatan persetujuan untuk mahasiswa..."
                                 class="w-full text-xs text-slate-600 bg-[#F8FAFC] border border-slate-200 rounded-xl p-3.5 focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/20 resize-none placeholder:text-slate-300 leading-relaxed transition"
                             ></textarea>
@@ -614,7 +720,8 @@
                                 type="submit"
                                 name="decision"
                                 value="revision"
-                                class="w-full flex items-center justify-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold py-2.5 rounded-xl transition-colors cursor-pointer"
+                                @disabled($usingDemoData)
+                                class="w-full flex items-center justify-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold py-2.5 rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
@@ -625,7 +732,8 @@
                                 type="submit"
                                 name="decision"
                                 value="approve"
-                                class="w-full flex items-center justify-center gap-2 bg-[#0B254A] hover:bg-[#0d2f5e] text-white text-xs font-extrabold py-2.5 rounded-xl transition-colors cursor-pointer"
+                                @disabled($usingDemoData)
+                                class="w-full flex items-center justify-center gap-2 bg-[#0B254A] hover:bg-[#0d2f5e] text-white text-xs font-extrabold py-2.5 rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -638,6 +746,7 @@
             </div>
         </div>
 
+        @if(!$usingDemoData)
         {{-- ── 6. MODAL TAMBAH TASK ── --}}
         <div x-show="taskModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-[#0B254A]/30 p-4" @keydown.escape.window="taskModal = false">
             <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl" @click.outside="taskModal = false">
@@ -681,6 +790,7 @@
                 </form>
             </div>
         </div>
+        @endif
         @endif
 
     </main>

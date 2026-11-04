@@ -981,6 +981,39 @@ Route::middleware('auth.api')->group(function () {
         Route::get('/proposals/{proposal}/uat', fn ($proposal) => redirect()->route('pengurus-tefa.uat.detail', $proposal))->name('uat.detail');
     });
 
+    // Jurusan shares the project-facing mockup screens while the data/API workflow is being completed.
+    Route::middleware('auth.api:jurusan')->prefix('jurusan')->name('jurusan.')->group(function () {
+        Route::get('/ajukan-proyek', function () {
+            return view('klien.ajukan-proyek', [
+                'user'       => session('user'),
+                'company'    => [],
+                'categories' => [],
+            ]);
+        })->name('ajukan-proyek');
+        Route::post('/ajukan-proyek', function () {
+            return back()->with('error', 'Form mockup Jurusan belum terhubung ke backend.');
+        })->name('ajukan-proyek.store');
+
+        Route::get('/projek-saya', function () {
+            return view('klien.projek-saya', [
+                'user'                      => session('user'),
+                'proposals'                 => [],
+                'handoverProjects'          => [],
+                'handoverProjectsAvailable' => false,
+                'error'                     => null,
+            ]);
+        })->name('projek-saya');
+
+        Route::get('/tagihan', function () {
+            return view('klien.tagihan', [
+                'user'            => session('user'),
+                'projectsBilling' => [],
+                'proposals'       => [],
+                'error'           => null,
+            ]);
+        })->name('tagihan');
+    });
+
     Route::get('/dashboard-jurusan', function () {
         $user = session('user');
         if (!ApiService::hasRole($user, 'jurusan')) {
