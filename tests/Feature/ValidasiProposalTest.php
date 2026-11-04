@@ -253,12 +253,8 @@ class ValidasiProposalTest extends TestCase
             ->get('/pengurus-tefa/validasi-proposal/13/setujui');
 
         $response->assertOk();
-<<<<<<< HEAD
-        $response->assertSee('Persetujuan Proposal &amp; Pembentukan Proyek', false);
-=======
         $response->assertSee('Persetujuan Proposal', false);
         $response->assertSee('Pembentukan Proyek', false);
->>>>>>> 3898f74d58e3175bcc8ac80db43db4786bb3ce53
         $response->assertSee('Surat Perjanjian Kerja Sama &amp; SPK', false);
         $response->assertSee('Biaya yang Disepakati &amp; Skema Termin', false);
         $response->assertSee('Pembentukan Tim Pengembang TeFa', false);
