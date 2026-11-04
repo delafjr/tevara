@@ -1269,14 +1269,17 @@ Route::middleware('auth.api')->group(function () {
                 ];
 
                 if ($request->hasFile('contract_file')) {
-                    $file = $request->file('contract_file');
-                    $api->withToken()
-                        ->attach('contract_file', file_get_contents($file->getRealPath()), $file->getClientOriginalName())
-                        ->post("proposals/{$proposal}/contract", $payload);
+                    $response = $api->sendWithFile("proposals/{$proposal}/contract", 'contract_file', $request->file('contract_file'), $payload);
                 } else {
-                    $api->post("proposals/{$proposal}/contract", $payload);
+                    $response = $api->post("proposals/{$proposal}/contract", $payload);
                 }
-            } catch (\Throwable) {}
+
+                if ($response->failed()) {
+                    return back()->withInput()->with('error', 'Gagal menyetujui proposal: ' . ($response->json('message') ?? 'Terjadi kesalahan pada backend API.'));
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Gagal menghubungi backend API untuk persetujuan proposal: ' . $e->getMessage());
+            }
 
             // 2. Direct database update di SQLite tevara-api agar data selalu konsisten & tersimpan
             $sqlitePath = base_path('../tevara-api/database/database.sqlite');

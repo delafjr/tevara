@@ -47,7 +47,7 @@ class ApiService
     public function withToken(?string $token = null): PendingRequest
     {
         $token = $token ?? session('api_token');
-        return Http::withToken($token)->timeout(15);
+        return Http::withToken($token)->baseUrl($this->baseUrl)->timeout(15);
     }
 
     /**
