@@ -147,6 +147,64 @@ class ApiService
     }
 
     /**
+     * Send multipart request with file attachment.
+     */
+    public function sendWithFile(string $endpoint, string $fileParam, $file, array $data = [], string $method = 'POST'): Response
+    {
+        $url = $this->baseUrl . '/' . ltrim($endpoint, '/');
+        $fileName = is_object($file) && method_exists($file, 'getClientOriginalName')
+            ? $file->getClientOriginalName()
+            : basename((string) $file);
+        $fileContents = is_object($file) && method_exists($file, 'getRealPath')
+            ? file_get_contents($file->getRealPath())
+            : (string) $file;
+
+        $client = $this->withToken()->attach($fileParam, $fileContents, $fileName);
+
+        if (strtoupper($method) === 'PATCH') {
+            return $client->post($url, array_merge($data, ['_method' => 'PATCH']));
+        }
+
+        return $client->post($url, $data);
+    }
+
+    // ==========================================
+    // F-09 : Pembayaran
+    // ==========================================
+
+    /**
+     * Buat termin pembayaran baru (pengurus_tefa / dosen).
+     */
+    public function createPaymentTerm(int $proposalId, array $data): Response
+    {
+        return $this->post("proposals/{$proposalId}/payments", $data);
+    }
+
+    /**
+     * Upload bukti transfer klien (klien).
+     */
+    public function uploadPaymentProof(int $proposalId, int $paymentId, array $data, $file): Response
+    {
+        return $this->sendWithFile("proposals/{$proposalId}/payments/{$paymentId}/proof", 'proof', $file, $data, 'PATCH');
+    }
+
+    /**
+     * Verifikasi bukti transfer (pengurus_tefa / dosen).
+     */
+    public function verifyPayment(int $proposalId, int $paymentId, array $data): Response
+    {
+        return $this->patch("proposals/{$proposalId}/payments/{$paymentId}/verify", $data);
+    }
+
+    /**
+     * List semua pembayaran yang butuh verifikasi (pengurus_tefa / dosen).
+     */
+    public function getPendingPayments(): Response
+    {
+        return $this->get('payments/pending');
+    }
+
+    /**
      * Extract allowed roles from user payload.
      * Include PM access when assigned explicitly or indicated by is_pm.
      */
