@@ -610,7 +610,7 @@
                             <div>
                                 <h4 class="text-sm font-extrabold text-emerald-900">Task Selesai &amp; Disetujui PM</h4>
                                 <p class="text-xs text-emerald-700 mt-1 max-w-sm mx-auto leading-relaxed">
-                                    Tugas ini telah diverifikasi dan disetujui penuh oleh Project Manager. Status terkunci (read-only).
+                                    Tugas ini telah diverifikasi dan disetujui penuh oleh Project Manager. Status laporan saat ini terkunci (read-only) untuk mencegah perubahan yang tidak disengaja.
                                 </p>
                             </div>
                         </div>

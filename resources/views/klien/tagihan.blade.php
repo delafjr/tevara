@@ -629,6 +629,13 @@
                                             <p class="mt-1 text-[11px] text-slate-500">
                                                 Jatuh tempo: <span class="font-medium text-slate-700">{{ $termin['due_date'] ?? 'Belum ditetapkan' }}</span>
                                             </p>
+                                            <p class="mt-2 text-[11px] text-slate-500">
+                                                Invoice: <span class="font-semibold text-slate-700">{{ $termin['invoice_number'] }}</span>
+                                                <span class="mx-1">•</span> Termin {{ $termin['term_sequence'] }}
+                                            </p>
+                                            <p class="mt-1 text-[11px] text-slate-500">
+                                                Jatuh tempo: <span class="font-medium text-slate-700">{{ $termin['due_date'] ?? 'Belum ditetapkan' }}</span>
+                                            </p>
                                         </td>
 
                                         {{-- 2. Nominal SPK --}}
