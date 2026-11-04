@@ -498,6 +498,26 @@
                                     Proposal sedang dalam alur peninjauan TEVARA Teaching Factory.
                                 </p>
                             </div>
+                            {{-- F-06 UAT Box --}}
+                            <div class="p-3.5 rounded-xl bg-[#EAF3FF] border border-blue-200 space-y-2.5">
+                                <div class="flex items-center gap-2 text-[#0B3B82]">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.5 2h7M7 16h10"/>
+                                    </svg>
+                                    <span class="text-xs font-bold uppercase tracking-wider">UAT &amp; Pengujian</span>
+                                </div>
+                                <p class="text-[11px] text-[#0B3B82]/80 leading-relaxed">
+                                    Tinjau lembar pengujian penerimaan pengguna dan lakukan sign-off digital hasil UAT.
+                                </p>
+                                <a href="{{ route('klien.projek-saya.uat', $proposalId) }}"
+                                   class="inline-flex items-center justify-center w-full gap-2 px-3 py-2 rounded-lg bg-[#0B3B82] hover:bg-[#082a5c] text-white text-xs font-bold transition shadow-xs">
+                                    Buka Lembar UAT
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
+                                    </svg>
+                                </a>
+                            </div>
                         </section>
 
                         <section class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-3">

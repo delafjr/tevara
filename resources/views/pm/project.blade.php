@@ -540,6 +540,19 @@
                                 </svg>
                                 {{ $proj['deadline'] }}
                             </div>
+                            {{-- Lembar UAT Shortcut --}}
+                            @php
+                                $pmPropIdNum = (int) (preg_replace('/[^0-9]/', '', $proj['id'] ?? '') ?: 1);
+                            @endphp
+                            <a href="{{ route('pengurus-tefa.uat.detail', $pmPropIdNum) }}"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] font-bold text-amber-800 hover:bg-amber-100 transition-all shadow-2xs">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.5 2h7M7 16h10"/>
+                                </svg>
+                                Lembar UAT
+                            </a>
+
                             {{-- Toggle --}}
                             <button
                                 type="button"

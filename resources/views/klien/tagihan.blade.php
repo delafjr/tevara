@@ -16,8 +16,7 @@
     $user = $user ?? session('user', []);
     $userName = $user['name'] ?? 'Budi Santoso';
 
-    $projectsBilling = [];
-
+    $projectsBilling = $projectsBilling ?? [];
     $hasRealBilling = !empty($projectsBilling);
     if (!$hasRealBilling) {
         $projectsBilling = [
@@ -173,10 +172,10 @@
                         'nominal'        => 'Rp 15.000.000',
                         'channel'        => 'BCA VA / Mandiri Giro',
                         'channel_icon'   => 'card',
-                        'status'         => 'verified',
-                        'status_label'   => 'VERIFIED (Lunas)',
-                        'due_date'       => null,
-                        'can_download'   => true,
+                        'status'         => 'verifying',
+                        'status_label'   => 'DALAM VERIFIKASI',
+                        'due_date'       => 'Sedang Diverifikasi Keuangan TEFA',
+                        'can_download'   => false,
                         'can_upload'     => false,
                     ],
                     [
@@ -188,10 +187,10 @@
                         'desc'           => 'Instalasi Lapangan & Serah Terima Unit Kendali Desktop',
                         'nominal'        => 'Rp 15.000.000',
                         'channel'        => 'Mandiri Giro',
-                        'channel_icon'   => 'bank',
+                        'channel_icon'   => 'card',
                         'status'         => 'pending',
                         'status_label'   => 'BELUM TERBUKA',
-                        'due_date'       => 'Est. 10 Jan 2027',
+                        'due_date'       => 'Est. 15 Jan 2027',
                         'can_download'   => false,
                         'can_upload'     => false,
                     ],
@@ -431,7 +430,7 @@
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
                         </svg>
-                        <span>Unggah Bukti Bayar Sekarang</span>
+                        <span>Unggah Bukti Pembayaran Termin Berjalan</span>
                     </a>
                 </div>
 

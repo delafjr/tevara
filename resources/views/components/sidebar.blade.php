@@ -93,14 +93,15 @@
             ['id' => 'dosen',             'label' => 'Dosen',             'icon' => 'team',           'href' => route('pengurus-tefa.dosen')],
             ['id' => 'mahasiswa',         'label' => 'Mahasiswa',         'icon' => 'team',           'href' => route('pengurus-tefa.mahasiswa')],
             ['id' => 'validasi-proposal', 'label' => 'Validasi Proposal', 'icon' => 'proposal',       'href' => route('pengurus-tefa.validasi-proposal')],
+            ['id' => 'uat',               'label' => 'UAT & Pengujian',   'icon' => 'uat',            'href' => route('pengurus-tefa.uat')],
             ['id' => 'keuangan',          'label' => 'Keuangan',          'icon' => 'tagihan',        'href' => route('pengurus-tefa.keuangan')],
             ['id' => 'monitoring',        'label' => 'Monitoring',        'icon' => 'monitoring',     'href' => route('pengurus-tefa.monitoring')],
         ],
         'jurusan' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'ajukan',       'label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => url()->current() . '?page=ajukan'],
-            ['id' => 'projek',       'label' => 'Projek Saya',           'icon' => 'project',        'href' => url()->current() . '?page=projek'],
-            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => url()->current() . '?page=tagihan'],
+            ['id' => 'ajukan-projek','label' => 'Ajukan Projek',        'icon' => 'ajukan-projek',  'href' => route('jurusan.ajukan-proyek')],
+            ['id' => 'projek-saya',  'label' => 'Projek Saya',          'icon' => 'project',        'href' => route('jurusan.projek-saya')],
+            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran', 'icon' => 'tagihan',        'href' => route('jurusan.tagihan')],
         ],
     ];
 
@@ -189,6 +190,13 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
                             <path d="M3 3v18h18"/>
                             <path d="m19 9-5 5-4-4-3 3"/>
+                        </svg>
+                    @elseif($item['icon'] === 'uat')
+                        {{-- UAT / Test Tube / Beaker icon --}}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                            <path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>
+                            <path d="M8.5 2h7"/>
+                            <path d="M7 16h10"/>
                         </svg>
                     @endif
                 </span>

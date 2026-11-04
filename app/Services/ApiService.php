@@ -47,7 +47,7 @@ class ApiService
     public function withToken(?string $token = null): PendingRequest
     {
         $token = $token ?? session('api_token');
-        return Http::withToken($token)->timeout(15);
+        return Http::withToken($token)->baseUrl($this->baseUrl)->timeout(15);
     }
 
     /**
@@ -166,6 +166,50 @@ class ApiService
         }
 
         return $client->post($url, $data);
+    }
+
+    // ==========================================
+    // F-06 : UAT (User Acceptance Testing)
+    // ==========================================
+
+    /**
+     * Detail UAT proyek + semua item (klien, pengurus_tefa, dosen).
+     */
+    public function getUat(int $proposalId): Response
+    {
+        return $this->get("proposals/{$proposalId}/uat");
+    }
+
+    /**
+     * Buat sesi UAT + item sekaligus (pengurus_tefa, dosen).
+     */
+    public function createUat(int $proposalId, array $data): Response
+    {
+        return $this->post("proposals/{$proposalId}/uat", $data);
+    }
+
+    /**
+     * Update UAT / revisi item (pengurus_tefa, dosen).
+     */
+    public function updateUat(int $proposalId, array $data): Response
+    {
+        return $this->put("proposals/{$proposalId}/uat", $data);
+    }
+
+    /**
+     * Sign-off UAT oleh klien (klien).
+     */
+    public function signoffUat(int $proposalId, array $data): Response
+    {
+        return $this->patch("proposals/{$proposalId}/uat/signoff", $data);
+    }
+
+    /**
+     * Tandai proyek masuk fase Testing (pengurus_tefa, dosen).
+     */
+    public function setProposalTesting(int $proposalId): Response
+    {
+        return $this->patch("proposals/{$proposalId}/status/testing");
     }
 
     // ==========================================
