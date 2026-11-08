@@ -117,4 +117,115 @@ class ProjekSayaKlienTest extends TestCase
 
         $response->assertRedirect('/klien/projek-saya');
     }
+
+    public function test_detail_projek_active_menampilkan_progress_dan_tim_pelaksana(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals/9' => Http::response([
+                'id'                  => 9,
+                'proposal_code'       => 'PRSL-2026-009',
+                'client_company_name' => 'PT. Maju Bersama Sentosa',
+                'title'               => 'Sistem Informasi Manajemen Teaching Factory',
+                'background'          => 'Pembuatan sistem informasi manajemen teaching factory terintegrasi.',
+                'target_audience'     => 'Pengurus TeFa dan mahasiswa',
+                'category_id'         => 1,
+                'category'            => ['id' => 1, 'name' => 'Web'],
+                'status_id'           => 7,
+                'status'              => ['id' => 7, 'name' => 'Active'],
+                'desired_deadline'    => '2026-12-15',
+                'estimated_budget'    => '30000000.00',
+                'overall_progress'    => 62,
+                'pm'                  => ['id' => 15, 'name' => 'Dr. Hendra Kusuma, M.T.'],
+                'project_teams'       => [
+                    [
+                        'id'    => 1,
+                        'user'  => ['id' => 28, 'name' => 'Aang Kunadi'],
+                        'role'  => ['id' => 2, 'name' => 'Frontend'],
+                    ],
+                    [
+                        'id'    => 2,
+                        'user'  => ['id' => 29, 'name' => 'Alvian Reza Mahardika'],
+                        'role'  => ['id' => 3, 'name' => 'Backend'],
+                    ],
+                ],
+                'client' => [
+                    'name'         => 'Budi Santoso',
+                    'email'        => 'budi.santoso@majubersamasentosa.co.id',
+                    'phone_number' => '6281234567890',
+                ],
+                'modules' => [
+                    ['id' => 1, 'title' => 'Modul Manajemen Proposal', 'description' => 'Pengelolaan proposal proyek.'],
+                ],
+            ], 200),
+            '*/api/v1/categories' => Http::response(['success' => true, 'data' => [['id' => 1, 'name' => 'Web']]], 200),
+            '*/api/v1/users/company' => Http::response([
+                'success' => true,
+                'data'    => [
+                    'company_name' => 'PT. Maju Bersama Sentosa',
+                    'name'         => 'Budi Santoso',
+                    'email'        => 'budi.santoso@majubersamasentosa.co.id',
+                    'no_hp'        => '6281234567890',
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->withSession($this->sessionKlien())
+            ->get('/klien/projek-saya/9');
+
+        $response->assertOk();
+        $response->assertSee('Progres Pengerjaan');
+        $response->assertSee('Overall Progress');
+        $response->assertSee('62%');
+        $response->assertSee('Project Manager');
+        $response->assertSee('Dr. Hendra Kusuma, M.T.');
+        $response->assertSee('Tim Pelaksana');
+        $response->assertSee('Aang Kunadi');
+        $response->assertSee('Alvian Reza Mahardika');
+        $response->assertSee('Frontend');
+        $response->assertSee('Backend');
+    }
+
+    public function test_detail_projek_submitted_tidak_menampilkan_progress_dan_tim_pelaksana(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals/9' => Http::response([
+                'id'                  => 9,
+                'proposal_code'       => 'PRSL-2026-009',
+                'client_company_name' => 'PT. Maju Bersama Sentosa',
+                'title'               => 'Sistem Informasi Manajemen Teaching Factory',
+                'background'          => 'Pembuatan sistem informasi manajemen teaching factory terintegrasi.',
+                'category_id'         => 1,
+                'category'            => ['id' => 1, 'name' => 'Web'],
+                'status_id'           => 2,
+                'status'              => ['id' => 2, 'name' => 'Submitted'],
+                'desired_deadline'    => '2026-12-15',
+                'estimated_budget'    => '30000000.00',
+                'client'              => [
+                    'name'         => 'Budi Santoso',
+                    'email'        => 'budi.santoso@majubersamasentosa.co.id',
+                    'phone_number' => '6281234567890',
+                ],
+                'modules' => [
+                    ['id' => 1, 'title' => 'Modul Manajemen Proposal', 'description' => 'Pengelolaan proposal proyek.'],
+                ],
+            ], 200),
+            '*/api/v1/categories' => Http::response(['success' => true, 'data' => [['id' => 1, 'name' => 'Web']]], 200),
+            '*/api/v1/users/company' => Http::response([
+                'success' => true,
+                'data'    => [
+                    'company_name' => 'PT. Maju Bersama Sentosa',
+                    'name'         => 'Budi Santoso',
+                    'email'        => 'budi.santoso@majubersamasentosa.co.id',
+                    'no_hp'        => '6281234567890',
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->withSession($this->sessionKlien())
+            ->get('/klien/projek-saya/9');
+
+        $response->assertOk();
+        $response->assertDontSee('Progres Pengerjaan');
+        $response->assertDontSee('Tim Pelaksana');
+    }
 }
