@@ -6,7 +6,7 @@
     <title>Detail Proposal - Tevara</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased">
+<body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased" x-data="{ rejectModal: false }">
 @php
     $user = $user ?? session('user');
     $proposal = is_array($proposal ?? null) ? $proposal : [];
@@ -72,6 +72,22 @@
                     </span>
                 @endif
             </div>
+
+            @if (session('success'))
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800">
+                    {{ session('success') }}
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-800">
+                    {{ session('error') }}
+                </div>
+            @endif
+            @if ($errors->any())
+                <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-800">
+                    {{ $errors->first() }}
+                </div>
+            @endif
 
             @if ($error)
                 <div class="max-w-xl mx-auto bg-white rounded-2xl border border-slate-100 shadow-sm px-8 py-14 text-center">
@@ -294,7 +310,8 @@
 
                         <div class="flex flex-wrap items-center gap-2">
                             <button type="button"
-                                    class="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-50 hover:border-red-300 transition-all">
+                                    @click="rejectModal = true"
+                                    class="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-50 hover:border-red-300 transition-all cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
                                 Tolak
                             </button>
@@ -319,5 +336,88 @@
         @endunless
     </div>
 </div>
+
+@unless ($error)
+{{-- Modal Tolak Proposal --}}
+<div x-cloak
+     x-show="rejectModal"
+     class="fixed inset-0 z-50 overflow-y-auto"
+     aria-labelledby="modal-title"
+     role="dialog"
+     aria-modal="true">
+    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+        <div x-show="rejectModal"
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="rejectModal = false"
+             class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+
+        <div x-show="rejectModal"
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200">
+            
+            <form action="{{ route('pengurus-tefa.validasi-proposal.tolak', $proposal['id'] ?? 0) }}" method="POST">
+                @csrf
+                <div class="bg-white px-6 pt-6 pb-4">
+                    <div class="flex items-start gap-4">
+                        <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600 sm:mx-0">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+                            </svg>
+                        </div>
+                        <div class="mt-1 flex-1">
+                            <h3 class="text-base font-bold text-slate-900" id="modal-title">
+                                Tolak Proposal {{ $proposal['proposal_code'] ?? '' }}
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                Proposal akan diubah statusnya menjadi <span class="font-semibold text-red-600">Ditolak (Rejected)</span>. Notifikasi resmi beserta alasan penolakan akan dikirimkan kepada PIC proposal ini.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 space-y-2">
+                        <label for="review_notes" class="block text-xs font-bold text-slate-700">
+                            Alasan Penolakan <span class="text-red-500">*</span>
+                        </label>
+                        <textarea id="review_notes"
+                                  name="review_notes"
+                                  rows="4"
+                                  required
+                                  minlength="5"
+                                  maxlength="2000"
+                                  placeholder="Tuliskan alasan penolakan secara jelas agar PIC klien memahami pertimbangan pengurus TeFa..."
+                                  class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-red-500 focus:ring-2 focus:ring-red-100 focus:outline-none transition-all resize-none shadow-xs"></textarea>
+                        <p class="text-[11px] text-slate-400">Minimal 5 karakter. Alasan ini akan tercatat dalam riwayat dan diterima oleh PIC klien.</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 px-6 py-4 flex flex-row-reverse gap-3 border-t border-slate-100">
+                    <button type="submit"
+                            class="inline-flex justify-center items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        Konfirmasi Tolak
+                    </button>
+                    <button type="button"
+                            @click="rejectModal = false"
+                            class="inline-flex justify-center rounded-xl bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-xs ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-all cursor-pointer">
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endunless
 </body>
 </html>
