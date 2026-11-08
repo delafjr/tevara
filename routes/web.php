@@ -1155,6 +1155,38 @@ Route::middleware('auth.api')->group(function () {
                     ->with('error', 'Tidak dapat terhubung ke backend: ' . $e->getMessage());
             }
         })->whereNumber('proposal')->name('validasi-proposal.revisi.store');
+
+        Route::post('/validasi-proposal/{proposal}/tolak', function (Request $request, ApiService $api, int $proposal) {
+            $validated = $request->validate([
+                'review_notes' => ['required', 'string', 'min:5', 'max:2000'],
+            ], [
+                'review_notes.required' => 'Alasan penolakan proposal wajib diisi.',
+                'review_notes.min'      => 'Alasan penolakan minimal 5 karakter.',
+                'review_notes.max'      => 'Alasan penolakan maksimal 2000 karakter.',
+            ]);
+
+            try {
+                $response = $api->patch("proposals/{$proposal}/review", [
+                    'decision'     => 'rejected',
+                    'review_notes' => $validated['review_notes'],
+                ]);
+
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('pengurus-tefa.validasi-proposal')
+                        ->with('success', 'Proposal berhasil ditolak dan pemberitahuan telah dikirimkan ke PIC klien.');
+                }
+
+                return back()
+                    ->withInput()
+                    ->with('error', 'Gagal menolak proposal: ' . ($response->json('message') ?? 'Terjadi kesalahan pada backend.'));
+            } catch (\Throwable $e) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Tidak dapat terhubung ke backend: ' . $e->getMessage());
+            }
+        })->whereNumber('proposal')->name('validasi-proposal.tolak');
+
         // Form Lanjutan Persetujuan Proposal (SPK, Termin Biaya & Tim Pengembang)
         Route::get('/validasi-proposal/{proposal}/setujui', function (ApiService $api, int $proposal) {
             $detail = [];
@@ -1419,76 +1451,6 @@ Route::middleware('auth.api')->group(function () {
             return redirect()->route('pengurus-tefa.validasi-proposal')
                 ->with('success', 'Proposal berhasil disetujui! Surat perjanjian (SPK), skema termin pembayaran, dan tim pengembang proyek resmi ditetapkan.');
         })->whereNumber('proposal')->name('validasi-proposal.setujui.store');
-
-        Route::get('/validasi-proposal/{proposal}/revisi', function (ApiService $api, int $proposal) {
-            $detail = [];
-            $error = null;
-
-            try {
-                $response = $api->get("proposals/{$proposal}/pending");
-                $data = $response->json();
-
-                if ($response->successful() && is_array($data)) {
-                    $detail = $data;
-                } else {
-                    $altResponse = $api->get("proposals/{$proposal}");
-                    if ($altResponse->successful() && is_array($altResponse->json())) {
-                        $alt = $altResponse->json();
-                        $detail = [
-                            'id'               => $alt['id'],
-                            'proposal_code'    => $alt['proposal_code'] ?? '-',
-                            'title'            => $alt['title'] ?? '-',
-                            'client_name'      => $alt['client']['name'] ?? $alt['client_name'] ?? '-',
-                            'review_notes'     => $alt['review_notes'] ?? '',
-                            'status'           => $alt['status']['name'] ?? $alt['status'] ?? '-',
-                            'category_name'    => $alt['category']['name'] ?? $alt['category_name'] ?? 'Other',
-                            'estimated_budget' => $alt['estimated_budget'] ?? 0,
-                            'desired_deadline' => $alt['desired_deadline'] ?? null,
-                        ];
-                    } else {
-                        $error = $response->json('message') ?? 'Detail proposal tidak ditemukan.';
-                    }
-                }
-            } catch (\Throwable) {
-                $error = 'Gagal mengambil detail proposal dari server TEVARA.';
-            }
-
-            return view('pengurus-tefa.revisi-proposal', [
-                'user'     => session('user'),
-                'proposal' => $detail,
-                'error'    => $error,
-            ]);
-        })->whereNumber('proposal')->name('validasi-proposal.revisi');
-
-        Route::post('/validasi-proposal/{proposal}/revisi', function (Request $request, ApiService $api, int $proposal) {
-            $validated = $request->validate([
-                'review_notes' => ['required', 'string', 'min:5', 'max:2000'],
-            ], [
-                'review_notes.required' => 'Catatan apa yang perlu direvisi klien wajib diisi.',
-                'review_notes.min'      => 'Catatan revisi minimal 5 karakter.',
-            ]);
-
-            try {
-                $response = $api->patch("proposals/{$proposal}/review", [
-                    'decision'     => 'revision_required',
-                    'review_notes' => $validated['review_notes'],
-                ]);
-
-                if ($response->successful()) {
-                    return redirect()
-                        ->route('pengurus-tefa.validasi-proposal')
-                        ->with('success', 'Permintaan revisi berhasil dikirim ke klien. Status proposal berubah menjadi Improvement (Revisi).');
-                }
-
-                return back()
-                    ->withInput()
-                    ->with('error', 'Gagal mengirim revisi: ' . ($response->json('message') ?? 'Terjadi kesalahan pada backend.'));
-            } catch (\Throwable $e) {
-                return back()
-                    ->withInput()
-                    ->with('error', 'Tidak dapat terhubung ke backend: ' . $e->getMessage());
-            }
-        })->whereNumber('proposal')->name('validasi-proposal.revisi.store');
 
         Route::get('/keuangan', function (ApiService $api) {
             $pendingPayments = [];
