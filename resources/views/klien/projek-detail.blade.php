@@ -46,6 +46,26 @@
     $reviewNotes = (string) ($proposal['review_notes'] ?? '');
     $reviewerName = (string) ($proposal['reviewer']['name'] ?? 'Pengurus TEFA');
 
+    // Info pelaksanaan proyek: hanya ditampilkan saat proyek sudah berjalan / selesai.
+    $executionStatuses = ['active', 'testing', 'completed', 'handover'];
+    $showExecutionInfo = in_array(strtolower($rawStatus), $executionStatuses, true);
+    $isCompletedStatus = in_array(strtolower($rawStatus), ['completed', 'handover'], true);
+    $overallProgress = isset($proposal['overall_progress'])
+        ? (int) round((float) $proposal['overall_progress'])
+        : ($isCompletedStatus ? 100 : 0);
+    $overallProgress = max(0, min(100, $overallProgress));
+
+    $pm                 = is_array($proposal['pm'] ?? null) ? $proposal['pm'] : [];
+    $pmName             = trim((string) ($pm['name'] ?? ''));
+    $teamMembers        = is_array($proposal['project_teams'] ?? null) ? $proposal['project_teams'] : [];
+    $teamInitials       = function (string $name): string {
+        return collect(explode(' ', trim($name)))
+            ->filter()
+            ->take(2)
+            ->map(fn ($word) => mb_substr($word, 0, 1))
+            ->implode('');
+    };
+
     // Modules untuk Alpine
     $rawModules = is_array($proposal['modules'] ?? null) ? $proposal['modules'] : [];
     $modulesDefault = [];
@@ -489,6 +509,71 @@
 
                     {{-- Sidebar Info --}}
                     <div class="space-y-6">
+                        @if ($showExecutionInfo)
+                            <section class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+                                <div class="flex items-center justify-between gap-3">
+                                    <h2 class="text-sm font-bold text-[#1E293B]">Progres Pengerjaan</h2>
+                                    <span class="text-xs font-bold text-[#0B3B82] bg-[#EAF3FF] px-2.5 py-1 rounded-full">{{ $overallProgress }}%</span>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                                        <span>Overall Progress</span>
+                                        <span class="text-[#0B3B82]">{{ $overallProgress }}%</span>
+                                    </div>
+                                    <div class="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                                        <div class="h-full rounded-full bg-gradient-to-r from-[#0B3B82] to-[#2563EB] transition-all"
+                                             style="width: {{ $overallProgress }}%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-slate-100 pt-4 space-y-4">
+                                    <div>
+                                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Project Manager</p>
+                                        @if ($pmName)
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-8 h-8 rounded-full bg-[#0B3B82] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                                                    {{ $teamInitials($pmName) ?: 'PM' }}
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <p class="text-xs font-semibold text-slate-700 truncate">{{ $pmName }}</p>
+                                                    <p class="text-[10px] text-slate-400">Penanggung Jawab Proyek</p>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <p class="text-xs text-slate-400">Belum ditentukan</p>
+                                        @endif
+                                    </div>
+
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tim Pelaksana</p>
+                                            <span class="text-[10px] font-semibold text-slate-400">{{ count($teamMembers) }} Orang</span>
+                                        </div>
+                                        @forelse ($teamMembers as $member)
+                                            @php
+                                                $memberName = trim((string) ($member['user']['name'] ?? ''));
+                                                $memberRole = trim((string) ($member['role']['name'] ?? 'Anggota'));
+                                            @endphp
+                                            @if ($memberName)
+                                                <div class="flex items-center gap-2.5 py-1.5">
+                                                    <div class="w-8 h-8 rounded-full bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                                                        {{ $teamInitials($memberName) ?: '—' }}
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <p class="text-xs font-semibold text-slate-700 truncate">{{ $memberName }}</p>
+                                                        <p class="text-[10px] text-slate-400">{{ $memberRole ?: 'Anggota' }}</p>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @empty
+                                            <p class="text-xs text-slate-400">Belum ada anggota tim yang ditugaskan.</p>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            </section>
+                        @endif
+
                         <section class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
                             <h2 class="text-sm font-bold text-[#1E293B]">Status Validasi</h2>
                             <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
