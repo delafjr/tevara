@@ -15,9 +15,6 @@
         ->filter()
         ->unique()
         ->values();
-    $withStudyProgram = collect($mahasiswas)
-        ->filter(fn ($student) => !empty($student['study_program'] ?? $student['department'] ?? $student['jurusan'] ?? null))
-        ->count();
 @endphp
 <div class="flex min-h-screen">
     <x-sidebar active="mahasiswa" />
@@ -35,7 +32,7 @@
                 </div>
             </div>
 
-            <section class="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Ringkasan mahasiswa">
+            <section class="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="Ringkasan mahasiswa">
                 <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
                     <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Total Mahasiswa</p>
                     <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ count($mahasiswas) }}</p>
@@ -46,18 +43,12 @@
                     <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ $studyPrograms->count() }}</p>
                     <p class="mt-1 text-xs text-slate-500">Program studi unik pada database</p>
                 </div>
-                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Data Prodi Terisi</p>
-                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ $withStudyProgram }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Profil mahasiswa dengan prodi</p>
-                </div>
             </section>
 
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <p class="font-semibold text-[#1E293B] text-[15px]">Daftar Mahasiswa</p>
-                        <p class="text-xs text-slate-400 mt-0.5">{{ count($mahasiswas) }} mahasiswa terdaftar</p>
                     </div>
                     <label class="relative block w-full sm:w-80">
                         <span class="sr-only">Cari nama, NIM, atau jurusan/prodi mahasiswa</span>

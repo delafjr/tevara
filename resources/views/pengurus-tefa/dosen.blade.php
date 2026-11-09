@@ -15,9 +15,6 @@
         ->filter()
         ->unique()
         ->values();
-    $withDepartment = collect($dosens)
-        ->filter(fn ($dosen) => !empty($dosen['department'] ?? $dosen['jurusan'] ?? null))
-        ->count();
 @endphp
 <div class="flex min-h-screen">
     <x-sidebar active="dosen" />
@@ -44,16 +41,11 @@
 
             </div>
 
-            <section class="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Ringkasan dosen">
+            <section class="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="Ringkasan dosen">
                 <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
                     <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Total Dosen</p>
                     <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ count($dosens) }}</p>
                     <p class="mt-1 text-xs text-slate-500">Akun dosen dari database</p>
-                </div>
-                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Data Jurusan Terisi</p>
-                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ $withDepartment }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Dosen dengan jurusan pada profil</p>
                 </div>
                 <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
                     <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Jurusan Terdaftar</p>
@@ -66,7 +58,6 @@
                 <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <p class="font-semibold text-[#1E293B] text-[15px]">Daftar Dosen</p>
-                        <p class="text-xs text-slate-400 mt-0.5">{{ count($dosens) }} dosen terdaftar di Teaching Factory</p>
                     </div>
                     <label class="relative block w-full sm:w-80">
                         <span class="sr-only">Cari nama, NIDN, atau jurusan dosen</span>

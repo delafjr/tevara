@@ -64,7 +64,6 @@
                 <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <p class="font-semibold text-[#1E293B] text-[15px]">Daftar Klien & Mitra</p>
-                        <p class="text-xs text-slate-400 mt-0.5">{{ count($clients) }} instansi</p>
                     </div>
                     <label class="relative block w-full sm:w-80">
                         <span class="sr-only">Cari klien, instansi, atau PIC</span>
