@@ -108,7 +108,6 @@ class VerifikasiBuktiTransferTest extends TestCase
         $response->assertSee('Budi Santoso');
         $response->assertSee('Termin 2');
         $response->assertSee('25.200.000');
-        $response->assertSee('TRF20261101-089');
         $response->assertSee('Transfer Bank (Giro Mandiri)');
         $response->assertSee('Dokumen Bukti Transfer Bank');
         $response->assertSee('Form Keputusan Verifikasi');

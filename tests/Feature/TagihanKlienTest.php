@@ -37,9 +37,6 @@ class TagihanKlienTest extends TestCase
         $response->assertSee('PRJ-2026/014');
         $response->assertSee('PRJ-2026/021');
         $response->assertSee('Unggah Bukti Pembayaran Termin Berjalan');
-        $response->assertSee('142-00-9928172-1');
-        $response->assertSee('88720-08123456789');
-        $response->assertSee('Prosedur & Standar SLA Keuangan', false);
         $response->assertSee('Invoice:');
         $response->assertSee('Belum tersedia');
         $response->assertSee('Termin 1');

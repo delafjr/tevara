@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Unggah bukti pembayaran termin proyek TEVARA. Konfirmasi transfer bank giro atau virtual account untuk verifikasi bagian keuangan.">
+    <meta name="description" content="Unggah bukti pembayaran termin proyek TEVARA. Konfirmasi transfer bank giro untuk verifikasi bagian keuangan.">
     <title>Unggah Bukti Pembayaran - Tevara</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
@@ -218,23 +218,6 @@
                                     <p class="text-[11px] text-slate-500 font-medium">a.n. Teaching Factory Politeknik</p>
                                 </div>
                             </div>
-
-                            {{-- BCA Virtual Account --}}
-                            <div class="p-4 rounded-2xl bg-[#F8FAFD] border border-slate-200/80 space-y-2 hover:border-[#0B3B82] transition">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[10.5px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">BCA VIRTUAL ACCOUNT</span>
-                                    <button type="button"
-                                            @click="copyText('8872008123456789', 'No. VA BCA')"
-                                            class="text-xs font-bold text-[#0B3B82] hover:underline inline-flex items-center gap-1 cursor-pointer">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"/></svg>
-                                        Salin
-                                    </button>
-                                </div>
-                                <div>
-                                    <p class="text-base font-extrabold text-slate-800 font-mono tracking-wide">88720-08123456789</p>
-                                    <p class="text-[11px] text-slate-500 font-medium">a.n. TEVARA - {{ $userName }}</p>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -262,9 +245,6 @@
                                 <option value="BANK_TRANSFER" {{ old('payment_method') === 'BANK_TRANSFER' ? 'selected' : '' }}>
                                     Transfer Bank Mandiri Giro (142-00-9928172-1)
                                 </option>
-                                <option value="VIRTUAL_ACCOUNT" {{ old('payment_method') === 'VIRTUAL_ACCOUNT' ? 'selected' : '' }}>
-                                    BCA Virtual Account (88720-08123456789)
-                                </option>
                                 <option value="CASH" {{ old('payment_method') === 'CASH' ? 'selected' : '' }}>
                                     Setor Tunai Langsung ke Kasir TEFA
                                 </option>
@@ -274,29 +254,16 @@
                             </select>
                         </div>
 
-                        {{-- Grid Tanggal & No Referensi --}}
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-2">
-                                    Tanggal Transfer <span class="text-red-500">*</span>
-                                </label>
-                                <input type="date"
-                                       name="payment_date"
-                                       required
-                                       value="{{ old('payment_date', date('Y-m-d')) }}"
-                                       class="w-full bg-[#F8FAFC] border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-2">
-                                    Nomor Referensi / 4 Digit Rekening
-                                </label>
-                                <input type="text"
-                                       name="transfer_reference"
-                                       value="{{ old('transfer_reference') }}"
-                                       placeholder="Contoh: REF98213 / Rek 4321"
-                                       maxlength="255"
-                                       class="w-full bg-[#F8FAFC] border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition">
-                            </div>
+                        {{-- Tanggal Transfer --}}
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-2">
+                                Tanggal Transfer <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date"
+                                   name="payment_date"
+                                   required
+                                   value="{{ old('payment_date', date('Y-m-d')) }}"
+                                   class="w-full bg-[#F8FAFC] border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition">
                         </div>
 
                         {{-- File Upload Box --}}

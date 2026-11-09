@@ -482,7 +482,7 @@ Route::middleware('auth.api')->group(function () {
         Route::post('/tagihan/{proposal}/payments/{payment}/proof', function (Request $request, ApiService $api, int $proposal, int $payment) {
             $validated = $request->validate([
                 'payment_date'       => ['required', 'date'],
-                'payment_method'     => ['required', 'in:BANK_TRANSFER,VIRTUAL_ACCOUNT,CASH,OTHER'],
+                'payment_method'     => ['required', 'in:BANK_TRANSFER,CASH,OTHER'],
                 'transfer_reference' => ['nullable', 'string', 'max:255'],
                 'proof'              => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             ], [
@@ -1447,33 +1447,6 @@ Route::middleware('auth.api')->group(function () {
                 'error'    => $error,
             ]);
         })->whereNumber('proposal')->whereNumber('payment')->name('payments.verifikasi');
-
-        Route::post('/proposals/{proposal}/payments', function (Request $request, ApiService $api, int $proposal) {
-            $validated = $request->validate([
-                'term_sequence' => ['required', 'integer', 'min:1'],
-                'amount'        => ['required', 'numeric', 'min:0'],
-                'due_date'      => ['nullable', 'date'],
-            ], [
-                'term_sequence.required' => 'Nomor termin wajib diisi.',
-                'amount.required'        => 'Nominal tagihan termin wajib diisi.',
-            ]);
-
-            try {
-                $response = $api->createPaymentTerm($proposal, $validated);
-
-                if ($response->successful()) {
-                    return back()->with('success', 'Termin pembayaran berhasil dibuat.');
-                }
-
-                return back()
-                    ->withInput()
-                    ->with('error', 'Gagal membuat termin: ' . ($response->json('message') ?? 'Terjadi kesalahan pada backend.'));
-            } catch (\Throwable $e) {
-                return back()
-                    ->withInput()
-                    ->with('error', 'Tidak dapat terhubung ke server backend: ' . $e->getMessage());
-            }
-        })->whereNumber('proposal')->name('payments.store');
 
         Route::post('/proposals/{proposal}/payments/{payment}/verify', function (Request $request, ApiService $api, int $proposal, int $payment) {
             $validated = $request->validate([
