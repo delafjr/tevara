@@ -50,7 +50,7 @@
                 <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
                     <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Jurusan Terdaftar</p>
                     <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ $departments->count() }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Jurusan unik pada database</p>
+                    <p class="mt-1 text-xs text-slate-500">Jurusan pada database</p>
                 </div>
             </section>
 
