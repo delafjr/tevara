@@ -89,8 +89,6 @@
                     ? 'Target belum ditentukan'
                     : ($daysRemaining >= 0 ? 'Sisa ' . $daysRemaining . ' Hari Kalender' : 'Terlambat ' . abs($daysRemaining) . ' Hari Kalender'),
                 'progress' => max(0, min(100, (int) ($proposal['overall_progress'] ?? 0))),
-                'spk_number' => $proposal['spk_number'] ?? null,
-                'contract_file_url' => $proposal['contract_file_url'] ?? null,
                 'bast_number' => $proposal['bast_number'] ?? null,
                 'handover_date' => $proposal['handover_date'] ?? null,
                 'repository_url' => $proposal['repository_url'] ?? null,
@@ -440,12 +438,6 @@
                                 </div>
                             </div>
 
-                            @if($proj['contract_file_url'])
-                                <a href="{{ route($routePrefix . '.projek-saya.contract.download', $proj['proposal_id']) }}"
-                                   class="rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-bold text-[#0B3B82] hover:bg-blue-100">
-                                    Unduh {{ $proj['spk_number'] ?? 'SPK' }}
-                                </a>
-                            @endif
 
                             @if($routePrefix === 'klien')
                                 <a href="{{ route('klien.projek-saya.uat', $proj['proposal_id']) }}"

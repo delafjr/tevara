@@ -56,7 +56,7 @@ class DashboardAccessTest extends TestCase
         $response->assertSee('Wiktasari');
     }
 
-    public function test_jurusan_menu_opens_the_mockup_pages(): void
+    public function test_jurusan_menu_opens_database_synchronized_pages(): void
     {
         Http::fake([
             '*' => Http::response(['success' => true, 'data' => []], 200),
@@ -88,12 +88,14 @@ class DashboardAccessTest extends TestCase
         $this->withSession($session)->get(route('jurusan.projek-saya'))
             ->assertOk()
             ->assertSee('Daftar Projek Saya')
-            ->assertSee('Sistem Monitoring Rantai Pasok Terpadu');
+            ->assertSee('Belum ada proyek aktif.')
+            ->assertDontSee('Sistem Monitoring Rantai Pasok Terpadu');
 
         $this->withSession($session)->get(route('jurusan.tagihan'))
             ->assertOk()
             ->assertSee('Tagihan &amp; Pembayaran', false)
-            ->assertSee('SPK/TEFA/2026/008');
+            ->assertSee('Belum ada tagihan proyek.')
+            ->assertDontSee('SPK/TEFA/2026/008');
     }
 
     public function test_wiktasari_cannot_access_pm_dashboard(): void

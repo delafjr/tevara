@@ -325,7 +325,7 @@
                             </li>
                             <li class="flex items-start gap-2">
                                 <svg class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                <span>Pastikan rekening penerima adalah <strong>Giro Mandiri Politeknik Negeri Semarang</strong> (142-00-9928172-1) atau VA resmi.</span>
+                                <span>Pastikan rekening penerima sesuai dengan rekening resmi yang tertera pada invoice atau dokumen kerja sama.</span>
                             </li>
                             <li class="flex items-start gap-2">
                                 <svg class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
@@ -549,4 +549,3 @@
 
 </body>
 </html>
-

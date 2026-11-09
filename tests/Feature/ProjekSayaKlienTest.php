@@ -98,30 +98,11 @@ class ProjekSayaKlienTest extends TestCase
         $response->assertOk()
             ->assertSee('PRJ-2026/501')
             ->assertSee('Sistem Inventaris Perusahaan')
-            ->assertSee('SPK/TEFA/2026/011')
             ->assertSee('Dosen Backend')
             ->assertSee('Manajemen Barang')
             ->assertSee('Mahasiswa Aktif')
-            ->assertSee(route('klien.projek-saya.contract.download', 501), false)
             ->assertDontSee('PRJ-2026/014')
             ->assertDontSee('Sistem Monitoring Rantai Pasok Terpadu');
-    }
-
-    public function test_spk_dapat_diunduh_melalui_api_terautentikasi(): void
-    {
-        Http::fake([
-            '*proposals/501/contract/download' => Http::response('%PDF-1.4 generated contract', 200, [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="501-spk.pdf"',
-            ]),
-        ]);
-
-        $response = $this->withSession($this->sessionKlien())
-            ->get('/klien/projek-saya/501/kontrak');
-
-        $response->assertOk()
-            ->assertHeader('content-type', 'application/pdf')
-            ->assertSee('%PDF-1.4 generated contract');
     }
 
     public function test_formulir_bast_dipost_ke_proposal_milik_klien(): void

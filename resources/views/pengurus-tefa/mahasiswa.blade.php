@@ -10,11 +10,19 @@
 @php
     $user = $user ?? session('user');
     $mahasiswas = is_array($mahasiswas ?? null) ? $mahasiswas : [];
+    $studyPrograms = collect($mahasiswas)
+        ->map(fn ($student) => trim((string) ($student['study_program'] ?? $student['department'] ?? $student['jurusan'] ?? '')))
+        ->filter()
+        ->unique()
+        ->values();
+    $withStudyProgram = collect($mahasiswas)
+        ->filter(fn ($student) => !empty($student['study_program'] ?? $student['department'] ?? $student['jurusan'] ?? null))
+        ->count();
 @endphp
 <div class="flex min-h-screen">
     <x-sidebar active="mahasiswa" />
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
-        <main class="flex-1 px-8 py-7 space-y-7">
+        <main class="flex-1 px-8 py-7 space-y-7" x-data="{ searchQuery: '' }">
             <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6">
                 <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
                 <div class="relative z-10">
@@ -27,10 +35,35 @@
                 </div>
             </div>
 
+            <section class="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Ringkasan mahasiswa">
+                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Total Mahasiswa</p>
+                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ count($mahasiswas) }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Akun mahasiswa dari database</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Prodi Terdaftar</p>
+                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ $studyPrograms->count() }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Program studi unik pada database</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Data Prodi Terisi</p>
+                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ $withStudyProgram }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Profil mahasiswa dengan prodi</p>
+                </div>
+            </section>
+
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-100">
-                    <p class="font-semibold text-[#1E293B] text-[15px]">Daftar Mahasiswa</p>
-                    <p class="text-xs text-slate-400 mt-0.5">{{ count($mahasiswas) }} mahasiswa terdaftar</p>
+                <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p class="font-semibold text-[#1E293B] text-[15px]">Daftar Mahasiswa</p>
+                        <p class="text-xs text-slate-400 mt-0.5">{{ count($mahasiswas) }} mahasiswa terdaftar</p>
+                    </div>
+                    <label class="relative block w-full sm:w-80">
+                        <span class="sr-only">Cari nama, NIM, atau jurusan/prodi mahasiswa</span>
+                        <input type="search" x-model.debounce.150ms="searchQuery" placeholder="Cari nama, NIM, atau jurusan/prodi"
+                               class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-3 pr-3 text-sm focus:border-[#0B3B82] focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/10">
+                    </label>
                 </div>
                 @if (!empty($error))
                     <div role="alert" class="border-b border-red-100 bg-red-50 px-6 py-3 text-sm text-red-700">{{ $error }}</div>
@@ -46,7 +79,8 @@
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             @forelse($mahasiswas as $student)
-                                <tr class="hover:bg-slate-50/60 transition-colors">
+                                @php $searchable = strtolower(($student['name'] ?? '') . ' ' . ($student['nim'] ?? '') . ' ' . ($student['study_program'] ?? $student['department'] ?? $student['jurusan'] ?? '')); @endphp
+                                <tr data-search="{{ $searchable }}" x-show="!searchQuery || $el.dataset.search.includes(searchQuery.toLowerCase().trim())" class="hover:bg-slate-50/60 transition-colors">
                                     <td class="px-6 py-3.5">
                                         <div class="flex items-center gap-3">
                                             <div class="w-8 h-8 rounded-full bg-[#0B3B82]/10 flex items-center justify-center text-[11px] font-bold text-[#0B3B82] flex-shrink-0">{{ strtoupper(substr($student['name'] ?? '?', 0, 1)) }}</div>
@@ -59,6 +93,9 @@
                             @empty
                                 <tr><td colspan="3" class="px-6 py-10 text-center text-sm text-slate-500">Belum ada data mahasiswa di database.</td></tr>
                             @endforelse
+                            <tr x-cloak x-show="searchQuery && Array.from($el.parentElement.querySelectorAll('tr[data-search]')).every(row => !row.dataset.search.includes(searchQuery.toLowerCase().trim()))">
+                                <td colspan="3" class="px-6 py-10 text-center text-sm text-slate-500">Tidak ada mahasiswa yang sesuai dengan pencarian.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
