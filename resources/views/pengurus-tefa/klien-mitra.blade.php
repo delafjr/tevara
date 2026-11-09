@@ -7,7 +7,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased">
-@php $user = $user ?? session('user'); $firstName = explode(' ', $user['name'] ?? 'Pengurus')[0]; @endphp
+@php
+    $user = $user ?? session('user');
+    $clients = is_array($clients ?? null) ? $clients : [];
+@endphp
 <div class="flex min-h-screen">
     <x-sidebar active="klien-mitra" />
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
@@ -31,67 +34,30 @@
                     </p>
                 </div>
 
-                <div class="relative z-10 flex-shrink-0">
-                    <a href="#" class="flex items-center gap-2 bg-[#0B3B82] text-white font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-[#082a5c] transition-colors shadow-sm">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                        Tambah Klien
-                    </a>
-                </div>
             </div>
 
-            {{-- Stats --}}
-            <div class="grid grid-cols-4 gap-4 items-stretch">
-                @php
-                $kmStats = [
-                    ['label' => 'Total Klien',    'value' => '12', 'sub' => 'Terdaftar',       'color' => '#0B3B82', 'icon' => 'users'],
-                    ['label' => 'Klien Aktif',    'value' => '8',  'sub' => 'Sedang Berjalan', 'color' => '#0B3B82', 'icon' => 'play'],
-                    ['label' => 'Mitra Baru',     'value' => '3',  'sub' => 'Bulan Ini',       'color' => '#F59E0B', 'icon' => 'folder'],
-                    ['label' => 'Projek Selesai', 'value' => '4',  'sub' => 'Siap Produksi',   'color' => '#0B3B82', 'icon' => 'check'],
-                ];
-                @endphp
-                @foreach($kmStats as $stat)
-                    <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
-                @endforeach
-            </div>
+            @if (!empty($error))
+                <div role="alert" class="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">{{ $error }}</div>
+            @endif
 
-            {{-- Grid Klien --}}
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                     <div>
                         <p class="font-semibold text-[#1E293B] text-[15px]">Daftar Klien & Mitra</p>
-                        <p class="text-xs text-slate-400 mt-0.5">12 klien terdaftar</p>
+                        <p class="text-xs text-slate-400 mt-0.5">{{ count($clients) }} instansi</p>
                     </div>
-                    <input type="text" placeholder="Cari klien..." class="text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0B3B82] w-48">
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-slate-100">
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-6 py-3">Nama Klien / Instansi</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Jenis</th>
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Kontak PIC</th>
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Total Projek</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Projek Aktif</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Total Nilai</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Status</th>
-                                <th class="px-3 py-3 w-10"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
-                            @php
-                            $clients = [
-                                ['name'=>'PT. ABC Indonesia','type'=>'Perusahaan','pic'=>'Budi Hartanto','total'=>4,'aktif'=>2,'nilai'=>'Rp 48.000.000','status'=>'Aktif'],
-                                ['name'=>'CV. Tani Maju','type'=>'UMKM','pic'=>'Sari Dewi','total'=>3,'aktif'=>2,'nilai'=>'Rp 24.500.000','status'=>'Aktif'],
-                                ['name'=>'PT. DEF Solusi','type'=>'Perusahaan','pic'=>'Hendra P.','total'=>2,'aktif'=>0,'nilai'=>'Rp 18.000.000','status'=>'Selesai'],
-                                ['name'=>'Pemkot Semarang','type'=>'Pemerintah','pic'=>'Ir. Suprapto','total'=>3,'aktif'=>1,'nilai'=>'Rp 62.000.000','status'=>'Aktif'],
-                                ['name'=>'Koperasi Batik','type'=>'Koperasi','pic'=>'Ibu Suminah','total'=>2,'aktif'=>1,'nilai'=>'Rp 16.000.000','status'=>'Aktif'],
-                                ['name'=>'Yayasan Al-Hikmah','type'=>'Yayasan','pic'=>'Ustaz Farid','total'=>1,'aktif'=>1,'nilai'=>'Rp 8.500.000','status'=>'Baru'],
-                                ['name'=>'PT. Maju Sentosa','type'=>'Perusahaan','pic'=>'Andi Kurniawan','total'=>2,'aktif'=>1,'nilai'=>'Rp 32.000.000','status'=>'Aktif'],
-                                ['name'=>'SMK Negeri 1','type'=>'Sekolah','pic'=>'Bapak Suharno','total'=>1,'aktif'=>1,'nilai'=>'Rp 12.000.000','status'=>'Baru'],
-                            ];
-                            $stStyle=['Aktif'=>'bg-green-50 text-green-700','Baru'=>'bg-blue-50 text-blue-700','Selesai'=>'bg-slate-100 text-slate-500'];
-                            @endphp
-                            @foreach($clients as $c)
+                            @forelse($clients as $c)
                             <tr class="hover:bg-slate-50/60 transition-colors">
                                 <td class="px-6 py-3.5">
                                     <div class="flex items-center gap-3">
@@ -99,19 +65,18 @@
                                         <p class="font-semibold text-[#1E293B] text-[13px]">{{ $c['name'] }}</p>
                                     </div>
                                 </td>
-                                <td class="px-3 py-3.5"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">{{ $c['type'] }}</span></td>
-                                <td class="px-3 py-3.5 text-[12px] text-slate-600">{{ $c['pic'] }}</td>
-                                <td class="px-3 py-3.5 text-[12px] font-semibold text-slate-700 text-center">{{ $c['total'] }}</td>
-                                <td class="px-3 py-3.5 text-[12px] font-bold text-[#0B3B82] text-center">{{ $c['aktif'] }}</td>
-                                <td class="px-3 py-3.5 text-[12px] font-semibold text-[#1E293B]">{{ $c['nilai'] }}</td>
-                                <td class="px-3 py-3.5"><span class="text-[11px] font-semibold px-2.5 py-1 rounded-full {{ $stStyle[$c['status']] ?? 'bg-slate-100 text-slate-600' }}">{{ $c['status'] }}</span></td>
-                                <td class="px-3 py-3.5">
-                                    <button class="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
-                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
-                                    </button>
+                                <td class="px-3 py-3.5 text-[12px] text-slate-600">
+                                    @forelse($c['contacts'] as $contact)
+                                        <p>{{ $contact }}</p>
+                                    @empty
+                                        —
+                                    @endforelse
                                 </td>
+                                <td class="px-3 py-3.5 text-[12px] font-semibold text-slate-700 text-center">{{ $c['total_projects'] }}</td>
                             </tr>
-                            @endforeach
+                            @empty
+                                <tr><td colspan="3" class="px-6 py-10 text-center text-sm text-slate-500">Belum ada data klien di database.</td></tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

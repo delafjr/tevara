@@ -7,7 +7,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased">
-@php $user = $user ?? session('user'); $firstName = explode(' ', $user['name'] ?? 'Pengurus')[0]; @endphp
+@php
+    $user = $user ?? session('user');
+    $dosens = is_array($dosens ?? null) ? $dosens : [];
+@endphp
 <div class="flex min-h-screen">
     <x-sidebar active="dosen" />
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
@@ -31,73 +34,29 @@
                     </p>
                 </div>
 
-                <div class="relative z-10 flex-shrink-0">
-                    <a href="#" class="flex items-center gap-2 bg-[#0B3B82] text-white font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-[#082a5c] transition-colors shadow-sm">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                        Tambah Dosen
-                    </a>
-                </div>
             </div>
 
-            {{-- Stats --}}
-            <div class="grid grid-cols-4 gap-4 items-stretch">
-                @php
-                $dosenStats = [
-                    ['label' => 'Total Dosen',     'value' => '18', 'sub' => 'Terdaftar',       'color' => '#0B3B82', 'icon' => 'academic'],
-                    ['label' => 'Aktif Mengajar',  'value' => '12', 'sub' => 'Sedang Mengajar', 'color' => '#0B3B82', 'icon' => 'play'],
-                    ['label' => 'Project Manager', 'value' => '8',  'sub' => 'Aktif PM',        'color' => '#0B3B82', 'icon' => 'folder'],
-                    ['label' => 'Jurusan',         'value' => '3',  'sub' => 'Program Studi',   'color' => '#F59E0B', 'icon' => 'users'],
-                ];
-                @endphp
-                @foreach($dosenStats as $stat)
-                    <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
-                @endforeach
-            </div>
-
-            {{-- Tabel Dosen --}}
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                     <div>
                         <p class="font-semibold text-[#1E293B] text-[15px]">Daftar Dosen</p>
-                        <p class="text-xs text-slate-400 mt-0.5">18 dosen terdaftar di Teaching Factory</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <input type="text" placeholder="Cari dosen..." class="text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0B3B82] w-48">
-                        <select class="text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0B3B82]">
-                            <option>Semua Jurusan</option><option>TI</option><option>Elektro</option><option>Mesin</option>
-                        </select>
+                        <p class="text-xs text-slate-400 mt-0.5">{{ count($dosens) }} dosen terdaftar di Teaching Factory</p>
                     </div>
                 </div>
+                @if (!empty($error))
+                    <div role="alert" class="border-b border-red-100 bg-red-50 px-6 py-3 text-sm text-red-700">{{ $error }}</div>
+                @endif
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-slate-100">
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-6 py-3">Nama Dosen</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">NIP</th>
+                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">NIDN</th>
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Jurusan</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Keahlian</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Projek Aktif</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Total Mahasiswa</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Status</th>
-                                <th class="px-3 py-3 w-10"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
-                            @php
-                            $dosens = [
-                                ['name'=>'Dimas Setiawan, S.Kom., M.T.','nip'=>'198501012010011001','jurusan'=>'TI','keahlian'=>'Web Development','projek'=>2,'mhs'=>15,'status'=>'PM Aktif'],
-                                ['name'=>'Rizky Pratama, S.T., M.Eng.','nip'=>'198703152012041002','jurusan'=>'Elektro','keahlian'=>'IoT & Embedded','projek'=>1,'mhs'=>6,'status'=>'PM Aktif'],
-                                ['name'=>'Nadia Putri, S.Ds., M.Ds.','nip'=>'199001202015042003','jurusan'=>'TI','keahlian'=>'UI/UX Design','projek'=>1,'mhs'=>4,'status'=>'PM Aktif'],
-                                ['name'=>'Thomas Elang, S.Kom., M.Cs.','nip'=>'198612102014011004','jurusan'=>'TI','keahlian'=>'Database & Aplikasi','projek'=>1,'mhs'=>5,'status'=>'PM Aktif'],
-                                ['name'=>'Ari Wibowo, S.T., M.T.','nip'=>'197809082005011005','jurusan'=>'Mesin','keahlian'=>'Otomasi & Kontrol','projek'=>1,'mhs'=>9,'status'=>'PM Aktif'],
-                                ['name'=>'Siti Rahayu, S.Kom., M.T.','nip'=>'199205172018042006','jurusan'=>'TI','keahlian'=>'E-Commerce','projek'=>1,'mhs'=>6,'status'=>'PM Aktif'],
-                                ['name'=>'Budi Prasetyo, M.Kom.','nip'=>'198811292016041007','jurusan'=>'TI','keahlian'=>'Computer Vision','projek'=>1,'mhs'=>5,'status'=>'PM Aktif'],
-                                ['name'=>'Erna Kusumawati, M.Pd.','nip'=>'197506102000032008','jurusan'=>'TI','keahlian'=>'Pembimbing','projek'=>0,'mhs'=>0,'status'=>'Pembimbing'],
-                                ['name'=>'Hartono, S.T., M.T.','nip'=>'197312152001011009','jurusan'=>'Mesin','keahlian'=>'Manufaktur','projek'=>0,'mhs'=>0,'status'=>'Pembimbing'],
-                            ];
-                            $stStyle=['PM Aktif'=>'bg-blue-50 text-blue-700','Pembimbing'=>'bg-green-50 text-green-700'];
-                            @endphp
-                            @foreach($dosens as $d)
+                            @forelse($dosens as $d)
                             <tr class="hover:bg-slate-50/60 transition-colors">
                                 <td class="px-6 py-3.5">
                                     <div class="flex items-center gap-3">
@@ -105,19 +64,12 @@
                                         <p class="font-semibold text-[#1E293B] text-[13px] leading-tight">{{ $d['name'] }}</p>
                                     </div>
                                 </td>
-                                <td class="px-3 py-3.5 text-[11px] text-slate-500 font-mono">{{ $d['nip'] }}</td>
-                                <td class="px-3 py-3.5"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">{{ $d['jurusan'] }}</span></td>
-                                <td class="px-3 py-3.5 text-[12px] text-slate-600">{{ $d['keahlian'] }}</td>
-                                <td class="px-3 py-3.5 text-[12px] font-bold text-[#0B3B82] text-center">{{ $d['projek'] }}</td>
-                                <td class="px-3 py-3.5 text-[12px] font-semibold text-slate-700 text-center">{{ $d['mhs'] }}</td>
-                                <td class="px-3 py-3.5"><span class="text-[11px] font-semibold px-2.5 py-1 rounded-full {{ $stStyle[$d['status']] ?? 'bg-slate-100 text-slate-600' }}">{{ $d['status'] }}</span></td>
-                                <td class="px-3 py-3.5">
-                                    <button class="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
-                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
-                                    </button>
-                                </td>
+                                <td class="px-3 py-3.5 text-[11px] text-slate-500 font-mono">{{ $d['nidn'] ?? '—' }}</td>
+                                <td class="px-3 py-3.5"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">{{ $d['department'] ?? $d['jurusan'] ?? '—' }}</span></td>
                             </tr>
-                            @endforeach
+                            @empty
+                                <tr><td colspan="3" class="px-6 py-10 text-center text-sm text-slate-500">Belum ada data dosen di database.</td></tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

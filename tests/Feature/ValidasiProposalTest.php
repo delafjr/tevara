@@ -259,7 +259,10 @@ class ValidasiProposalTest extends TestCase
         $response->assertSee('Biaya yang Disepakati &amp; Skema Termin', false);
         $response->assertSee('Pembentukan Tim Pengembang TeFa', false);
         $response->assertSee('Project Manager (Dosen TeFa)', false);
-        $response->assertSee('Berkas Surat Perjanjian / Kontrak (SPK)', false);
+        $response->assertSee('Dokumen SPK otomatis');
+        $response->assertSee('Nomor SPK dan kode proyek diterbitkan otomatis oleh sistem.');
+        $response->assertDontSee('name="spk_number"', false);
+        $response->assertDontSee('name="contract_file"', false);
     }
 
     public function test_proses_setujui_proposal_berhasil_menyimpan_dan_redirect(): void
@@ -267,12 +270,12 @@ class ValidasiProposalTest extends TestCase
         Http::fake([
             '*/api/v1/proposals/13/contract' => Http::response([
                 'message' => 'Data SPK/kontrak berhasil disimpan',
+                'data' => ['spk_number' => 'SPK/TEFA/2026/014'],
             ], 200),
         ]);
 
         $response = $this->withSession($this->sessionPengurus())
             ->post('/pengurus-tefa/validasi-proposal/13/setujui', [
-                'spk_number'                  => 'SPK/TEFA/2026/013',
                 'scope_of_work'               => 'Pengerjaan modul frontend dan backend.',
                 'total_amount'                => 50000000,
                 'payment_terms_description'   => '3 Termin pembayaran',
@@ -290,7 +293,10 @@ class ValidasiProposalTest extends TestCase
             ]);
 
         $response->assertRedirect(route('pengurus-tefa.validasi-proposal'));
-        $response->assertSessionHas('success');
+        $response->assertSessionHas('success', fn ($message) => str_contains($message, 'SPK/TEFA/2026/014'));
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/api/v1/proposals/13/contract')
+            && !array_key_exists('spk_number', $request->data())
+            && $request['members'][0]['student_id'] === 50);
     }
 
     public function test_halaman_detail_proposal_menampilkan_tombol_dan_modal_tolak(): void

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 
 class ProjekSayaKlienTest extends TestCase
@@ -34,16 +35,16 @@ class ProjekSayaKlienTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Daftar');
         $response->assertSee('Projek Saya');
-        $response->assertSee('PRJ-2026/014');
-        $response->assertSee('Sistem Monitoring Rantai Pasok Terpadu');
-        $response->assertSee('Dr. Hendra Kusuma, M.T.');
-        $response->assertSee('PRJ-2026/008');
-        $response->assertSee('PRJ-2026/021');
+        $response->assertSee('Belum ada proyek aktif.');
+        $response->assertDontSee('PRJ-2026/014');
+        $response->assertDontSee('Dr. Hendra Kusuma, M.T.');
         $response->assertSee('TOTAL PROYEK PORTOFOLIO');
         $response->assertSee('RATA - RATA PROGRES');
-        $response->assertSee('DISTRIBUSI FASE PENGERJAAN');
-        $response->assertSee('Berita Acara Serah Terima (BAST)');
-        $response->assertSee('Tautan repositori');
+        $response->assertSee('0 Modul');
+        $response->assertDontSee('Cari kode proyek, judul deliverable, nama dosen');
+        $response->assertDontSee('Web Platform');
+        $response->assertSee('Formulir Berita Acara Serah Terima');
+        $response->assertSee('Repository source code');
         $response->assertSee('Masa garansi (bulan)');
         $response->assertSee('UAT terakhir berstatus PASSED');
         $response->assertSee('Proyek siap serah terima');
@@ -71,6 +72,58 @@ class ProjekSayaKlienTest extends TestCase
             ->assertSee('Isi formulir BAST');
     }
 
+    public function test_daftar_proyek_menggunakan_data_api_dan_menampilkan_spk_terbitan(): void
+    {
+        Http::fake([
+            '*proposals/mine' => Http::response([[
+                'id' => 501,
+                'project_code' => 'PRJ-2026/501',
+                'spk_number' => 'SPK/TEFA/2026/011',
+                'contract_file_url' => 'contracts/501-spk-tefa-2026-011.pdf',
+                'title' => 'Sistem Inventaris Perusahaan',
+                'category' => 'Web',
+                'status' => 'Active',
+                'overall_progress' => 65,
+                'start_date' => '2026-11-01',
+                'target_completion_date' => '2027-01-31',
+                'pm' => ['name' => 'Dosen Backend', 'nidn' => '123456', 'department' => 'Teknik Informatika'],
+                'modules' => [['title' => 'Manajemen Barang', 'description' => 'Master data stok']],
+                'team_members' => [['name' => 'Mahasiswa Aktif', 'role' => 'Backend']],
+            ]], 200),
+        ]);
+
+        $response = $this->withSession($this->sessionKlien())
+            ->get('/klien/projek-saya');
+
+        $response->assertOk()
+            ->assertSee('PRJ-2026/501')
+            ->assertSee('Sistem Inventaris Perusahaan')
+            ->assertSee('SPK/TEFA/2026/011')
+            ->assertSee('Dosen Backend')
+            ->assertSee('Manajemen Barang')
+            ->assertSee('Mahasiswa Aktif')
+            ->assertSee(route('klien.projek-saya.contract.download', 501), false)
+            ->assertDontSee('PRJ-2026/014')
+            ->assertDontSee('Sistem Monitoring Rantai Pasok Terpadu');
+    }
+
+    public function test_spk_dapat_diunduh_melalui_api_terautentikasi(): void
+    {
+        Http::fake([
+            '*proposals/501/contract/download' => Http::response('%PDF-1.4 generated contract', 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="501-spk.pdf"',
+            ]),
+        ]);
+
+        $response = $this->withSession($this->sessionKlien())
+            ->get('/klien/projek-saya/501/kontrak');
+
+        $response->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertSee('%PDF-1.4 generated contract');
+    }
+
     public function test_formulir_bast_dipost_ke_proposal_milik_klien(): void
     {
         Http::fake([
@@ -85,15 +138,11 @@ class ProjekSayaKlienTest extends TestCase
         $response = $this->withSession($this->sessionKlien())
             ->post('/klien/projek-saya/bast', [
                 'project_code' => 'PRJ-2026/501',
-                'handover_date' => '2026-11-01',
                 'repository_url' => 'https://example.test/repository',
-                'documentation_url' => 'https://example.test/documentation',
-                'user_manual_url' => 'https://example.test/manual',
+                'documentation_file' => UploadedFile::fake()->create('api-documentation.pdf', 20, 'application/pdf'),
                 'client_signoff_name' => 'Klien Tevara',
                 'client_approved' => '1',
                 'maintenance_warranty_months' => '3',
-                'maintenance_start_date' => '2026-11-01',
-                'maintenance_end_date' => '2027-02-01',
             ]);
 
         $response->assertRedirect('/klien/projek-saya')
