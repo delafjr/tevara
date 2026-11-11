@@ -167,6 +167,22 @@ Route::middleware('auth.api')->group(function () {
             }
         }
 
+        $notifications = [];
+        $unreadCount = 0;
+        try {
+            $notifRes = $api->get('notifications');
+            if ($notifRes->successful() && is_array($notifRes->json('data'))) {
+                $notifications = $notifRes->json('data');
+            }
+            $unreadRes = $api->get('notifications/unread-count');
+            if ($unreadRes->successful()) {
+                $unreadCount = (int) ($unreadRes->json('data.unread_count') ?? 0);
+            }
+        } catch (\Throwable) {
+            $notifications = [];
+            $unreadCount = 0;
+        }
+
         $viewMap = [
             'klien'         => 'klien.dashboard',
             'pengurus_tefa' => 'pengurus-tefa.dashboard',
@@ -177,8 +193,43 @@ Route::middleware('auth.api')->group(function () {
         ];
 
         $view = $viewMap[$activeRole] ?? 'dashboard';
-        return view($view, ['user' => $user, 'currentRole' => $activeRole, 'dashboard' => $dashboardData]);
+        return view($view, [
+            'user'          => $user,
+            'currentRole'   => $activeRole,
+            'dashboard'     => $dashboardData,
+            'notifications' => $notifications,
+            'unreadCount'   => $unreadCount,
+        ]);
     })->name('dashboard');
+
+    // ── Notifikasi in-app web actions ────────────────
+    Route::match(['patch', 'post'], '/notifications/read-all', function (Request $request, ApiService $api) {
+        try {
+            $response = $api->patch('notifications/read-all');
+            if ($request->wantsJson()) {
+                return response()->json($response->json(), $response->status());
+            }
+        } catch (\Throwable $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Gagal menandai notifikasi.'], 500);
+            }
+        }
+        return back();
+    })->name('notifications.read-all');
+
+    Route::match(['patch', 'post'], '/notifications/{id}/read', function (Request $request, ApiService $api, int|string $id) {
+        try {
+            $response = $api->patch("notifications/{$id}/read");
+            if ($request->wantsJson()) {
+                return response()->json($response->json(), $response->status());
+            }
+        } catch (\Throwable $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Gagal menandai notifikasi.'], 500);
+            }
+        }
+        return back();
+    })->name('notifications.read');
 
     // Switch Role handlers (Strictly validated against allowed roles)
     Route::get('/switch-role/{role}', function ($role) {

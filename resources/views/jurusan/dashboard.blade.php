@@ -46,6 +46,9 @@
             </div>
         </div>
 
+        {{-- NOTIFIKASI & AKTIVITAS HIGHLIGHT --}}
+        <x-dashboard-notifications :notifications="$notifications ?? []" :unread-count="$unreadCount ?? 0" />
+
         {{-- STAT CARDS --}}
         @php
             $jurusanStats = [
