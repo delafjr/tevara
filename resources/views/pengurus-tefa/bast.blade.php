@@ -153,6 +153,58 @@
                                                             <label class="mb-1 block text-xs font-semibold text-slate-700">Catatan serah terima</label>
                                                             <textarea name="handover_notes" rows="2" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">{{ old('handover_notes', $project['handover_notes'] ?? '') }}</textarea>
                                                         </div>
+                                                        <div class="md:col-span-2" x-data="{ items: {{ \Illuminate\Support\Js::from(!empty($project['handover_deliverables']) ? $project['handover_deliverables'] : [['name' => '', 'type' => 'digital', 'quantity' => 1, 'unit' => 'unit', 'condition' => 'not_applicable', 'notes' => '']]) }}, addItem() { this.items.push({ name: '', type: 'digital', quantity: 1, unit: 'unit', condition: 'not_applicable', notes: '' }) }, removeItem(index) { if (this.items.length > 1) this.items.splice(index, 1) } }">
+                                                            <div class="flex items-center justify-between gap-3">
+                                                                <div>
+                                                                    <label class="block text-xs font-semibold text-slate-700">Hasil/barang yang diserahkan</label>
+                                                                    <p class="mt-1 text-[11px] text-slate-500">Cantumkan produk digital maupun barang fisik agar PIC tahu apa yang diterima.</p>
+                                                                </div>
+                                                                <button type="button" @click="addItem()" class="shrink-0 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50">Tambah item</button>
+                                                            </div>
+                                                            <input type="hidden" name="handover_deliverables" :value="JSON.stringify(items)">
+                                                            <div class="mt-3 space-y-3">
+                                                                <template x-for="(item, index) in items" :key="index">
+                                                                    <fieldset class="rounded-lg border border-slate-200 p-3">
+                                                                        <legend class="px-1 text-[11px] font-semibold text-slate-500" x-text="`Item ${index + 1}`"></legend>
+                                                                        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                                                            <label class="text-[11px] font-medium text-slate-600">Nama hasil/barang
+                                                                                <input type="text" x-model="item.name" required maxlength="255" placeholder="Contoh: Aplikasi manajemen inventaris" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs">
+                                                                            </label>
+                                                                            <label class="text-[11px] font-medium text-slate-600">Jenis
+                                                                                <select x-model="item.type" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs">
+                                                                                    <option value="digital">Produk digital</option>
+                                                                                    <option value="physical">Barang fisik</option>
+                                                                                    <option value="document">Dokumen</option>
+                                                                                    <option value="other">Lainnya</option>
+                                                                                </select>
+                                                                            </label>
+                                                                            <div class="grid grid-cols-2 gap-2">
+                                                                                <label class="text-[11px] font-medium text-slate-600">Jumlah
+                                                                                    <input type="number" x-model="item.quantity" min="1" max="1000000" required class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs">
+                                                                                </label>
+                                                                                <label class="text-[11px] font-medium text-slate-600">Satuan
+                                                                                    <input type="text" x-model="item.unit" required maxlength="50" placeholder="unit, set, file" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs">
+                                                                                </label>
+                                                                            </div>
+                                                                            <label class="text-[11px] font-medium text-slate-600">Kondisi
+                                                                                <select x-model="item.condition" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs">
+                                                                                    <option value="new">Baru</option>
+                                                                                    <option value="good">Baik</option>
+                                                                                    <option value="needs_repair">Perlu perbaikan</option>
+                                                                                    <option value="not_applicable">Tidak berlaku (produk digital)</option>
+                                                                                </select>
+                                                                            </label>
+                                                                            <label class="text-[11px] font-medium text-slate-600 md:col-span-2">Keterangan
+                                                                                <textarea x-model="item.notes" rows="2" maxlength="2000" placeholder="Detail isi, spesifikasi, atau cara menerima barang/hasil" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"></textarea>
+                                                                            </label>
+                                                                            <div class="md:col-span-2 text-right">
+                                                                                <button type="button" @click="removeItem(index)" :disabled="items.length === 1" class="text-[11px] font-semibold text-red-600 disabled:cursor-not-allowed disabled:opacity-40">Hapus item</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </fieldset>
+                                                                </template>
+                                                            </div>
+                                                        </div>
                                                         <div class="md:col-span-2">
                                                             <label class="mb-1 block text-xs font-semibold text-slate-700">Catatan pemeliharaan</label>
                                                             <textarea name="maintenance_notes" rows="2" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">{{ old('maintenance_notes', $project['maintenance']['maintenance_notes'] ?? '') }}</textarea>

@@ -61,6 +61,14 @@ class ProjekSayaKlienTest extends TestCase
                 'bast_number' => 'BAST/TEFA/2026/001',
                 'repository_url' => 'https://example.test/repository',
                 'documentation_url' => 'handover-documents/api-documentation.pdf',
+                'handover_deliverables' => [[
+                    'name' => 'Aplikasi inventaris',
+                    'type' => 'digital',
+                    'quantity' => 1,
+                    'unit' => 'aplikasi',
+                    'condition' => 'not_applicable',
+                    'notes' => 'Akses tersedia melalui repository.',
+                ]],
                 'maintenance' => ['maintenance_warranty_months' => 3],
             ]], 200),
         ]);
@@ -72,10 +80,33 @@ class ProjekSayaKlienTest extends TestCase
             ->assertSee('PRJ-2026/501')
             ->assertSee('Proyek UAT Lulus')
             ->assertSee('BAST/TEFA/2026/001')
+            ->assertSee('Aplikasi inventaris')
+            ->assertSee('Yang akan diterima')
             ->assertSee('Repository source code')
             ->assertSee('Nama PIC yang menyetujui')
             ->assertSee('Setujui BAST')
             ->assertDontSee('Isi formulir BAST');
+    }
+
+    public function test_bast_lama_yang_sudah_disetujui_menampilkan_peringatan_jika_daftar_hasil_belum_tercatat(): void
+    {
+        Http::fake([
+            '*proposals/mine' => Http::response([[
+                'id' => 501,
+                'project_code' => 'PRJ-2026/501',
+                'title' => 'Proyek BAST lama',
+                'status' => 'Completed',
+                'client_approved' => true,
+                'bast_number' => 'BAST/TEFA/2026/001',
+            ]], 200),
+        ]);
+
+        $this->withSession($this->sessionKlien())
+            ->get('/klien/projek-saya')
+            ->assertOk()
+            ->assertSee('Proyek BAST lama')
+            ->assertSee('BAST ini sudah disetujui sebelum daftar hasil/barang dicatat.')
+            ->assertSee('hubungi Pengurus TeFa untuk koreksi resmi.');
     }
 
     public function test_daftar_proyek_menggunakan_data_api_dan_menampilkan_spk_terbitan(): void
@@ -188,6 +219,14 @@ class ProjekSayaKlienTest extends TestCase
             ->post('/pengurus-tefa/proposals/501/bast', [
                 'repository_url' => 'https://example.test/repository',
                 'documentation_file' => UploadedFile::fake()->create('api-documentation.pdf', 20, 'application/pdf'),
+                'handover_deliverables' => json_encode([[
+                    'name' => 'Aplikasi inventaris',
+                    'type' => 'digital',
+                    'quantity' => 1,
+                    'unit' => 'aplikasi',
+                    'condition' => 'not_applicable',
+                    'notes' => 'Akses tersedia melalui repository.',
+                ]]),
                 'user_manual_url' => 'https://example.test/manual',
                 'maintenance_warranty_months' => '3',
             ])
@@ -195,7 +234,8 @@ class ProjekSayaKlienTest extends TestCase
             ->assertSessionHas('success', 'BAST berhasil disiapkan untuk persetujuan PIC Klien.');
 
         Http::assertSent(fn ($request) => str_ends_with($request->url(), '/proposals/501/handover/prepare')
-            && $request->hasFile('documentation_file'));
+            && $request->hasFile('documentation_file')
+            && str_contains($request->body(), 'Aplikasi inventaris'));
     }
 
     public function test_halaman_projek_saya_dicegah_untuk_role_lain(): void
