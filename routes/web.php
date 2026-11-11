@@ -978,6 +978,28 @@ Route::middleware('auth.api')->group(function () {
                 } catch (\Throwable $e) {
                     $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
                 }
+
+                if (empty($overview['team_members'])) {
+                    try {
+                        $teamRes = $api->get('proposals/' . rawurlencode((string) $proposalId) . '/team');
+                        if ($teamRes->successful() && is_array($teamRes->json())) {
+                            $teamData = $teamRes->json();
+                            $members = isset($teamData['data']) && is_array($teamData['data']) ? $teamData['data'] : $teamData;
+                            $overview['team_members'] = collect($members)->map(function ($item) {
+                                return [
+                                    'id'            => $item['student']['id'] ?? $item['user_id'] ?? null,
+                                    'name'          => $item['student']['name'] ?? null,
+                                    'email'         => $item['student']['email'] ?? null,
+                                    'nim'           => $item['student']['nim'] ?? null,
+                                    'study_program' => $item['student']['study_program'] ?? null,
+                                    'role'          => $item['role']['name'] ?? null,
+                                ];
+                            })->filter(fn ($m) => !empty($m['id']))->values()->toArray();
+                        }
+                    } catch (\Throwable) {
+                        // ignore fallback error
+                    }
+                }
             }
 
             return view('pm.task-timeline', [

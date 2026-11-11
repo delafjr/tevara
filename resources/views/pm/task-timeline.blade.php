@@ -145,11 +145,13 @@
 
     $groupedTasks = collect($tasks)->groupBy(fn ($task) => strtoupper((string) ($task['status'] ?? 'TODO')));
 
-    $teamMembers = collect($tasks)
-        ->pluck('assignee')
-        ->filter(fn ($assignee) => is_array($assignee) && ! empty($assignee['id']))
-        ->unique('id')
-        ->values();
+    $teamMembers = collect($overview['team_members'] ?? []);
+    if ($teamMembers->isEmpty()) {
+        $teamMembers = collect($tasks)
+            ->pluck('assignee')
+            ->filter(fn ($assignee) => is_array($assignee) && ! empty($assignee['id']));
+    }
+    $teamMembers = $teamMembers->unique('id')->values();
 
     $formatDate = function (?string $date): string {
         if (! $date) {
@@ -779,7 +781,7 @@
                         <select name="assigned_student_id" class="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#2563EB] focus:outline-none">
                             <option value="">Belum ditentukan</option>
                             @foreach($teamMembers as $member)
-                                <option value="{{ $member['id'] }}">{{ $member['name'] }}{{ !empty($member['nim']) ? ' · ' . $member['nim'] : '' }}</option>
+                                <option value="{{ $member['id'] }}">{{ $member['name'] }}{{ !empty($member['nim']) ? ' · ' . $member['nim'] : '' }}{{ !empty($member['role']) ? ' (' . $member['role'] . ')' : '' }}</option>
                             @endforeach
                         </select>
                     </label>
