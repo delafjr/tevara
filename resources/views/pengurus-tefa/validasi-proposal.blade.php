@@ -16,7 +16,7 @@
 
     $pendingCount = count($proposals);
     $statusCounts = collect($allProposals)->countBy(fn ($p) => strtolower((string) ($p['status'] ?? '')));
-    $approvedCount = $statusCounts->get('approved', 0);
+    $approvedCount = $statusCounts->get('approved', 0) + $statusCounts->get('active', 0);
     $revisionCount = $statusCounts->get('revision required', 0);
     $totalProposalCount = count($allProposals) ?: $pendingCount;
 
@@ -40,7 +40,7 @@
         if (str_contains($s, 'submitted') || str_contains($s, 'review')) {
             return 'bg-blue-50 text-blue-700';
         }
-        if (str_contains($s, 'approved')) {
+        if (str_contains($s, 'approved') || str_contains($s, 'active')) {
             return 'bg-green-50 text-green-700';
         }
 

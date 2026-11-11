@@ -188,41 +188,13 @@
                         </div>
                     </div>
 
-                    {{-- Card Rekening Pembayaran Resmi TEVARA --}}
-                    <div class="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-4">
-                        <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
-                            <div>
-                                <h3 class="text-sm font-bold text-slate-800">Rekening Tujuan Resmi</h3>
-                                <p class="text-[11px] text-slate-400 mt-0.5">Gunakan salah satu kanal resmi di bawah</p>
-                            </div>
-                            <span class="inline-flex items-center gap-1 text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
-                                Resmi TEFA
-                            </span>
-                        </div>
-
-                        <div class="space-y-3.5">
-                            {{-- Bank Mandiri Giro --}}
-                            <div class="p-4 rounded-2xl bg-[#F8FAFD] border border-slate-200/80 space-y-2 hover:border-[#0B3B82] transition">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[10.5px] font-bold px-2 py-0.5 rounded bg-blue-100 text-[#0B3B82]">BANK MANDIRI (GIRO)</span>
-                                    <button type="button"
-                                            @click="copyText('1420099281721', 'Rekening Mandiri')"
-                                            class="text-xs font-bold text-[#0B3B82] hover:underline inline-flex items-center gap-1 cursor-pointer">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"/></svg>
-                                        Salin
-                                    </button>
-                                </div>
-                                <div>
-                                    <p class="text-base font-extrabold text-slate-800 font-mono tracking-wide">142-00-9928172-1</p>
-                                    <p class="text-[11px] text-slate-500 font-medium">a.n. Teaching Factory Politeknik</p>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="rounded-3xl border border-blue-100 bg-blue-50/60 p-6">
+                        <h3 class="text-sm font-bold text-slate-800">Informasi Pembayaran</h3>
+                        <p class="mt-2 text-xs leading-relaxed text-slate-600">
+                            Gunakan nomor rekening atau virtual account yang tercantum pada invoice resmi proyek. Pastikan nominal dan nomor invoice sesuai sebelum mengirim bukti pembayaran.
+                        </p>
                     </div>
-
                 </div>
-
                 {{-- Kolom Kanan (7 Kolom): Formulir Bukti Transfer --}}
                 <div class="lg:col-span-7">
                     <form method="POST"
@@ -243,13 +215,16 @@
                             </label>
                             <select name="payment_method" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition">
                                 <option value="BANK_TRANSFER" {{ old('payment_method') === 'BANK_TRANSFER' ? 'selected' : '' }}>
-                                    Transfer Bank Mandiri Giro (142-00-9928172-1)
+                                    Transfer Bank
+                                </option>
+                                <option value="VIRTUAL_ACCOUNT" {{ old('payment_method') === 'VIRTUAL_ACCOUNT' ? 'selected' : '' }}>
+                                    Virtual Account
                                 </option>
                                 <option value="CASH" {{ old('payment_method') === 'CASH' ? 'selected' : '' }}>
-                                    Setor Tunai Langsung ke Kasir TEFA
+                                    Tunai
                                 </option>
                                 <option value="OTHER" {{ old('payment_method') === 'OTHER' ? 'selected' : '' }}>
-                                    Transfer Antar Bank (BI-FAST / Realtime Online)
+                                    Lainnya
                                 </option>
                             </select>
                         </div>

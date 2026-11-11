@@ -22,7 +22,63 @@
     $activeProjects    = (int) ($dash['active_projects'] ?? 0);
     $completedProjects = (int) ($dash['completed_projects'] ?? 0);
     $waitingReview     = (int) ($dash['waiting_review'] ?? 0);
-    $projectsList      = $dash['projects'] ?? [];
+    $projectsList      = is_array($dash['projects'] ?? null) ? $dash['projects'] : [];
+    $usingDemoData     = empty($projectsList)
+        && $totalProjects === 0
+        && $activeProjects === 0
+        && $completedProjects === 0
+        && $waitingReview === 0;
+
+    if ($usingDemoData) {
+        $projectsList = [
+            [
+                'title' => 'Sistem Informasi UMKM',
+                'description' => 'Pengembangan sistem informasi untuk operasional UMKM.',
+                'client_name' => 'PT. ABC Indonesia',
+                'status' => 'Berjalan',
+                'progress' => 75,
+            ],
+            [
+                'title' => 'Smart Farming IoT',
+                'description' => 'Implementasi IoT untuk pertanian presisi.',
+                'client_name' => 'CV. Tani Maju',
+                'status' => 'Review',
+                'progress' => 60,
+            ],
+            [
+                'title' => 'Website Company Profile',
+                'description' => 'Pembuatan website profil perusahaan.',
+                'client_name' => 'PT. DEF Solusi',
+                'status' => 'Selesai',
+                'progress' => 100,
+            ],
+            [
+                'title' => 'Aplikasi Manajemen Inventori',
+                'description' => 'Sistem inventori berbasis web.',
+                'client_name' => 'Dinas Pendidikan',
+                'status' => 'Berjalan',
+                'progress' => 40,
+            ],
+            [
+                'title' => 'IoT Monitoring Pertanian',
+                'description' => 'Monitoring lingkungan pertanian berbasis IoT.',
+                'client_name' => 'CV. Tani Maju',
+                'status' => 'Proposal',
+                'progress' => 20,
+            ],
+        ];
+        $totalProjects = 15;
+        $activeProjects = 9;
+        $completedProjects = 4;
+        $waitingReview = 3;
+        $dash['category_distribution'] = [
+            ['web' => 6],
+            ['iot' => 4],
+            ['app' => 3],
+            ['system' => 2],
+            ['other' => 0],
+        ];
+    }
 
     // category_distribution dari API berbentuk [{"web": 1}, ...] → ratakan lalu jumlahkan per kategori.
     $categoryCounts = [];
@@ -118,12 +174,20 @@
             </div>
 
             <div class="relative z-10 flex flex-col items-end gap-2 flex-shrink-0">
+                @if($usingDemoData)
+                    <span class="inline-flex items-center gap-1.5 rounded-lg border border-amber-100 bg-amber-50 px-3 py-1.5 text-[10px] font-bold text-amber-700">
+                        Preview data demo
+                    </span>
+                @endif
                 <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[11.5px] font-semibold px-3 py-1.5 rounded-lg hover:bg-[#DCEBFF] transition-colors" title="Ambil ulang data dashboard dari backend">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
                     Data terbaru
                 </a>
             </div>
         </div>
+
+        {{-- ── NOTIFIKASI & AKTIVITAS HIGHLIGHT ── --}}
+        <x-dashboard-notifications :notifications="$notifications ?? []" :unread-count="$unreadCount ?? 0" />
 
         {{-- ── 2. 4 STAT CARDS ── --}}
         @php
@@ -135,7 +199,7 @@
             ];
         @endphp
 
-        <div class="grid grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             @foreach($pmStats as $stat)
                 <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
             @endforeach
@@ -197,6 +261,9 @@
                             <div class="px-5 py-4 grid grid-cols-12 items-center hover:bg-slate-50/50 transition-colors">
                                 <div class="col-span-5 pr-4">
                                     <p class="font-bold text-[#1E293B] text-[13px] leading-tight">{{ $proj['title'] ?? '-' }}</p>
+                                    @if(!empty($proj['description']))
+                                        <p class="mt-1 truncate text-[10px] text-slate-400">{{ $proj['description'] }}</p>
+                                    @endif
                                 </div>
                                 <div class="col-span-3">
                                     <span class="text-[12px] font-medium text-slate-600">{{ $proj['client_name'] ?? '-' }}</span>

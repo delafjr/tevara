@@ -12,224 +12,107 @@
 </head>
 <body class="bg-[#F4F7FB] font-sans text-[#1E293B] antialiased min-h-screen"
       x-data="{
-          searchQuery: '',
-          activeCategory: 'Semua',
-          expanded: {
-              'PRJ-2026/014': true,
-              'PRJ-2026/008': false,
-              'PRJ-2026/021': false
-          },
+          expanded: {},
           handoverModalOpen: false,
           handoverProject: '',
-          handoverMessage: '',
           toggle(id) {
               this.expanded[id] = !this.expanded[id];
           },
           openHandoverForm(projectId) {
               this.handoverProject = projectId;
               this.handoverModalOpen = true;
-          },
-          matches(p) {
-              const matchCat = this.activeCategory === 'Semua' ||
-                  (this.activeCategory === 'Web Platform' && (p.category === 'Web' || p.category_badge.includes('Web') || p.title.includes('Web'))) ||
-                  (this.activeCategory === 'Mobile' && (p.category === 'Mobile' || p.title.includes('Mobile'))) ||
-                  (this.activeCategory === 'IoT & Hardware' && (p.category === 'IoT & Hardware' || p.title.includes('IoT') || p.title.includes('Sensor')));
-
-              const q = this.searchQuery.toLowerCase().trim();
-              if (!q) return matchCat;
-
-              const matchQuery = p.id.toLowerCase().includes(q) ||
-                  p.title.toLowerCase().includes(q) ||
-                  p.dosen.name.toLowerCase().includes(q) ||
-                  p.status.toLowerCase().includes(q);
-
-              return matchCat && matchQuery;
           }
       }">
 
 @php
-    $user = $user ?? session('user', []);
-    $userName = $user['name'] ?? 'Budi Santoso';
     $proposals = is_array($proposals ?? null) ? $proposals : [];
     $handoverProjects = $handoverProjects ?? [];
     $handoverProjectsAvailable = $handoverProjectsAvailable ?? false;
+    $error = $error ?? null;
+    $routePrefix = request()->routeIs('jurusan.*') ? 'jurusan' : 'klien';
 
-    $projectsData = [
-        [
-            'id'               => 'PRJ-2026/014',
-            'category'         => 'IoT & Hardware',
-            'category_badge'   => 'IoT & Web',
-            'status'           => 'Dalam Pengerjaan',
-            'status_type'      => 'running',
-            'title'            => 'Sistem Monitoring Rantai Pasok Terpadu (IoT & Web)',
-            'icon_type'        => 'iot',
-            'dates'            => '15 Agt 2026 — 25 Nov 2026',
-            'days_left'        => 'Sisa 56 Hari Kalender',
-            'progress'         => 72,
-            'dosen' => [
-                'initials'     => 'HK',
-                'name'         => 'Dr. Hendra Kusuma, M.T.',
-                'tag'          => 'DOSEN PEMBIMBING / PM',
-                'nidn'         => 'NIDN: 0012058401 • Lab Rekayasa Lunak',
-                'role_badge'   => 'Penanggung Jawab Teknis',
-            ],
-            'modules' => [
-                [
-                    'icon'     => 'lock',
-                    'title'    => 'Modul 1: Autentikasi & RBAC',
-                    'desc'     => 'Spesifikasi Single Sign-On (OAuth2), manajemen hak akses multi-role (Klien, Admin, Operator Gudang), enkripsi token sesi, dan pencatatan audit log terpusat.',
+    $formatProjectDate = static fn ($value) => $value
+        ? \Carbon\Carbon::parse($value)->translatedFormat('d M Y')
+        : 'Belum ditentukan';
+    $projectsData = collect($proposals)
+        ->filter(fn ($proposal) => is_array($proposal) && !empty($proposal['project_code']))
+        ->map(function ($proposal) use ($formatProjectDate) {
+            $projectCode = (string) $proposal['project_code'];
+            $targetDate = $proposal['target_completion_date'] ?? null;
+            $daysRemaining = $targetDate
+                ? \Carbon\Carbon::today()->diffInDays(\Carbon\Carbon::parse($targetDate)->startOfDay(), false)
+                : null;
+            $pm = $proposal['pm'] ?? [];
+            $pmName = $pm['name'] ?? 'Belum ditetapkan';
+            $pmInitials = collect(explode(' ', trim($pmName)))
+                ->filter()
+                ->take(2)
+                ->map(fn ($part) => mb_substr($part, 0, 1))
+                ->implode('');
+            $category = $proposal['category'] ?? 'Proyek';
+            $categoryAndTitle = strtolower($category . ' ' . ($proposal['title'] ?? ''));
+            $statusType = !empty($proposal['bast_eligible'])
+                ? 'uat'
+                : (!empty($proposal['client_approved']) ? 'complete' : 'running');
+            $modules = collect($proposal['modules'] ?? [])
+                ->filter(fn ($module) => is_array($module))
+                ->map(fn ($module) => [
+                    'icon' => 'file',
+                    'title' => $module['title'] ?? 'Modul',
+                    'desc' => $module['description'] ?? 'Tidak ada deskripsi modul.',
+                ])
+                ->values()
+                ->all();
+            $students = collect($proposal['team_members'] ?? [])
+                ->filter(fn ($member) => is_array($member))
+                ->map(fn ($member) => [
+                    'icon' => 'code',
+                    'name' => $member['name'] ?? 'Mahasiswa',
+                    'role' => $member['role'] ?? 'Anggota Tim',
+                ])
+                ->values()
+                ->all();
+            $displayStatus = $statusType === 'uat'
+                ? 'Siap Serah Terima'
+                : ($statusType === 'complete' ? 'Serah Terima Selesai' : ($proposal['status'] ?? 'Berjalan'));
+
+            return [
+                'id' => $projectCode,
+                'proposal_id' => $proposal['id'],
+                'category' => $category,
+                'status' => $displayStatus,
+                'status_type' => $statusType,
+                'title' => $proposal['title'] ?? 'Proyek TEVARA',
+                'icon_type' => str_contains($categoryAndTitle, 'mobile') ? 'mobile' : (str_contains($categoryAndTitle, 'iot') ? 'iot' : 'robot'),
+                'dates' => $formatProjectDate($proposal['start_date'] ?? null) . ' — ' . $formatProjectDate($targetDate),
+                'days_left' => $daysRemaining === null
+                    ? 'Target belum ditentukan'
+                    : ($daysRemaining >= 0 ? 'Sisa ' . $daysRemaining . ' Hari Kalender' : 'Terlambat ' . abs($daysRemaining) . ' Hari Kalender'),
+                'progress' => max(0, min(100, (int) ($proposal['overall_progress'] ?? 0))),
+                'bast_number' => $proposal['bast_number'] ?? null,
+                'handover_date' => $proposal['handover_date'] ?? null,
+                'repository_url' => $proposal['repository_url'] ?? null,
+                'documentation_url' => $proposal['documentation_url'] ?? null,
+                'maintenance' => $proposal['maintenance'] ?? [],
+                'dosen' => [
+                    'initials' => $pmInitials !== '' ? strtoupper($pmInitials) : 'PM',
+                    'name' => $pmName,
+                    'tag' => 'DOSEN PEMBIMBING / PM',
+                    'nidn' => 'NIDN: ' . ($pm['nidn'] ?? '—') . ' • ' . ($pm['department'] ?? 'Jurusan belum diisi'),
+                    'role_badge' => 'Penanggung Jawab Teknis',
                 ],
-                [
-                    'icon'     => 'signal',
-                    'title'    => 'Modul 2: Telemetri IoT Stream',
-                    'desc'     => 'Integrasi broker MQTT broker data logger, websocket real-time feed ke dashboard monitoring kondisi kontainer, dan visualisasi heatmap temperatur armada.',
-                ],
-                [
-                    'icon'     => 'file',
-                    'title'    => 'Modul 3: Laporan & Export Data',
-                    'desc'     => 'Format otomasi laporan kepatuhan suhu & kelembapan berkala, filter rentang tanggal, serta engine unduhan format PDF resmi dan spreadsheet Excel.',
-                ],
-            ],
-            'students' => [
-                [
-                    'icon'     => 'code',
-                    'name'     => 'Ahmad Rifai',
-                    'role'     => 'Fullstack Lead',
-                ],
-                [
-                    'icon'     => 'palette',
-                    'name'     => 'Siti Nurhaliza',
-                    'role'     => 'UI/UX Designer',
-                ],
-                [
-                    'icon'     => 'server',
-                    'name'     => 'Dimas Prasetyo',
-                    'role'     => 'Backend Engineer',
-                ],
-                [
-                    'icon'     => 'shield',
-                    'name'     => 'Kevin Sanjaya',
-                    'role'     => 'QA & Verification',
-                ],
-            ],
-        ],
-        [
-            'id'               => 'PRJ-2026/008',
-            'category'         => 'Mobile',
-            'category_badge'   => 'Mobile Platform',
-            'status'           => 'Tahap UAT & Validasi',
-            'status_type'      => 'uat',
-            'title'            => 'Aplikasi Mobile Portal Layanan Nasabah & Pembayaran Digital',
-            'icon_type'        => 'mobile',
-            'dates'            => '01 Jul 2026 — 30 Okt 2026',
-            'days_left'        => 'Sisa 12 Hari Kalender',
-            'progress'         => 88,
-            'dosen' => [
-                'initials'     => 'IM',
-                'name'         => 'Irfan Maulana, S.T., M.Kom.',
-                'tag'          => 'DOSEN PEMBIMBING / PM',
-                'nidn'         => 'NIDN: 0019088203 • Lab Mobile Computing',
-                'role_badge'   => 'Penanggung Jawab Teknis',
-            ],
-            'modules' => [
-                [
-                    'icon'     => 'lock',
-                    'title'    => 'Modul 1: Digital KYC & Biometrik',
-                    'desc'     => 'Verifikasi identitas nasabah, pemindaian e-KTP dan integrasi biometrik face recognition terenkripsi sesuai standar OJK.',
-                ],
-                [
-                    'icon'     => 'signal',
-                    'title'    => 'Modul 2: Payment Gateway & QRIS Dinamis',
-                    'desc'     => 'Integrasi multi-channel pembayaran perbankan, mutasi transaksi real-time, dan otomasi settlement rekening escrow.',
-                ],
-                [
-                    'icon'     => 'file',
-                    'title'    => 'Modul 3: Push Notification & Audit Trailing',
-                    'desc'     => 'Notifikasi instan via FCM/APNs, ringkasan transaksi bulanan, serta pencatatan audit log forensik transaksi perbankan.',
-                ],
-            ],
-            'students' => [
-                [
-                    'icon'     => 'code',
-                    'name'     => 'Fajar Nugroho',
-                    'role'     => 'Mobile Flutter Lead',
-                ],
-                [
-                    'icon'     => 'palette',
-                    'name'     => 'Nadia Amanda',
-                    'role'     => 'UI/UX Specialist',
-                ],
-                [
-                    'icon'     => 'server',
-                    'name'     => 'Rizky Pratama',
-                    'role'     => 'API & Backend Specialist',
-                ],
-                [
-                    'icon'     => 'shield',
-                    'name'     => 'Dewi Lestari',
-                    'role'     => 'Security & QA Engineer',
-                ],
-            ],
-        ],
-        [
-            'id'               => 'PRJ-2026/021',
-            'category'         => 'IoT & Hardware',
-            'category_badge'   => 'Hardware & IoT',
-            'status'           => 'Dalam Pengerjaan',
-            'status_type'      => 'running',
-            'title'            => 'Smart Warehouse Environmental Sensor & Desktop Control Unit',
-            'icon_type'        => 'robot',
-            'dates'            => '10 Sep 2026 — 20 Des 2026',
-            'days_left'        => 'Sisa 68 Hari Kalender',
-            'progress'         => 88,
-            'dosen' => [
-                'initials'     => 'BW',
-                'name'         => 'Bambang Wijaya, Ph.D.',
-                'tag'          => 'DOSEN PEMBIMBING / PM',
-                'nidn'         => 'NIDN: 0028047501 • Lab Mekatronika & IoT',
-                'role_badge'   => 'Penanggung Jawab Teknis',
-            ],
-            'modules' => [
-                [
-                    'icon'     => 'signal',
-                    'title'    => 'Modul 1: Firmware Sensor ESP32 & LoRa',
-                    'desc'     => 'Pembacaan multi-sensor lingkungan gudang (suhu, kelembapan, gas) transmisi nirkabel jarak jauh via protokol LoRaWAN.',
-                ],
-                [
-                    'icon'     => 'lock',
-                    'title'    => 'Modul 2: Desktop Control App (Tauri / Electron)',
-                    'desc'     => 'Antarmuka visualisasi layout denah gudang interaktif dengan pemicu alarm otomatis saat melewati ambang batas toleransi.',
-                ],
-                [
-                    'icon'     => 'file',
-                    'title'    => 'Modul 3: Sinkronisasi Cloud & Failover Cache',
-                    'desc'     => 'Penyimpanan lokal SQLite offline-first dengan pipeline sinkronisasi otomatis terenkripsi saat koneksi cloud online kembali.',
-                ],
-            ],
-            'students' => [
-                [
-                    'icon'     => 'code',
-                    'name'     => 'Bayu Setiawan',
-                    'role'     => 'Embedded System Lead',
-                ],
-                [
-                    'icon'     => 'palette',
-                    'name'     => 'Anisa Rahmawati',
-                    'role'     => 'Desktop UI Engineer',
-                ],
-                [
-                    'icon'     => 'server',
-                    'name'     => 'Galih Wicaksono',
-                    'role'     => 'Hardware Architect',
-                ],
-                [
-                    'icon'     => 'shield',
-                    'name'     => 'Rian Saputra',
-                    'role'     => 'Field Tester & QA',
-                ],
-            ],
-        ],
-    ];
+                'modules' => $modules,
+                'students' => $students,
+            ];
+        })
+        ->values()
+        ->all();
+    $totalProjectCount = count($projectsData);
+    $activeProjectCount = count(array_filter($projectsData, fn ($project) => $project['status_type'] === 'running'));
+    $averageProjectProgress = $totalProjectCount > 0
+        ? round(array_sum(array_column($projectsData, 'progress')) / $totalProjectCount, 1)
+        : 0;
+    $totalModuleCount = array_sum(array_map(fn ($project) => count($project['modules']), $projectsData));
 @endphp
 
 <div class="flex min-h-screen">
@@ -257,17 +140,18 @@
             @if(session('success'))
                 <div role="status" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
             @endif
-            @if($errors->any())
+            @if(!empty($errors) && $errors->any())
                 <div role="alert" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                     <p class="font-semibold">BAST belum dapat dikirim:</p>
                     <ul class="mt-1 list-disc pl-5">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
+                        @foreach($errors->all() as $errItem)
+                            <li>{{ $errItem }}</li>
                         @endforeach
                     </ul>
                 </div>
             @endif
 
+            @if($routePrefix === 'klien')
             <section class="border-b border-slate-200 pb-5" aria-labelledby="bast-ready-title">
                 <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
                     <div>
@@ -297,6 +181,7 @@
                     <p class="mt-3 text-xs text-amber-800">Data kelayakan BAST belum dapat dimuat dari backend.</p>
                 @endif
             </section>
+            @endif
 
             {{-- == ( 3 kartu ringkasan metrik statistik ) == --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -306,10 +191,10 @@
                     <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-3">TOTAL PROYEK PORTOFOLIO</p>
                     <div class="flex items-center justify-between gap-3">
                         <div class="flex items-center gap-2.5">
-                            <span class="text-2xl font-bold text-slate-800">3 Proyek</span>
+                            <span class="text-2xl font-bold text-slate-800">{{ $totalProjectCount }} Proyek</span>
                             <span class="text-[11px] font-semibold text-[#0B3B82] bg-[#EAF3FF] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                                Aktif Berjalan
+                                {{ $activeProjectCount }} Aktif
                             </span>
                         </div>
                         <div class="w-10 h-10 rounded-xl bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0">
@@ -329,9 +214,9 @@
                     <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-3">RATA - RATA PROGRES</p>
                     <div class="flex items-center justify-between gap-3">
                         <div class="space-y-1.5">
-                            <span class="text-2xl font-bold text-slate-800">68.4%</span>
+                            <span class="text-2xl font-bold text-slate-800">{{ number_format($averageProjectProgress, 1) }}%</span>
                             <div class="w-28 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-[#0B3B82] rounded-full" style="width: 68.4%"></div>
+                                <div class="h-full bg-[#0B3B82] rounded-full" style="width: {{ $averageProjectProgress }}%"></div>
                             </div>
                         </div>
                         <div class="w-10 h-10 rounded-xl bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0">
@@ -348,7 +233,7 @@
                     <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-3">DISTRIBUSI FASE PENGERJAAN</p>
                     <div class="flex items-center justify-between gap-3">
                         <div>
-                            <span class="text-2xl font-bold text-slate-800">3 Milestone</span>
+                            <span class="text-2xl font-bold text-slate-800">{{ $totalModuleCount }} Modul</span>
                         </div>
                         <div class="w-10 h-10 rounded-xl bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0">
                             {{-- Clipboard / Checklist Icon --}}
@@ -357,47 +242,6 @@
                             </svg>
                         </div>
                     </div>
-                </div>
-
-            </div>
-
-            {{-- == ( filter & search bar ) == --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-2.5 flex flex-col md:flex-row items-center justify-between gap-3">
-
-                {{-- Search Box --}}
-                <div class="relative flex-1 w-full">
-                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
-                        </svg>
-                    </span>
-                    <input type="text"
-                           x-model="searchQuery"
-                           placeholder="Cari kode proyek, judul deliverable, nama dosen..."
-                           class="w-full bg-[#F8FAFC] border border-slate-200/70 rounded-xl pl-10 pr-4 py-2.5 text-xs md:text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0B3B82] focus:bg-white transition">
-                </div>
-
-                {{-- Filter Pills --}}
-                <div class="flex items-center gap-1.5 flex-shrink-0 flex-wrap">
-                    @php
-                        $categories = [
-                            'Semua'          => 'Semua (3)',
-                            'Web Platform'   => 'Web Platform',
-                            'Mobile'         => 'Mobile',
-                            'IoT & Hardware' => 'IoT & Hardware',
-                        ];
-                    @endphp
-
-                    @foreach($categories as $catKey => $catLabel)
-                        <button type="button"
-                                @click="activeCategory = '{{ $catKey }}'"
-                                :class="activeCategory === '{{ $catKey }}'
-                                    ? 'bg-[#0B3B82] text-white shadow-xs font-semibold'
-                                    : 'bg-transparent text-slate-600 hover:bg-slate-100 font-medium'"
-                                class="px-4 py-2 rounded-xl text-xs transition cursor-pointer">
-                            {{ $catLabel }}
-                        </button>
-                    @endforeach
                 </div>
 
             </div>
@@ -427,7 +271,7 @@
                             <h2 class="text-sm font-bold text-slate-800">Proposal &amp; Pengajuan Proyek Anda</h2>
                             <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#EAF3FF] text-[#0B3B82]">{{ count($proposals) }}</span>
                         </div>
-                        <a href="{{ route('klien.ajukan-proyek') }}" class="text-xs font-semibold text-[#0B3B82] hover:underline inline-flex items-center gap-1">
+                        <a href="{{ route($routePrefix . '.ajukan-proyek') }}" class="text-xs font-semibold text-[#0B3B82] hover:underline inline-flex items-center gap-1">
                             + Ajukan Proyek Baru
                         </a>
                     </div>
@@ -502,12 +346,8 @@
             {{-- == ( daftar kartu proyek ) == --}}
             <div class="space-y-4">
 
-                @foreach($projectsData as $proj)
-                <div x-show="matches(@js($proj))"
-                     x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="opacity-0 translate-y-1"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     class="bg-white rounded-2xl border border-slate-100 shadow-xs transition hover:shadow-md overflow-hidden">
+                @forelse($projectsData as $proj)
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs transition hover:shadow-md overflow-hidden">
 
                     {{-- == CARD HEADER (COLLAPSED / EXPANDED TOP BAR) == --}}
                     <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-5">
@@ -515,7 +355,7 @@
                         <div class="flex items-start gap-4 flex-1">
                             {{-- Project Icon --}}
                             <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-xs
-                                        {{ $proj['id'] === 'PRJ-2026/014' ? 'bg-[#0B3B82] text-white' : 'bg-[#EAF3FF] text-[#0B3B82]' }}">
+                                        bg-[#EAF3FF] text-[#0B3B82]">
                                 @if($proj['icon_type'] === 'iot')
                                     {{-- IoT / Broadcast Waves Icon --}}
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
@@ -598,18 +438,17 @@
                                 </div>
                             </div>
 
-                            {{-- Lembar UAT Button --}}
-                            @php
-                                $propIdNum = (int) (preg_replace('/[^0-9]/', '', $proj['id'] ?? '') ?: 1);
-                            @endphp
-                            <a href="{{ route('klien.projek-saya.uat', $propIdNum) }}"
-                               class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold px-3.5 py-2 rounded-xl inline-flex items-center gap-1.5 transition flex-shrink-0 shadow-2xs">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.5 2h7M7 16h10"/>
-                                </svg>
-                                Lembar UAT
-                            </a>
+
+                            @if($routePrefix === 'klien')
+                                <a href="{{ route('klien.projek-saya.uat', $proj['proposal_id']) }}"
+                                   class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold px-3.5 py-2 rounded-xl inline-flex items-center gap-1.5 transition flex-shrink-0 shadow-2xs">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.5 2h7M7 16h10"/>
+                                    </svg>
+                                    Lembar UAT
+                                </a>
+                            @endif
 
                             {{-- Accordion Toggle Button --}}
                             <button type="button"
@@ -765,7 +604,7 @@
 
                         </div>
 
-                        @if($proj['status_type'] === 'uat')
+                        @if($proj['status_type'] === 'uat' && $routePrefix === 'klien')
                         <section class="border-t border-slate-100 pt-5 space-y-4" aria-labelledby="bast-title-{{ $proj['id'] }}">
                             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                                 <div>
@@ -774,7 +613,7 @@
                                 </div>
                                 <span class="inline-flex w-fit items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
                                     <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-                                    Menunggu persetujuan UAT
+                                    UAT Lulus
                                 </span>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
@@ -787,33 +626,50 @@
                                     <p class="mt-1 text-slate-500">Lama garansi, tanggal mulai, tanggal selesai, dan catatan pemeliharaan</p>
                                 </div>
                             </div>
-                            <button type="button" disabled
-                                    class="inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-slate-200 bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-400"
-                                    title="Gunakan daftar proyek siap serah terima setelah UAT PASSED">
-                                Menunggu hasil UAT PASSED
+                            <button type="button" @click="openHandoverForm(@js($proj['id']))"
+                                    class="inline-flex items-center gap-2 rounded-lg bg-[#0B3B82] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#082d64]">
+                                Isi formulir BAST
                             </button>
                         </section>
+                        @endif
+                        @if($proj['status_type'] === 'complete')
+                            <section class="border-t border-slate-100 pt-5 space-y-3">
+                                <h3 class="text-sm font-bold text-slate-800">Berita Acara Serah Terima</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="mb-1 block text-xs font-semibold text-slate-700">Nomor BAST</label>
+                                        <input type="text" value="{{ $proj['bast_number'] ?? '—' }}" readonly class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-slate-600" aria-readonly="true">
+                                    </div>
+                                    <div>
+                                        <label class="mb-1 block text-xs font-semibold text-slate-700">Tanggal serah terima resmi</label>
+                                        <input type="date" value="{{ $proj['handover_date'] ?? '' }}" readonly disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-slate-600 cursor-not-allowed" aria-readonly="true">
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-semibold text-slate-700">Masa garansi</p>
+                                        <p class="mt-1 text-xs text-slate-500">{{ $proj['maintenance']['maintenance_warranty_months'] ?? 0 }} bulan · mulai {{ $proj['maintenance']['maintenance_start_date'] ?? '—' }} · berakhir {{ $proj['maintenance']['maintenance_end_date'] ?? '—' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-semibold text-slate-700">Repository source code</p>
+                                        @if($proj['repository_url'])
+                                            <a href="{{ $proj['repository_url'] }}" target="_blank" rel="noopener noreferrer" class="mt-1 block truncate text-xs text-blue-700 underline">{{ $proj['repository_url'] }}</a>
+                                        @else
+                                            <p class="mt-1 text-xs text-slate-500">Belum tercatat</p>
+                                        @endif
+                                        <p class="mt-2 text-xs text-slate-500">Dokumentasi API: {{ $proj['documentation_url'] ? basename($proj['documentation_url']) : 'Belum terlampir' }}</p>
+                                    </div>
+                                </div>
+                            </section>
                         @endif
 
                     </div>
 
                 </div>
-                @endforeach
-
-                {{-- Empty Search / Filter State --}}
-                <div x-show="!$el.previousElementSibling || searchQuery && [ 'PRJ-2026/014', 'PRJ-2026/008', 'PRJ-2026/021' ].every(id => !matches(projectsData.find(p => p.id === id)))"
-                     style="display: none;"
-                     class="bg-white rounded-2xl border border-slate-100 p-12 text-center shadow-xs">
-                    <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
-                        </svg>
+                @empty
+                    <div class="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center">
+                        <p class="text-sm font-semibold text-slate-700">Belum ada proyek aktif.</p>
+                        <p class="mt-1 text-xs text-slate-500">Proyek akan muncul di sini setelah proposal disetujui.</p>
                     </div>
-                    <h3 class="text-sm font-bold text-slate-700">Tidak ada proyek ditemukan</h3>
-                    <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                        Coba gunakan kata kunci pencarian lain atau pilih kategori yang berbeda.
-                    </p>
-                </div>
+                @endforelse
 
             </div>
 
@@ -834,7 +690,7 @@
                 </div>
                 <button type="button" @click="handoverModalOpen = false" aria-label="Tutup formulir BAST" class="text-xl leading-none text-slate-500 hover:text-slate-800">&times;</button>
             </div>
-            <form method="POST" action="{{ route('klien.projek-saya.bast.store') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+            <form method="POST" enctype="multipart/form-data" action="{{ route('klien.projek-saya.bast.store') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 @csrf
                 <input type="hidden" name="project_code" :value="handoverProject">
                 <div>
@@ -842,20 +698,18 @@
                     <input type="text" value="Diterbitkan sistem setelah UAT disetujui" disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-slate-500">
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tanggal serah terima</label>
-                    <input type="date" name="handover_date" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tanggal serah terima resmi (read-only)</label>
+                    <input type="date" value="{{ now()->toDateString() }}" readonly disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-slate-500 cursor-not-allowed" aria-readonly="true">
+                    <p class="mt-1 text-[11px] text-slate-400">Tanggal resmi dicatat otomatis oleh sistem saat persetujuan dikirim.</p>
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tautan repositori</label>
-                    <input type="url" name="repository_url" placeholder="https://" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Repository source code</label>
+                    <input type="url" name="repository_url" placeholder="https://github.com/..." required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tautan dokumentasi</label>
-                    <input type="url" name="documentation_url" placeholder="https://" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tautan panduan pengguna</label>
-                    <input type="url" name="user_manual_url" placeholder="https://" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Lampiran fisik dokumentasi API</label>
+                    <input type="file" name="documentation_file" accept=".pdf,.doc,.docx" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                    <p class="mt-1 text-[11px] text-slate-400">PDF, DOC, atau DOCX, maksimal 10 MB.</p>
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-semibold text-slate-700">Nama penandatangan klien</label>
@@ -865,13 +719,8 @@
                     <label class="mb-1 block text-xs font-semibold text-slate-700">Masa garansi (bulan)</label>
                     <input type="number" name="maintenance_warranty_months" min="0" value="3" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
                 </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tanggal mulai pemeliharaan</label>
-                    <input type="date" name="maintenance_start_date" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tanggal selesai pemeliharaan</label>
-                    <input type="date" name="maintenance_end_date" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                <div class="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+                    Garansi mulai otomatis sehari setelah serah terima resmi.
                 </div>
                 <label class="flex items-center gap-2 text-xs font-medium text-slate-700">
                     <input type="checkbox" name="client_approved" value="1" required class="rounded border-slate-300 text-[#0B3B82]">

@@ -14,189 +14,26 @@
 
 @php
     $user = $user ?? session('user', []);
-    $userName = $user['name'] ?? 'Budi Santoso';
-
-    $hasRealBilling = !empty($projectsBilling);
-    if (!$hasRealBilling) {
-        $projectsBilling = [
-            [
-                'id'             => 'PRJ-2026/014',
-                'proposal_id'    => 1,
-                'spk'            => 'SPK/TEFA/2026/008',
-                'spk_status'     => 'SPK Ditandatangani',
-                'spk_status_type'=> 'success',
-                'title'          => 'Sistem Monitoring Rantai Pasok Terpadu (IoT & Web)',
-                'period'         => 'Periode: 01 Agt 2026 s.d. 30 Nov 2026 • Skema: 3 Termin (30% - 40% - 30%)',
-                'total_value'    => 'Rp 75.000.000',
-                'paid_percent'   => 66.6,
-                'paid_status'    => '66.6% Terbayar',
-                'has_open'       => false,
-                'termins' => [
-                    [
-                        'id'           => 1,
-                        'proposal_id'  => 1,
-                        'name'         => 'Termin 1 — Down Payment (30%)',
-                        'invoice_number' => 'Belum tersedia',
-                        'term_sequence'  => 1,
-                        'desc'         => 'Kick-off, Spesifikasi Teknis, dan Persetujuan Arsitektur Sistem',
-                        'nominal'      => 'Rp 22.500.000',
-                        'channel'      => 'Transfer Bank Mandiri (Giro)',
-                        'channel_icon' => 'bank',
-                        'status'       => 'verified',
-                        'status_label' => 'VERIFIED (Lunas)',
-                        'due_date'     => null,
-                        'can_download' => true,
-                        'can_upload'   => false,
-                    ],
-                    [
-                        'id'           => 2,
-                        'proposal_id'  => 1,
-                        'name'         => 'Termin 2 — Progres Lapangan & Integrasi IoT (40%)',
-                        'invoice_number' => 'Belum tersedia',
-                        'term_sequence'  => 2,
-                        'desc'         => 'Implementasi Firmware Sensor, Broker MQTT, dan Visualisasi Web',
-                        'nominal'      => 'Rp 30.000.000',
-                        'channel'      => 'Transfer Bank Mandiri (Giro)',
-                        'channel_icon' => 'bank',
-                        'status'       => 'verified',
-                        'status_label' => 'VERIFIED (Lunas)',
-                        'due_date'     => null,
-                        'can_download' => true,
-                        'can_upload'   => false,
-                    ],
-                    [
-                        'id'           => 3,
-                        'proposal_id'  => 1,
-                        'name'         => 'Termin 3 — Final UAT & Serah Terima (30%)',
-                        'invoice_number' => 'Belum tersedia',
-                        'term_sequence'  => 3,
-                        'desc'         => 'Uji Terima Pengguna (UAT) Final, Pelatihan Operator, & Handover',
-                        'nominal'      => 'Rp 22.500.000',
-                        'channel'      => 'Transfer Bank Mandiri (Giro)',
-                        'channel_icon' => 'card',
-                        'status'       => 'pending',
-                        'status_label' => 'BELUM TERBUKA',
-                        'due_date'     => 'Est. 25 Nov 2026',
-                        'can_download' => false,
-                        'can_upload'   => false,
-                    ],
-                ],
-            ],
-            [
-                'id'             => 'PRJ-2026/009',
-                'proposal_id'    => 2,
-                'spk'            => 'SPK/TEFA/2026/005',
-                'spk_status'     => 'SPK Aktif',
-                'spk_status_type'=> 'success',
-                'has_open'       => true,
-                'open_badge'     => '! Tagihan Terbuka',
-                'title'          => 'Aplikasi Mobile Portal Layanan Nasabah & Pembayaran Digital',
-                'period'         => 'Periode: 10 Mei 2026 s.d. 30 Okt 2026 • Skema: 2 Termin (DP 50% & Pelunasan 50%)',
-                'total_value'    => 'Kontrak: Rp 60.000.000',
-                'paid_percent'   => 50.0,
-                'paid_status'    => '50.0%',
-                'active_action'  => 'Bayar Termin 2',
-                'termins' => [
-                    [
-                        'id'           => 4,
-                        'proposal_id'  => 2,
-                        'name'         => 'Termin 1 — Down Payment (50%)',
-                        'invoice_number' => 'Belum tersedia',
-                        'term_sequence'  => 1,
-                        'desc'         => 'Kick-off & Approval System Architecture & UI/UX',
-                        'nominal'      => 'Rp 30.000.000',
-                        'channel'      => 'Transfer Bank Mandiri (Giro)',
-                        'channel_icon' => 'bank',
-                        'status'       => 'verified',
-                        'status_label' => 'VERIFIED (Lunas)',
-                        'due_date'     => null,
-                        'can_download' => true,
-                        'can_upload'   => false,
-                    ],
-                    [
-                        'id'           => 5,
-                        'proposal_id'  => 2,
-                        'name'         => 'Termin 2 — Pelunasan & Deployment (50%)',
-                        'invoice_number' => 'Belum tersedia',
-                        'term_sequence'  => 2,
-                        'is_urgent'    => true,
-                        'desc'         => 'UAT Final, User Training, & Penyerahan Source Code',
-                        'nominal'      => 'Rp 30.000.000',
-                        'channel'      => 'Transfer Bank Mandiri (Giro)',
-                        'channel_icon' => 'card',
-                        'status'       => 'unpaid',
-                        'status_label' => 'MENUNGGU PEMBAYARAN',
-                        'due_date'     => 'Jatuh Tempo: 15 Okt 2026',
-                        'can_download' => false,
-                        'can_upload'   => true,
-                    ],
-                ],
-            ],
-            [
-                'id'             => 'PRJ-2026/021',
-                'proposal_id'    => 3,
-                'spk'            => 'SPK/TEFA/2026/012',
-                'spk_status'     => 'Kontrak Aktif',
-                'spk_status_type'=> 'success',
-                'title'          => 'Smart Warehouse Environmental Sensor & Desktop Control Unit',
-                'period'         => 'Periode: 01 Sep 2026 s.d. 15 Jan 2027 • Skema: 3 Termin (DP 40% - Progres 30% - UAT 30%)',
-                'total_value'    => 'Nilai: Rp 50.000.000',
-                'paid_percent'   => 40.0,
-                'paid_status'    => '40.0% Terbayar',
-                'has_open'       => false,
-                'termins' => [
-                    [
-                        'id'           => 6,
-                        'proposal_id'  => 3,
-                        'name'         => 'Termin 1 — Down Payment (40%)',
-                        'invoice_number' => 'Belum tersedia',
-                        'term_sequence'  => 1,
-                        'desc'         => 'Pengadaan Perangkat Keras Sensor & Desain Arsitektur Hardware',
-                        'nominal'      => 'Rp 20.000.000',
-                        'channel'      => 'Mandiri Giro',
-                        'channel_icon' => 'bank',
-                        'status'       => 'verified',
-                        'status_label' => 'VERIFIED (Lunas)',
-                        'due_date'     => null,
-                        'can_download' => true,
-                        'can_upload'   => false,
-                    ],
-                    [
-                        'id'           => 7,
-                        'proposal_id'  => 3,
-                        'name'         => 'Termin 2 — Progres Pengerjaan & Modul Desktop (30%)',
-                        'invoice_number' => 'Belum tersedia',
-                        'term_sequence'  => 2,
-                        'desc'         => 'Pengembangan GUI Desktop & Uji Kalibrasi Sensor Suhu Gudang',
-                        'nominal'      => 'Rp 15.000.000',
-                        'channel'      => 'Transfer Bank Mandiri (Giro)',
-                        'channel_icon' => 'card',
-                        'status'       => 'verifying',
-                        'status_label' => 'DALAM VERIFIKASI',
-                        'due_date'     => 'Sedang Diverifikasi Keuangan TEFA',
-                        'can_download' => false,
-                        'can_upload'   => false,
-                    ],
-                    [
-                        'id'           => 8,
-                        'proposal_id'  => 3,
-                        'name'         => 'Termin 3 — UAT & Deployment Akhir (30%)',
-                        'invoice_number' => 'Belum tersedia',
-                        'term_sequence'  => 3,
-                        'desc'         => 'Instalasi Lapangan & Serah Terima Unit Kendali Desktop',
-                        'nominal'      => 'Rp 15.000.000',
-                        'channel'      => 'Mandiri Giro',
-                        'channel_icon' => 'card',
-                        'status'       => 'pending',
-                        'status_label' => 'BELUM TERBUKA',
-                        'due_date'     => 'Est. 15 Jan 2027',
-                        'can_download' => false,
-                        'can_upload'   => false,
-                    ],
-                ],
-            ],
-        ];
-    }
+    $projectsBilling = is_array($projectsBilling ?? null) ? $projectsBilling : [];
+    $billingTerms = collect($projectsBilling)->flatMap(fn ($project) => $project['termins'] ?? [])->values();
+    $totalBilled = $billingTerms->sum(fn ($term) => (float) ($term['amount'] ?? 0));
+    $totalVerified = $billingTerms->filter(fn ($term) => ($term['status'] ?? '') === 'verified')->sum(fn ($term) => (float) ($term['amount'] ?? 0));
+    $totalVerifying = $billingTerms->filter(fn ($term) => ($term['status'] ?? '') === 'verifying')->sum(fn ($term) => (float) ($term['amount'] ?? 0));
+    $totalOpen = $billingTerms->filter(fn ($term) => in_array(($term['status'] ?? ''), ['unpaid', 'rejected', 'pending'], true))->sum(fn ($term) => (float) ($term['amount'] ?? 0));
+    $verifiedPercent = $totalBilled > 0 ? round($totalVerified / $totalBilled * 100, 1) : 0;
+    $verifyingPercent = $totalBilled > 0 ? round($totalVerifying / $totalBilled * 100, 1) : 0;
+    $openPercent = $totalBilled > 0 ? max(0, 100 - $verifiedPercent - $verifyingPercent) : 0;
+    $urgentTerm = $billingTerms->first(fn ($term) => !empty($term['can_upload']));
+    $urgentProposalId = $urgentTerm['proposal_id'] ?? null;
+    $urgentPaymentId = $urgentTerm['id'] ?? null;
+    $urgentProject = collect($projectsBilling)->first(
+        fn ($project) => (int) ($project['proposal_id'] ?? 0) === (int) $urgentProposalId
+    );
+    $statusCounts = [
+        'Menunggu Bayar' => $billingTerms->whereIn('status', ['unpaid', 'rejected', 'pending'])->count(),
+        'Dalam Verifikasi' => $billingTerms->where('status', 'verifying')->count(),
+        'Lunas' => $billingTerms->where('status', 'verified')->count(),
+    ];
 @endphp
 
 <div class="flex min-h-screen"
@@ -234,7 +71,7 @@
 
              if (this.activeStatusFilter === 'Semua') return true;
              if (this.activeStatusFilter === 'Menunggu Bayar') {
-                 return p.termins.some(t => t.status === 'unpaid');
+                 return p.termins.some(t => ['unpaid', 'rejected'].includes(t.status));
              }
              if (this.activeStatusFilter === 'Dalam Verifikasi') {
                  return p.termins.some(t => t.status === 'verifying');
@@ -312,66 +149,42 @@
                         <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5"/>
                         </svg>
-                        <span>Rabu, 30 September 2026</span>
+                        <span>{{ now()->translatedFormat('l, d F Y') }}</span>
                     </div>
                     <div class="inline-flex items-center gap-1 text-[11px] text-slate-500 font-medium">
                         <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
                         </svg>
-                        <span>Sync Otomatis: <strong class="text-slate-700">Aktif</strong> (Cache 60s)</span>
+                        <span>Data tagihan <strong class="text-slate-700">{{ empty($error) ? 'tersinkron dari database' : 'belum tersinkron' }}</strong></span>
                     </div>
                 </div>
             </div>
 
-            {{-- == ( kartu metrik nilai kontrak & distribusi termin ) == --}}
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 md:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-
-                {{-- Sisi Kiri: Total Nilai Kontrak --}}
-                <div class="space-y-1.5 flex-1">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400">TOTAL NILAI KONTRAK TERIKAT SPK</p>
-                    <div class="text-3xl lg:text-[36px] font-extrabold text-slate-800 tracking-tight">
-                        Rp 185.000.000
-                    </div>
-                    <div class="inline-flex items-center gap-1.5 text-xs text-slate-500 pt-1 font-medium">
-                        <span class="w-2 h-2 rounded-full bg-[#0B3B82]"></span>
-                        <span>3 Proyek Aktif Terikat Dokumen SPK Sah</span>
-                    </div>
+            <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" aria-label="Ringkasan tagihan">
+                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Total Tagihan</p>
+                    <p class="mt-2 text-xl font-extrabold text-slate-800">Rp {{ number_format($totalBilled, 0, ',', '.') }}</p>
+                    <p class="mt-1 text-xs text-slate-500">{{ $billingTerms->count() }} termin tercatat</p>
                 </div>
-
-                {{-- Sisi Kanan: Distribusi Termin Pembayaran --}}
-                <div class="space-y-3 w-full lg:w-[460px] flex-shrink-0">
-                    <div class="flex items-center justify-between text-xs font-bold text-slate-700">
-                        <span>Distribusi Termin Pembayaran</span>
-                        <span class="text-[#0B3B82]">Realisasi 60.8%</span>
-                    </div>
-
-                    {{-- Multi-color segmented progress bar --}}
-                    <div class="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex gap-0.5">
-                        <div class="h-full bg-emerald-500 rounded-l-full transition-all duration-500" style="width: 60.8%" title="Terverifikasi: 60.8%"></div>
-                        <div class="h-full bg-[#FFB800] transition-all duration-500" style="width: 17.6%" title="Verifikasi: 17.6%"></div>
-                        <div class="h-full bg-[#0B3B82] rounded-r-full transition-all duration-500" style="width: 21.6%" title="Terbuka: 21.6%"></div>
-                    </div>
-
-                    {{-- Legend --}}
-                    <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium pt-0.5">
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span>Terverifikasi (60.8%)</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-[#FFB800]"></span>
-                            <span>Verifikasi (17.6%)</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-[#0B3B82]"></span>
-                            <span>Terbuka (21.6%)</span>
-                        </div>
-                    </div>
+                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Terverifikasi</p>
+                    <p class="mt-2 text-xl font-extrabold text-emerald-700">Rp {{ number_format($totalVerified, 0, ',', '.') }}</p>
+                    <p class="mt-1 text-xs text-slate-500">{{ $verifiedPercent }}% dari total tagihan</p>
                 </div>
-
-            </div>
+                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Dalam Verifikasi</p>
+                    <p class="mt-2 text-xl font-extrabold text-amber-700">Rp {{ number_format($totalVerifying, 0, ',', '.') }}</p>
+                    <p class="mt-1 text-xs text-slate-500">{{ $statusCounts['Dalam Verifikasi'] }} termin</p>
+                </div>
+                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Menunggu Pembayaran</p>
+                    <p class="mt-2 text-xl font-extrabold text-[#0B3B82]">Rp {{ number_format($totalOpen, 0, ',', '.') }}</p>
+                    <p class="mt-1 text-xs text-slate-500">{{ $statusCounts['Menunggu Bayar'] }} termin</p>
+                </div>
+            </section>
 
             {{-- == ( banner peringatan tindakan : unggah bukti pembayaran termin berjalan ) == --}}
+            @if($urgentTerm && $urgentProject)
             <div class="bg-gradient-to-r from-[#EFF5FF] to-[#FAF5E8] border border-blue-100/90 rounded-2xl p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
 
                 <div class="flex items-start gap-4">
@@ -389,51 +202,33 @@
                             </span>
                             <span class="bg-red-50 text-red-600 text-[10.5px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
                                 <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                                Jatuh Tempo: 15 Okt 2026
+                                {{ $urgentTerm['due_date'] ?? 'Jatuh tempo belum ditetapkan' }}
                             </span>
                         </div>
 
                         <h2 class="text-base font-bold text-slate-800 leading-snug">
-                            Unggah Bukti Pembayaran Termin Berjalan (Termin 2)
+                            Unggah Bukti Pembayaran {{ $urgentTerm['name'] ?? 'Termin' }}
                         </h2>
 
                         <p class="text-xs text-slate-500 leading-relaxed max-w-2xl">
-                            Proyek <strong class="text-slate-700">Aplikasi Mobile Portal Layanan Nasabah (PRJ-2026/009)</strong> siap untuk proses pelunasan 50% (Rp 30.000.000). Silakan unggah slip transaksi atau bukti transfer bank guna mempercepat penerbitan kwitansi sah bendahara Politeknik.
+                            Proyek <strong class="text-slate-700">{{ $urgentProject['title'] }}</strong> memiliki tagihan {{ $urgentTerm['invoice_number'] ?? '' }} sebesar {{ $urgentTerm['nominal'] ?? '—' }} yang menunggu pembayaran.
                         </p>
                     </div>
                 </div>
 
                 <div class="flex-shrink-0">
-                    @php
-                        // Cari termin urgent yang dapat diupload dari data projectsBilling
-                        $urgentProposalId = null;
-                        $urgentPaymentId  = null;
-                        foreach ($projectsBilling as $_proj) {
-                            foreach ($_proj['termins'] ?? [] as $_t) {
-                                if (!empty($_t['can_upload'])) {
-                                    $urgentProposalId = $_t['proposal_id'] ?? ($_proj['proposal_id'] ?? null);
-                                    $urgentPaymentId  = $_t['id'] ?? null;
-                                    break 2;
-                                }
-                            }
-                        }
-                    @endphp
-                    @if($urgentProposalId && $urgentPaymentId)
-                        <a href="{{ route('klien.tagihan.unggah', ['proposal' => $urgentProposalId, 'payment' => $urgentPaymentId]) }}"
-                           class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-5 py-3 rounded-xl flex items-center gap-2 shadow-sm transition">
-                    @else
-                        <a href="{{ route('klien.tagihan') }}"
-                           class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-5 py-3 rounded-xl flex items-center gap-2 shadow-sm transition">
-                    @endif
+                    <a href="{{ route('klien.tagihan.unggah', ['proposal' => $urgentProposalId, 'payment' => $urgentPaymentId]) }}"
+                       class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-5 py-3 rounded-xl flex items-center gap-2 shadow-sm transition">
                         {{-- Document Upload Icon --}}
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
                         </svg>
-                        <span>Unggah Bukti Bayar Sekarang</span>
+                        <span>Unggah Bukti Pembayaran Termin Berjalan</span>
                     </a>
                 </div>
 
             </div>
+            @endif
 
             {{-- == ( filter & search bar ) == --}}
             <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-2.5 flex flex-col md:flex-row items-center justify-between gap-3">
@@ -455,10 +250,10 @@
                 <div class="flex items-center gap-1.5 flex-wrap">
                     @php
                         $statusTabs = [
-                            'Semua'            => 'Semua (5)',
-                            'Menunggu Bayar'   => 'Menunggu Bayar (1)',
-                            'Dalam Verifikasi' => 'Dalam Verifikasi (1)',
-                            'Lunas'            => 'Lunas (3)',
+                            'Semua'            => 'Semua (' . $billingTerms->count() . ')',
+                            'Menunggu Bayar'   => 'Menunggu Bayar (' . $statusCounts['Menunggu Bayar'] . ')',
+                            'Dalam Verifikasi' => 'Dalam Verifikasi (' . $statusCounts['Dalam Verifikasi'] . ')',
+                            'Lunas'            => 'Lunas (' . $statusCounts['Lunas'] . ')',
                         ];
                     @endphp
 
@@ -478,10 +273,10 @@
                 <div class="w-full md:w-auto">
                     <select x-model="selectedProjectFilter"
                             class="w-full md:w-auto bg-[#F8FAFC] border border-slate-200/80 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:border-[#0B3B82] cursor-pointer">
-                        <option value="all">Semua Proyek Aktif (3)</option>
-                        <option value="PRJ-2026/014">PRJ-2026/014 - Sistem Monitoring</option>
-                        <option value="PRJ-2026/009">PRJ-2026/009 - Aplikasi Mobile Nasabah</option>
-                        <option value="PRJ-2026/021">PRJ-2026/021 - Smart Warehouse Sensor</option>
+                        <option value="all">Semua Proyek ({{ count($projectsBilling) }})</option>
+                        @foreach($projectsBilling as $project)
+                            <option value="{{ $project['id'] }}">{{ $project['id'] }} - {{ $project['title'] }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -490,7 +285,7 @@
             {{-- == ( daftar kartu proyek & termin tagihan ) == --}}
             <div class="space-y-4">
 
-                @foreach($projectsBilling as $proj)
+                @forelse($projectsBilling as $proj)
                 <div x-show="matches(@js($proj))"
                      x-transition:enter="transition ease-out duration-200"
                      x-transition:enter-start="opacity-0 translate-y-1"
@@ -536,12 +331,12 @@
                             <div class="space-y-1 text-left md:text-right">
                                 <div class="flex items-center gap-3">
                                     <span class="text-xs text-slate-500 font-medium">{{ $proj['total_value'] }}</span>
-                                    <span class="text-xs font-bold {{ $proj['id'] === 'PRJ-2026/009' ? 'text-slate-800' : 'text-[#0B3B82]' }}">
+                                    <span class="text-xs font-bold {{ $proj['has_open'] ? 'text-amber-700' : 'text-[#0B3B82]' }}">
                                         {{ $proj['paid_status'] }}
                                     </span>
                                 </div>
                                 <div class="w-32 md:w-36 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                    <div class="h-full {{ $proj['id'] === 'PRJ-2026/009' ? 'bg-[#FFB800]' : 'bg-[#0B3B82]' }} rounded-full"
+                                    <div class="h-full {{ $proj['has_open'] ? 'bg-[#FFB800]' : 'bg-[#0B3B82]' }} rounded-full"
                                          style="width: {{ $proj['paid_percent'] }}%"></div>
                                 </div>
                             </div>
@@ -587,7 +382,7 @@
                                 Rincian Dokumen & Riwayat Termin Proyek
                             </h4>
                             <span class="text-slate-400 font-medium">
-                                Diperbarui sistem otomatis: 15 menit yang lalu
+                                Status pembayaran tersinkron dari database
                             </span>
                         </div>
 
@@ -623,8 +418,8 @@
                                                 {{ $termin['desc'] ?? ($termin['name'] ?? '-') }}
                                             </p>
                                             <p class="mt-2 text-[11px] text-slate-500">
-                                                Invoice: <span class="font-semibold text-slate-700">{{ $termin['invoice_number'] }}</span>
-                                                <span class="mx-1">•</span> Termin {{ $termin['term_sequence'] }}
+                                                Invoice: <span class="font-semibold text-slate-700">{{ $termin['invoice_number'] ?? 'Belum diterbitkan' }}</span>
+                                                <span class="mx-1">•</span> Termin {{ $termin['term_sequence'] ?? ($loop->iteration ?? 1) }}
                                             </p>
                                             <p class="mt-1 text-[11px] text-slate-500">
                                                 Jatuh tempo: <span class="font-medium text-slate-700">{{ $termin['due_date'] ?? 'Belum ditetapkan' }}</span>
@@ -707,16 +502,15 @@
 
                                         {{-- 5. Aksi Dokumen --}}
                                         <td class="px-5 py-4 whitespace-nowrap text-right">
-                                            @if($termin['can_download'])
-                                                <button type="button"
-                                                        @click="triggerToast('Mengunduh berkas Kwitansi Resmi bermeterai (PDF)...')"
+                                            <div class="inline-flex items-center gap-2">
+                                                <a href="{{ route('klien.tagihan.invoice', $termin['id']) }}"
                                                         class="bg-white border border-slate-200 hover:border-[#0B3B82] hover:text-[#0B3B82] text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer">
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                                                     </svg>
-                                                    <span>Unduh Kwitansi</span>
-                                                </button>
-                                            @elseif($termin['can_upload'])
+                                                    <span>Unduh Invoice</span>
+                                                </a>
+                                                @if($termin['can_upload'])
                                                 <a href="{{ route('klien.tagihan.unggah', ['proposal' => $termin['proposal_id'] ?? ($proj['proposal_id'] ?? 0), 'payment' => $termin['id'] ?? 0]) }}"
                                                    class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 shadow-xs transition">
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -724,11 +518,8 @@
                                                     </svg>
                                                     <span>Unggah Bukti</span>
                                                 </a>
-                                            @else
-                                                <span class="text-xs text-slate-300 font-medium italic">
-                                                    Belum Tersedia
-                                                </span>
-                                            @endif
+                                                @endif
+                                            </div>
                                         </td>
 
                                     </tr>
@@ -740,10 +531,21 @@
                     </div>
 
                 </div>
-                @endforeach
+                @empty
+                    <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+                        <p class="text-sm font-semibold text-slate-700">Belum ada tagihan proyek.</p>
+                        <p class="mt-1 text-xs text-slate-500">Tagihan akan tampil setelah termin pembayaran dibuat pada proyek Anda.</p>
+                    </div>
+                @endforelse
 
             </div>
 
+            <section class="rounded-2xl border border-blue-100 bg-white p-6 shadow-xs" aria-label="Informasi pembayaran">
+                <h2 class="text-sm font-bold text-slate-800">Informasi Pembayaran</h2>
+                <p class="mt-2 text-xs leading-relaxed text-slate-500">
+                    Gunakan informasi rekening yang tercantum pada dokumen invoice resmi untuk setiap termin. Pastikan nomor invoice dan nominal pembayaran sesuai sebelum mengirim bukti transfer.
+                </p>
+            </section>
         </main>
 
     </div>

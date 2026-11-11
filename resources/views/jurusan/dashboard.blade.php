@@ -46,6 +46,9 @@
             </div>
         </div>
 
+        {{-- NOTIFIKASI & AKTIVITAS HIGHLIGHT --}}
+        <x-dashboard-notifications :notifications="$notifications ?? []" :unread-count="$unreadCount ?? 0" />
+
         {{-- STAT CARDS --}}
         @php
             $jurusanStats = [
@@ -65,14 +68,14 @@
         {{-- ACTIONS BAR --}}
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <button class="bg-[#0B3B82] hover:bg-[#082a5c] text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
+                <a href="{{ route('jurusan.ajukan-proyek') }}" class="bg-[#0B3B82] hover:bg-[#082a5c] text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Ajukan Projek Baru
-                </button>
-                <button class="bg-white hover:bg-slate-50 text-[#1E293B] border border-slate-200 px-5 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
+                </a>
+                <a href="{{ route('jurusan.projek-saya') }}" class="bg-white hover:bg-slate-50 text-[#1E293B] border border-slate-200 px-5 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                     Lihat Semua Projek
-                </button>
+                </a>
             </div>
             <div class="relative w-72">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
