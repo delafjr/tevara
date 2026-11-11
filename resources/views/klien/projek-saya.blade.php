@@ -169,59 +169,14 @@
                 @if(count($handoverProjects))
                     <div class="mt-3 divide-y divide-slate-100 border-y border-slate-100">
                         @foreach($handoverProjects as $handoverProjectItem)
-                            <div class="grid gap-4 py-4 lg:grid-cols-[1fr_auto]">
+                            <article class="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <p class="text-sm font-bold text-slate-800">{{ $handoverProjectItem['title'] ?? 'Proyek' }}</p>
                                     <p class="mt-1 font-mono text-[11px] text-slate-500">{{ $handoverProjectItem['bast_number'] ?? 'Nomor BAST belum tersedia' }} · {{ $handoverProjectItem['project_code'] ?? '' }}</p>
-                                    <div class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs">
-                                        @if(!empty($handoverProjectItem['repository_url']))
-                                            <a href="{{ $handoverProjectItem['repository_url'] }}" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-700 underline">Repository source code</a>
-                                        @endif
-                                        @if(!empty($handoverProjectItem['id']) && !empty($handoverProjectItem['documentation_url']))
-                                            <a href="{{ route('klien.projek-saya.bast.documentation', $handoverProjectItem['id']) }}" class="font-semibold text-blue-700 underline">Unduh dokumentasi API</a>
-                                        @endif
-                                        @if(!empty($handoverProjectItem['user_manual_url']))
-                                            <a href="{{ $handoverProjectItem['user_manual_url'] }}" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-700 underline">Panduan pengguna</a>
-                                        @endif
-                                    </div>
-                                    @if(!empty($handoverProjectItem['handover_notes']))
-                                        <p class="mt-2 text-xs text-slate-600">{{ $handoverProjectItem['handover_notes'] }}</p>
-                                    @endif
-                                    <div class="mt-4 rounded-lg border border-blue-100 bg-blue-50/60 p-3">
-                                        <h3 class="text-xs font-bold text-slate-800">Yang akan diterima</h3>
-                                        @if(!empty($handoverProjectItem['handover_deliverables']))
-                                            <ul class="mt-2 space-y-2">
-                                                @foreach($handoverProjectItem['handover_deliverables'] as $deliverable)
-                                                    <li class="rounded-md bg-white px-3 py-2 text-xs">
-                                                        <p class="font-semibold text-slate-800">{{ $deliverable['name'] ?? 'Hasil/barang' }} <span class="font-normal text-slate-500">· {{ $deliverable['quantity'] ?? 1 }} {{ $deliverable['unit'] ?? 'unit' }}</span></p>
-                                                        <p class="mt-0.5 text-slate-500">{{ ['physical' => 'Barang fisik', 'digital' => 'Produk digital', 'document' => 'Dokumen', 'other' => 'Lainnya'][$deliverable['type'] ?? 'other'] ?? 'Lainnya' }} · Kondisi: {{ ['new' => 'Baru', 'good' => 'Baik', 'needs_repair' => 'Perlu perbaikan', 'not_applicable' => 'Tidak berlaku'][$deliverable['condition'] ?? 'not_applicable'] ?? 'Tidak berlaku' }}</p>
-                                                        @if(!empty($deliverable['notes']))<p class="mt-1 text-slate-600">{{ $deliverable['notes'] }}</p>@endif
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        @else
-                                            <p class="mt-1 text-xs text-amber-700">Daftar hasil/barang belum dilengkapi Pengurus TeFa. BAST belum dapat disetujui.</p>
-                                        @endif
-                                    </div>
-                                    <p class="mt-2 text-xs text-slate-500">
-                                        Garansi {{ $handoverProjectItem['maintenance']['maintenance_warranty_months'] ?? 0 }} bulan.
-                                        Tanggal serah terima dan awal garansi dicatat setelah persetujuan.
-                                    </p>
+                                    <p class="mt-2 text-xs text-slate-500">Dokumen serah terima sudah disiapkan. Silakan tinjau daftar hasil/barang sebelum menyetujui.</p>
                                 </div>
-                                <form method="POST" action="{{ route('klien.projek-saya.bast.approve', $handoverProjectItem['id']) }}" class="flex flex-col gap-2 self-start lg:w-64">
-                                    @csrf
-                                    @method('PATCH')
-                                    <label class="text-[11px] font-semibold text-slate-700">
-                                        Nama PIC yang menyetujui
-                                        <input type="text" name="client_signoff_name" required maxlength="255" value="{{ old('client_signoff_name', session('user.name')) }}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-normal text-slate-700">
-                                    </label>
-                                    <label class="flex items-start gap-2 text-[11px] text-slate-600">
-                                        <input type="checkbox" name="client_approved" value="1" required @disabled(empty($handoverProjectItem['handover_deliverables'])) class="mt-0.5 rounded border-slate-300 text-[#0B3B82]">
-                                        Saya telah memeriksa hasil/barang dan menyetujui serah terima.
-                                    </label>
-                                    <button type="submit" @disabled(empty($handoverProjectItem['handover_deliverables'])) class="rounded-lg bg-[#0B3B82] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#082d64] disabled:cursor-not-allowed disabled:opacity-50">Setujui BAST</button>
-                                </form>
-                            </div>
+                                <a href="{{ route('klien.projek-saya.bast.review', $handoverProjectItem['id']) }}" class="inline-flex shrink-0 justify-center rounded-lg bg-[#0B3B82] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#082d64]">Tinjau BAST</a>
+                            </article>
                         @endforeach
                     </div>
                 @elseif($handoverProjectsAvailable)

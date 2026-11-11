@@ -324,6 +324,41 @@ Route::middleware('auth.api')->group(function () {
         })->whereNumber('proposal')->name('projek-saya.detail');
         Route::get('/proyek-saya/{proposal}', fn ($proposal) => redirect()->route('klien.projek-saya.detail', $proposal));
 
+        Route::get('/projek-saya/{proposal}/bast', function (ApiService $api, int $proposal) {
+            try {
+                $response = $api->get('proposals/mine');
+                $payload = $response->successful()
+                    ? (is_array($response->json('data')) ? $response->json('data') : $response->json())
+                    : null;
+                $project = is_array($payload)
+                    ? collect($payload)->firstWhere('id', $proposal)
+                    : null;
+
+                if (!is_array($project)) {
+                    return redirect()->route('klien.projek-saya')->with('error', 'BAST proyek tidak ditemukan.');
+                }
+
+                if (empty($project['bast_prepared']) || !empty($project['client_approved'])) {
+                    return redirect()->route('klien.projek-saya')->with('error', 'BAST ini tidak sedang menunggu persetujuan.');
+                }
+
+                if (empty($project['handover_deliverables'])) {
+                    return redirect()->route('klien.projek-saya')->with('error', 'Daftar hasil/barang BAST belum dilengkapi Pengurus TeFa.');
+                }
+
+                return view('klien.bast-review', [
+                    'user' => session('user'),
+                    'project' => $project,
+                ]);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::error('Gagal memuat tinjauan BAST klien: ' . $exception->getMessage(), [
+                    'proposal_id' => $proposal,
+                ]);
+
+                return redirect()->route('klien.projek-saya')->with('error', 'Detail BAST tidak dapat dimuat. Silakan coba kembali.');
+            }
+        })->whereNumber('proposal')->name('projek-saya.bast.review');
+
         Route::post('/projek-saya/{proposal}/revisi', function (Request $request, ApiService $api, int $proposal) {
             $request->merge([
                 'modul' => json_decode($request->input('modul', '[]'), true) ?: [],
@@ -1112,6 +1147,32 @@ Route::middleware('auth.api')->group(function () {
                 'error' => $error,
             ]);
         })->name('bast');
+
+        Route::get('/bast/{proposal}/prepare', function (ApiService $api, int $proposal) use ($readApiList) {
+            try {
+                $response = $api->get('proposals/handover');
+                $project = collect($readApiList($response))->firstWhere('id', $proposal);
+
+                if (!$response->successful() || !is_array($project)) {
+                    return redirect()->route('pengurus-tefa.bast')->with('error', 'Proyek BAST tidak ditemukan atau tidak lagi memenuhi syarat.');
+                }
+
+                if (!empty($project['client_approved'])) {
+                    return redirect()->route('pengurus-tefa.bast')->with('error', 'BAST yang sudah disetujui PIC tidak dapat diubah.');
+                }
+
+                return view('pengurus-tefa.bast-prepare', [
+                    'user' => session('user'),
+                    'project' => $project,
+                ]);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::error('Gagal memuat detail persiapan BAST: ' . $exception->getMessage(), [
+                    'proposal_id' => $proposal,
+                ]);
+
+                return redirect()->route('pengurus-tefa.bast')->with('error', 'Data BAST tidak dapat dimuat. Silakan coba kembali.');
+            }
+        })->whereNumber('proposal')->name('bast.prepare.form');
 
         Route::post('/proposals/{proposal}/bast', function (Request $request, ApiService $api, int $proposal) {
             $validated = $request->validate([

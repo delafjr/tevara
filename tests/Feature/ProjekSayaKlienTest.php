@@ -80,12 +80,45 @@ class ProjekSayaKlienTest extends TestCase
             ->assertSee('PRJ-2026/501')
             ->assertSee('Proyek UAT Lulus')
             ->assertSee('BAST/TEFA/2026/001')
-            ->assertSee('Aplikasi inventaris')
-            ->assertSee('Yang akan diterima')
-            ->assertSee('Repository source code')
-            ->assertSee('Nama PIC yang menyetujui')
-            ->assertSee('Setujui BAST')
+            ->assertSee('Tinjau BAST')
+            ->assertSee(route('klien.projek-saya.bast.review', 501), false)
+            ->assertDontSee('Yang akan diterima')
             ->assertDontSee('Isi formulir BAST');
+    }
+
+    public function test_klien_meninjau_bast_di_halaman_terpisah_sebelum_menyetujui(): void
+    {
+        Http::fake([
+            '*proposals/mine' => Http::response([[
+                'id' => 501,
+                'project_code' => 'PRJ-2026/501',
+                'title' => 'Proyek UAT Lulus',
+                'bast_prepared' => true,
+                'client_approved' => false,
+                'bast_number' => 'BAST/TEFA/2026/001',
+                'repository_url' => 'https://example.test/repository',
+                'documentation_url' => 'handover-documents/api-documentation.pdf',
+                'handover_deliverables' => [[
+                    'name' => 'Aplikasi inventaris',
+                    'type' => 'digital',
+                    'quantity' => 1,
+                    'unit' => 'aplikasi',
+                    'condition' => 'not_applicable',
+                    'notes' => 'Akses tersedia melalui repository.',
+                ]],
+                'maintenance' => ['maintenance_warranty_months' => 3],
+            ]], 200),
+        ]);
+
+        $this->withSession($this->sessionKlien())
+            ->get('/klien/projek-saya/501/bast')
+            ->assertOk()
+            ->assertSee('Tinjau')
+            ->assertSee('Serah Terima')
+            ->assertSee('Aplikasi inventaris')
+            ->assertSee('Buka repository source code')
+            ->assertSee('Setujui BAST')
+            ->assertSee(route('klien.projek-saya.bast.approve', 501), false);
     }
 
     public function test_bast_lama_yang_sudah_disetujui_menampilkan_peringatan_jika_daftar_hasil_belum_tercatat(): void
@@ -183,8 +216,37 @@ class ProjekSayaKlienTest extends TestCase
             ->get('/pengurus-tefa/bast')
             ->assertOk()
             ->assertSee('Siapkan BAST')
-            ->assertSee('Lampiran fisik dokumentasi API')
-            ->assertSee('Kirim ke PIC Klien');
+            ->assertSee(route('pengurus-tefa.bast.prepare.form', 501), false)
+            ->assertDontSee('Hasil/barang yang diserahkan');
+    }
+
+    public function test_pengurus_mengisi_bast_di_halaman_lanjutan_terpisah(): void
+    {
+        Http::fake([
+            '*proposals/handover' => Http::response([[
+                'id' => 501,
+                'project_code' => 'PRJ-2026/501',
+                'title' => 'Proyek UAT Lulus',
+                'latest_uat_result' => 'PASSED',
+                'bast_eligible' => true,
+                'bast_prepared' => false,
+                'client_approved' => false,
+            ]], 200),
+        ]);
+        $session = [
+            'api_token' => 'dummy-token',
+            'user' => ['id' => 5, 'name' => 'Pengurus', 'roles' => ['pengurus_tefa']],
+            'active_role' => 'pengurus_tefa',
+        ];
+
+        $this->withSession($session)
+            ->get('/pengurus-tefa/bast/501/prepare')
+            ->assertOk()
+            ->assertSee('Siapkan')
+            ->assertSee('Serah Terima')
+            ->assertSee('Hasil/barang yang diserahkan')
+            ->assertSee('Kirim ke PIC Klien')
+            ->assertSee(route('pengurus-tefa.bast.prepare', 501), false);
     }
 
     public function test_halaman_projek_pengurus_tetap_ke_halaman_semula_dan_bast_punya_menu_sendiri(): void
