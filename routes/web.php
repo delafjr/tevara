@@ -1090,7 +1090,9 @@ Route::middleware('auth.api')->group(function () {
     };
 
     Route::middleware('auth.api:pengurus_tefa')->prefix('pengurus-tefa')->name('pengurus-tefa.')->group(function () use ($readApiList) {
-        Route::get('/projek', function (ApiService $api) use ($readApiList) {
+        Route::get('/projek', fn () => view('pengurus-tefa.projek', ['user' => session('user')]))->name('projek');
+
+        Route::get('/bast', function (ApiService $api) use ($readApiList) {
             $projects = [];
             $error = null;
 
@@ -1109,7 +1111,7 @@ Route::middleware('auth.api')->group(function () {
                 'projects' => $projects,
                 'error' => $error,
             ]);
-        })->name('projek');
+        })->name('bast');
 
         Route::post('/proposals/{proposal}/bast', function (Request $request, ApiService $api, int $proposal) {
             $validated = $request->validate([
@@ -1137,7 +1139,7 @@ Route::middleware('auth.api')->group(function () {
                 }
 
                 if ($response->successful()) {
-                    return redirect()->route('pengurus-tefa.projek')->with('success', 'BAST berhasil disiapkan untuk persetujuan PIC Klien.');
+                    return redirect()->route('pengurus-tefa.bast')->with('success', 'BAST berhasil disiapkan untuk persetujuan PIC Klien.');
                 }
 
                 $errors = $response->json('errors');

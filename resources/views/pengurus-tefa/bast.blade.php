@@ -15,7 +15,7 @@
     $completedHandovers = collect($projects)->filter(fn ($project) => !empty($project['client_approved']))->count();
 @endphp
 <div class="flex min-h-screen">
-    <x-sidebar active="projek" />
+    <x-sidebar active="bast" />
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
         <main class="flex-1 px-8 py-7 space-y-7" x-data="{ searchQuery: '' }">
             <header class="rounded-2xl border border-slate-100 bg-white px-8 py-6 shadow-sm">

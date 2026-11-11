@@ -149,11 +149,28 @@ class ProjekSayaKlienTest extends TestCase
         ];
 
         $this->withSession($session)
-            ->get('/pengurus-tefa/projek')
+            ->get('/pengurus-tefa/bast')
             ->assertOk()
             ->assertSee('Siapkan BAST')
             ->assertSee('Lampiran fisik dokumentasi API')
             ->assertSee('Kirim ke PIC Klien');
+    }
+
+    public function test_halaman_projek_pengurus_tetap_ke_halaman_semula_dan_bast_punya_menu_sendiri(): void
+    {
+        $session = [
+            'api_token' => 'dummy-token',
+            'user' => ['id' => 5, 'name' => 'Pengurus', 'roles' => ['pengurus_tefa']],
+            'active_role' => 'pengurus_tefa',
+        ];
+
+        $this->withSession($session)
+            ->get('/pengurus-tefa/projek')
+            ->assertOk()
+            ->assertSee('Kelola Semua')
+            ->assertSee('Sistem Informasi UMKM')
+            ->assertSee('href="' . route('pengurus-tefa.bast') . '"', false)
+            ->assertDontSee('Serah Terima &amp; BAST', false);
     }
 
     public function test_pengurus_mengirimkan_isian_bast_dan_lampiran_ke_api(): void
@@ -174,7 +191,7 @@ class ProjekSayaKlienTest extends TestCase
                 'user_manual_url' => 'https://example.test/manual',
                 'maintenance_warranty_months' => '3',
             ])
-            ->assertRedirect('/pengurus-tefa/projek')
+            ->assertRedirect('/pengurus-tefa/bast')
             ->assertSessionHas('success', 'BAST berhasil disiapkan untuk persetujuan PIC Klien.');
 
         Http::assertSent(fn ($request) => str_ends_with($request->url(), '/proposals/501/handover/prepare')
