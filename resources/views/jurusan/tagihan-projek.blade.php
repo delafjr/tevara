@@ -41,16 +41,11 @@
             </div>
 
             {{-- Section Rekening --}}
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 max-w-md gap-4">
                 <div class="bg-white rounded-2xl p-5 border border-slate-100 space-y-2">
                     <span class="text-xs font-semibold text-slate-400">BANK MANDIRI (GIRO)</span>
                     <p class="text-lg font-bold text-[#1E293B]">142-00-9928172-1</p>
                     <p class="text-xs text-slate-500">a.n. Teaching Factory Politeknik</p>
-                </div>
-                <div class="bg-white rounded-2xl p-5 border border-slate-100 space-y-2">
-                    <span class="text-xs font-semibold text-slate-400">BCA VIRTUAL ACCOUNT</span>
-                    <p class="text-lg font-bold text-[#1E293B]">88720-08123456789</p>
-                    <p class="text-xs text-slate-500">a.n. TEVARA - {{ $userName }}</p>
                 </div>
             </div>
         </div>

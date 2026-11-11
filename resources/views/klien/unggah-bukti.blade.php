@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Unggah bukti pembayaran termin proyek TEVARA. Konfirmasi transfer bank giro atau virtual account untuk verifikasi bagian keuangan.">
+    <meta name="description" content="Unggah bukti pembayaran termin proyek TEVARA. Konfirmasi transfer bank giro untuk verifikasi bagian keuangan.">
     <title>Unggah Bukti Pembayaran - Tevara</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
@@ -229,29 +229,16 @@
                             </select>
                         </div>
 
-                        {{-- Grid Tanggal & No Referensi --}}
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-2">
-                                    Tanggal Transfer <span class="text-red-500">*</span>
-                                </label>
-                                <input type="date"
-                                       name="payment_date"
-                                       required
-                                       value="{{ old('payment_date', date('Y-m-d')) }}"
-                                       class="w-full bg-[#F8FAFC] border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-2">
-                                    Nomor Referensi / 4 Digit Rekening
-                                </label>
-                                <input type="text"
-                                       name="transfer_reference"
-                                       value="{{ old('transfer_reference') }}"
-                                       placeholder="Contoh: REF98213 / Rek 4321"
-                                       maxlength="255"
-                                       class="w-full bg-[#F8FAFC] border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition">
-                            </div>
+                        {{-- Tanggal Transfer --}}
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-2">
+                                Tanggal Transfer <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date"
+                                   name="payment_date"
+                                   required
+                                   value="{{ old('payment_date', date('Y-m-d')) }}"
+                                   class="w-full bg-[#F8FAFC] border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition">
                         </div>
 
                         {{-- File Upload Box --}}
