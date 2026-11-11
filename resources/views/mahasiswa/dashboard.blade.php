@@ -51,6 +51,9 @@
         </div>
     </div>
 
+    {{-- ===== NOTIFIKASI & AKTIVITAS HIGHLIGHT ===== --}}
+    <x-dashboard-notifications :notifications="$notifications ?? []" :unread-count="$unreadCount ?? 0" />
+
     {{-- ===== 4 STAT CARDS ===== --}}
     @php
         $deadlineText = $daysRemaining === null ? 'Aman' : ($daysRemaining < 0 ? 'Terlewat' : ($daysRemaining === 0 ? 'Hari ini' : $daysRemaining . ' Hari'));

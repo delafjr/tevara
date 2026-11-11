@@ -186,6 +186,9 @@
             </div>
         </div>
 
+        {{-- ── NOTIFIKASI & AKTIVITAS HIGHLIGHT ── --}}
+        <x-dashboard-notifications :notifications="$notifications ?? []" :unread-count="$unreadCount ?? 0" />
+
         {{-- ── 2. 4 STAT CARDS ── --}}
         @php
             $pmStats = [
