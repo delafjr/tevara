@@ -745,7 +745,7 @@ Route::middleware('auth.api')->group(function () {
             ->name('ajukan-proyek.store');
 
         // ==========================================
-        // F-06 : UAT & Sign-Off Klien
+        // UAT & Sign-Off Klien
         // ==========================================
         Route::get('/projek-saya/{proposal}/uat', function (ApiService $api, int $proposal) {
             $detail = [];
@@ -2125,7 +2125,7 @@ Route::middleware('auth.api')->group(function () {
         })->whereNumber('proposal')->whereNumber('payment')->name('payments.verify');
 
         // ==========================================
-        // F-06 : UAT (User Acceptance Testing) - Pengurus TeFa
+        // UAT (User Acceptance Testing) - Pengurus TeFa
         // ==========================================
         Route::get('/uat', function (ApiService $api) {
             $proposals = [];
@@ -2272,12 +2272,18 @@ Route::middleware('auth.api')->group(function () {
             ]);
         })->whereNumber('proposal')->name('uat.detail');
 
-        Route::post('/proposals/{proposal}/status/testing', function (ApiService $api, int $proposal) {
+        Route::post('/proposals/{proposal}/status/testing', function (Request $request, ApiService $api, int $proposal) {
             try {
                 $response = $api->setProposalTesting($proposal);
 
                 if ($response->successful()) {
-                    return back()->with('success', 'Status proyek berhasil diperbarui ke Testing (id=8). Formulir UAT sekarang telah aktif!');
+                    if ($request->input('next') === 'create_uat') {
+                        return redirect()
+                            ->route('pengurus-tefa.uat.detail', $proposal)
+                            ->with('success', 'Status proyek berhasil diperbarui ke Testing (id=8). Silakan buat sesi UAT sekarang.');
+                    }
+
+                    return back()->with('success', 'Status proyek berhasil diperbarui ke Testing (id=8). Tombol "Buat Sesi UAT" sekarang telah aktif!');
                 }
 
                 return back()->with('error', 'Gagal memperbarui status ke testing: ' . ($response->json('message') ?? 'Terjadi kesalahan backend.'));
