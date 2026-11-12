@@ -177,7 +177,7 @@
             @endif
 
             {{-- Breadcrumb & Quick Actions --}}
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex flex-row items-center justify-between gap-4">
                 <a href="{{ route('pengurus-tefa.uat') }}"
                    class="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-[#0B3B82] transition-colors">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
