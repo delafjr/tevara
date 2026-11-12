@@ -10,6 +10,20 @@
             overflow-x: hidden !important;
             max-width: 100vw;
         }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F8FAFC;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
     </style>
 </head>
 <body class="bg-[#F1F5F9] font-sans text-[#1E293B] antialiased overflow-x-hidden">
@@ -96,17 +110,17 @@
                 </div>
 
                 @if(count($pendingPayments) > 0)
-                    <div class="w-full overflow-hidden">
-                        <table class="w-full text-left border-collapse text-xs">
+                    <div class="w-full overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse text-xs min-w-[880px]">
                             <thead>
                                 <tr class="border-b border-slate-100 bg-[#F8FAFC] text-slate-400 font-bold uppercase text-[10px] tracking-wider">
                                     <th class="px-5 py-3.5 whitespace-nowrap">Tanggal Bayar</th>
-                                    <th class="px-4 py-3.5">Kode & Judul Proyek</th>
-                                    <th class="px-4 py-3.5">Klien / PIC</th>
+                                    <th class="px-4 py-3.5 whitespace-nowrap">Kode & Judul Proyek</th>
+                                    <th class="px-4 py-3.5 whitespace-nowrap">Klien / PIC</th>
                                     <th class="px-4 py-3.5 whitespace-nowrap">Termin</th>
                                     <th class="px-4 py-3.5 whitespace-nowrap">Nominal</th>
                                     <th class="px-4 py-3.5 whitespace-nowrap">Metode Bayar</th>
-                                    <th class="px-5 py-3.5 text-right whitespace-nowrap">Aksi</th>
+                                    <th class="px-6 py-3.5 text-right whitespace-nowrap">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
@@ -115,13 +129,13 @@
                                         <td class="px-5 py-4 font-medium text-slate-600 whitespace-nowrap">
                                             {{ !empty($p['payment_date']) ? \Carbon\Carbon::parse($p['payment_date'])->translatedFormat('d M Y') : '-' }}
                                         </td>
-                                        <td class="px-4 py-4 max-w-[220px]">
-                                            <p class="font-mono text-[11px] font-bold text-[#0B3B82]">{{ $p['proposal']['project_code'] ?? ('PRJ-' . ($p['proposal_id'] ?? '-')) }}</p>
-                                            <p class="font-semibold text-slate-800 line-clamp-1 mt-0.5">{{ $p['proposal']['title'] ?? '-' }}</p>
+                                        <td class="px-4 py-4 whitespace-nowrap">
+                                            <p class="font-mono text-[11px] font-bold text-[#0B3B82] whitespace-nowrap">{{ $p['proposal']['project_code'] ?? ('PRJ-' . ($p['proposal_id'] ?? '-')) }}</p>
+                                            <p class="font-semibold text-slate-800 text-xs mt-1 truncate max-w-[210px]" title="{{ $p['proposal']['title'] ?? '-' }}">{{ $p['proposal']['title'] ?? '-' }}</p>
                                         </td>
-                                        <td class="px-4 py-4 max-w-[180px]">
-                                            <p class="font-semibold text-slate-800 line-clamp-1">{{ $p['proposal']['client']['name'] ?? 'Klien' }}</p>
-                                            <p class="text-[11px] text-slate-400 truncate">{{ $p['proposal']['client']['email'] ?? '' }}</p>
+                                        <td class="px-4 py-4 whitespace-nowrap">
+                                            <p class="font-semibold text-slate-800 text-xs whitespace-nowrap">{{ $p['proposal']['client']['name'] ?? 'Klien' }}</p>
+                                            <p class="text-[11px] text-slate-400 mt-0.5 truncate max-w-[170px]" title="{{ $p['proposal']['client']['email'] ?? '' }}">{{ $p['proposal']['client']['email'] ?? '' }}</p>
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
                                             <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#EAF3FF] text-[#0B3B82]">
@@ -250,15 +264,15 @@
                         <option>Oktober 2026</option><option>September 2026</option><option>Agustus 2026</option>
                     </select>
                 </div>
-                <div class="w-full overflow-hidden">
-                    <table class="w-full text-sm">
+                <div class="w-full overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-sm min-w-[650px]">
                         <thead>
                             <tr class="border-b border-slate-100 text-slate-400 text-[11px] font-semibold">
                                 <th class="text-left px-6 py-3 whitespace-nowrap">Tanggal</th>
-                                <th class="text-left px-3 py-3">Keterangan Tagihan</th>
-                                <th class="text-left px-3 py-3">Projek</th>
-                                <th class="text-left px-3 py-3">Klien</th>
-                                <th class="text-left px-3 py-3 whitespace-nowrap">Status</th>
+                                <th class="text-left px-4 py-3 whitespace-nowrap">Keterangan Tagihan</th>
+                                <th class="text-left px-4 py-3 whitespace-nowrap">Projek</th>
+                                <th class="text-left px-4 py-3 whitespace-nowrap">Klien</th>
+                                <th class="text-left px-4 py-3 whitespace-nowrap">Status</th>
                                 <th class="text-right px-6 py-3 whitespace-nowrap">Jumlah</th>
                             </tr>
                         </thead>
@@ -275,10 +289,10 @@
                             @foreach($transactions as $t)
                             <tr class="hover:bg-slate-50/60 transition-colors">
                                 <td class="px-6 py-3 text-[12px] text-slate-500 whitespace-nowrap">{{ $t['date'] }}</td>
-                                <td class="px-3 py-3 text-[12px] font-semibold text-[#1E293B]">{{ $t['ket'] }}</td>
-                                <td class="px-3 py-3 text-[12px] text-slate-600">{{ $t['projek'] }}</td>
-                                <td class="px-3 py-3 text-[12px] text-slate-600">{{ $t['klien'] }}</td>
-                                <td class="px-3 py-3 whitespace-nowrap">
+                                <td class="px-4 py-3 text-[12px] font-semibold text-[#1E293B] whitespace-nowrap">{{ $t['ket'] }}</td>
+                                <td class="px-4 py-3 text-[12px] text-slate-600 whitespace-nowrap">{{ $t['projek'] }}</td>
+                                <td class="px-4 py-3 text-[12px] text-slate-600 whitespace-nowrap">{{ $t['klien'] }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap">
                                     <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-green-50 text-green-700">Pemasukan</span>
                                 </td>
                                 <td class="px-6 py-3 text-right text-[13px] font-bold text-green-600 whitespace-nowrap">{{ $t['jumlah'] }}</td>
