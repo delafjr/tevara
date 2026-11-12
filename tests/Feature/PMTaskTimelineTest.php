@@ -226,7 +226,7 @@ class PMTaskTimelineTest extends TestCase
             ->assertSee('Sistem Informasi Pengelolaan UMKM')
             ->assertSee('Integrasi Payment Gateway QRIS Midtrans')
             ->assertSee('Total Task')
-            ->assertSee('Disetujui / Selesai')
+            ->assertSee('Task Selesai')
             ->assertSee('18')
             ->assertSee('disabled', false);
         Http::assertNotSent(function ($request) {
