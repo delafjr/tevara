@@ -112,6 +112,78 @@ class PMTaskTimelineTest extends TestCase
         });
     }
 
+    public function test_halaman_task_timeline_menampilkan_pilihan_mahasiswa_dari_team_members_saat_belum_ada_task(): void
+    {
+        Http::fake([
+            '*/api/v1/dosen/dashboard' => Http::response([
+                'success' => true,
+                'data' => [
+                    'projects' => [
+                        [
+                            'id' => 9,
+                            'title' => 'WICARA: Voice-Activated Smart Home System',
+                            'client_name' => 'PT. Inovasi Cerdas',
+                            'status' => 'Active',
+                            'progress' => 0,
+                            'deadline' => '2026-11-25',
+                        ],
+                    ],
+                ],
+            ], 200),
+            '*/api/v1/proposals/9/tasks/overview' => Http::response([
+                'success' => true,
+                'data' => [
+                    'proposal' => [
+                        'id' => 9,
+                        'proposal_code' => 'PRSL-2026-009',
+                        'title' => 'WICARA: Voice-Activated Smart Home System',
+                        'status' => 'Active',
+                        'category' => 'IoT',
+                        'start_date' => '2026-11-04',
+                        'target_completion_date' => '2026-12-04',
+                        'pm_id' => 23,
+                    ],
+                    'summary' => [
+                        'total' => 0,
+                        'todo' => 0,
+                        'in_progress' => 0,
+                        'testing' => 0,
+                        'done' => 0,
+                        'pending_review' => 0,
+                        'approved' => 0,
+                        'needs_improvement' => 0,
+                        'overall_progress' => 0,
+                    ],
+                    'team_members' => [
+                        [
+                            'id' => 34,
+                            'name' => 'Dela Fajar Mulia',
+                            'nim' => '4.33.25.2.07',
+                            'role' => 'Hardware Engineer',
+                        ],
+                        [
+                            'id' => 41,
+                            'name' => 'Muhammad Baruna Saylendra',
+                            'nim' => '4.33.25.2.14',
+                            'role' => 'IoT Specialist',
+                        ],
+                    ],
+                    'tasks' => [],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->withSession($this->sessionData())->get('/pm/task-timeline?proposal_id=9');
+
+        $response->assertOk();
+        $response->assertSee('Dela Fajar Mulia');
+        $response->assertSee('4.33.25.2.07');
+        $response->assertSee('Muhammad Baruna Saylendra');
+        $response->assertSee('4.33.25.2.14');
+        $response->assertSee('value="34"', false);
+        $response->assertSee('value="41"', false);
+    }
+
     public function test_halaman_task_timeline_memilih_proposal_dari_query_string(): void
     {
         Http::fake([

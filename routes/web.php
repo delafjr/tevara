@@ -329,7 +329,7 @@ Route::middleware('auth.api')->group(function () {
                     $proposals = $payload;
                     $handoverProjectsAvailable = true;
                     $handoverProjects = collect($payload)
-                        ->filter(fn ($proposal) => is_array($proposal) && !empty($proposal['bast_eligible']) && !empty($proposal['project_code']))
+                        ->filter(fn ($proposal) => is_array($proposal) && !empty($proposal['bast_prepared']) && empty($proposal['client_approved']))
                         ->values()
                         ->all();
                 } else {
@@ -374,6 +374,41 @@ Route::middleware('auth.api')->group(function () {
             ]);
         })->whereNumber('proposal')->name('projek-saya.detail');
         Route::get('/proyek-saya/{proposal}', fn ($proposal) => redirect()->route('klien.projek-saya.detail', $proposal));
+
+        Route::get('/projek-saya/{proposal}/bast', function (ApiService $api, int $proposal) {
+            try {
+                $response = $api->get('proposals/mine');
+                $payload = $response->successful()
+                    ? (is_array($response->json('data')) ? $response->json('data') : $response->json())
+                    : null;
+                $project = is_array($payload)
+                    ? collect($payload)->firstWhere('id', $proposal)
+                    : null;
+
+                if (!is_array($project)) {
+                    return redirect()->route('klien.projek-saya')->with('error', 'BAST proyek tidak ditemukan.');
+                }
+
+                if (empty($project['bast_prepared']) || !empty($project['client_approved'])) {
+                    return redirect()->route('klien.projek-saya')->with('error', 'BAST ini tidak sedang menunggu persetujuan.');
+                }
+
+                if (empty($project['handover_deliverables'])) {
+                    return redirect()->route('klien.projek-saya')->with('error', 'Daftar hasil/barang BAST belum dilengkapi Pengurus TeFa.');
+                }
+
+                return view('klien.bast-review', [
+                    'user' => session('user'),
+                    'project' => $project,
+                ]);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::error('Gagal memuat tinjauan BAST klien: ' . $exception->getMessage(), [
+                    'proposal_id' => $proposal,
+                ]);
+
+                return redirect()->route('klien.projek-saya')->with('error', 'Detail BAST tidak dapat dimuat. Silakan coba kembali.');
+            }
+        })->whereNumber('proposal')->name('projek-saya.bast.review');
 
         Route::post('/projek-saya/{proposal}/revisi', function (Request $request, ApiService $api, int $proposal) {
             $request->merge([
@@ -652,41 +687,17 @@ Route::middleware('auth.api')->group(function () {
         Route::get('/tagihan-pembayaran', fn () => redirect()->route('klien.tagihan'));
         Route::get('/pembayaran', fn () => redirect()->route('klien.tagihan'));
 
-        Route::post('/projek-saya/bast', function (Request $request, ApiService $api) {
+        Route::patch('/projek-saya/{proposal}/bast/approve', function (Request $request, ApiService $api, int $proposal) {
             $validated = $request->validate([
-                'project_code' => ['required', 'string', 'max:50'],
-                'repository_url' => ['required', 'url', 'max:255'],
-                'documentation_file' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
-                'handover_notes' => ['nullable', 'string'],
                 'client_signoff_name' => ['required', 'string', 'max:255'],
                 'client_approved' => ['required', 'accepted'],
-                'maintenance_warranty_months' => ['required', 'integer', 'min:0'],
-                'maintenance_notes' => ['nullable', 'string'],
             ]);
 
             try {
-                $proposalsResponse = $api->get('proposals/mine');
-                $proposals = $proposalsResponse->successful() ? $proposalsResponse->json() : null;
-                $project = is_array($proposals)
-                    ? collect($proposals)->first(fn ($item) => is_array($item) && ($item['project_code'] ?? null) === $validated['project_code'])
-                    : null;
-
-                if (!$project || empty($project['id'])) {
-                    return back()->withInput()->withErrors([
-                        'project_code' => 'Proyek tidak ditemukan pada akun klien ini.',
-                    ]);
-                }
-
-                unset($validated['project_code'], $validated['documentation_file']);
-                $response = $api->sendWithFile(
-                    "proposals/{$project['id']}/handover",
-                    'documentation_file',
-                    $request->file('documentation_file'),
-                    $validated
-                );
+                $response = $api->patch("proposals/{$proposal}/handover/approve", $validated);
 
                 if ($response->successful()) {
-                    return redirect()->route('klien.projek-saya')->with('success', 'BAST berhasil disetujui.');
+                    return redirect()->route('klien.projek-saya')->with('success', 'Persetujuan BAST berhasil dikirim.');
                 }
 
                 $errors = $response->json('errors');
@@ -694,11 +705,33 @@ Route::middleware('auth.api')->group(function () {
                     'handover' => $response->json('message') ?? 'Pengiriman BAST gagal.',
                 ]);
             } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Gagal mengirim persetujuan BAST: ' . $e->getMessage(), [
+                    'proposal_id' => $proposal,
+                ]);
                 return back()->withInput()->withErrors([
                     'handover' => 'Tidak dapat menghubungi backend BAST. Silakan coba kembali.',
                 ]);
             }
-        })->name('projek-saya.bast.store');
+        })->whereNumber('proposal')->name('projek-saya.bast.approve');
+
+        Route::get('/projek-saya/{proposal}/bast/documentation', function (ApiService $api, int $proposal) {
+            try {
+                $response = $api->get("proposals/{$proposal}/handover/documentation");
+                if (!$response->successful()) {
+                    return back()->with('error', $response->json('message') ?? 'Dokumentasi BAST tidak dapat diunduh.');
+                }
+
+                return response($response->body(), 200, [
+                    'Content-Type' => $response->header('Content-Type') ?? 'application/octet-stream',
+                    'Content-Disposition' => $response->header('Content-Disposition') ?? 'attachment; filename="dokumentasi-api"',
+                ]);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::error('Gagal mengunduh dokumentasi BAST: ' . $exception->getMessage(), [
+                    'proposal_id' => $proposal,
+                ]);
+                return back()->with('error', 'Dokumentasi BAST tidak dapat diunduh dari server.');
+            }
+        })->whereNumber('proposal')->name('projek-saya.bast.documentation');
 
         Route::get('/ajukan-proyek', function (ApiService $api) {
             return view('klien.ajukan-proyek', [
@@ -1005,6 +1038,28 @@ Route::middleware('auth.api')->group(function () {
                 } catch (\Throwable $e) {
                     $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
                 }
+
+                if (empty($overview['team_members'])) {
+                    try {
+                        $teamRes = $api->get('proposals/' . rawurlencode((string) $proposalId) . '/team');
+                        if ($teamRes->successful() && is_array($teamRes->json())) {
+                            $teamData = $teamRes->json();
+                            $members = isset($teamData['data']) && is_array($teamData['data']) ? $teamData['data'] : $teamData;
+                            $overview['team_members'] = collect($members)->map(function ($item) {
+                                return [
+                                    'id'            => $item['student']['id'] ?? $item['user_id'] ?? null,
+                                    'name'          => $item['student']['name'] ?? null,
+                                    'email'         => $item['student']['email'] ?? null,
+                                    'nim'           => $item['student']['nim'] ?? null,
+                                    'study_program' => $item['student']['study_program'] ?? null,
+                                    'role'          => $item['role']['name'] ?? null,
+                                ];
+                            })->filter(fn ($m) => !empty($m['id']))->values()->toArray();
+                        }
+                    } catch (\Throwable) {
+                        // ignore fallback error
+                    }
+                }
             }
 
             return view('pm.task-timeline', [
@@ -1144,6 +1199,116 @@ Route::middleware('auth.api')->group(function () {
 
     Route::middleware('auth.api:pengurus_tefa')->prefix('pengurus-tefa')->name('pengurus-tefa.')->group(function () use ($readApiList) {
         Route::get('/projek', fn () => view('pengurus-tefa.projek', ['user' => session('user')]))->name('projek');
+
+        Route::get('/bast', function (ApiService $api) use ($readApiList) {
+            $projects = [];
+            $error = null;
+
+            try {
+                $response = $api->get('proposals/handover');
+                $projects = $readApiList($response);
+                if (!$response->successful()) {
+                    $error = $response->json('message') ?? 'Data proyek untuk BAST belum dapat dimuat.';
+                }
+            } catch (\Throwable $exception) {
+                $error = 'Tidak dapat memuat proyek untuk BAST: ' . $exception->getMessage();
+            }
+
+            return view('pengurus-tefa.bast', [
+                'user' => session('user'),
+                'projects' => $projects,
+                'error' => $error,
+            ]);
+        })->name('bast');
+
+        Route::get('/bast/{proposal}/prepare', function (ApiService $api, int $proposal) use ($readApiList) {
+            try {
+                $response = $api->get('proposals/handover');
+                $project = collect($readApiList($response))->firstWhere('id', $proposal);
+
+                if (!$response->successful() || !is_array($project)) {
+                    return redirect()->route('pengurus-tefa.bast')->with('error', 'Proyek BAST tidak ditemukan atau tidak lagi memenuhi syarat.');
+                }
+
+                if (!empty($project['client_approved'])) {
+                    return redirect()->route('pengurus-tefa.bast')->with('error', 'BAST yang sudah disetujui PIC tidak dapat diubah.');
+                }
+
+                return view('pengurus-tefa.bast-prepare', [
+                    'user' => session('user'),
+                    'project' => $project,
+                ]);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::error('Gagal memuat detail persiapan BAST: ' . $exception->getMessage(), [
+                    'proposal_id' => $proposal,
+                ]);
+
+                return redirect()->route('pengurus-tefa.bast')->with('error', 'Data BAST tidak dapat dimuat. Silakan coba kembali.');
+            }
+        })->whereNumber('proposal')->name('bast.prepare.form');
+
+        Route::post('/proposals/{proposal}/bast', function (Request $request, ApiService $api, int $proposal) {
+            $validated = $request->validate([
+                'repository_url' => ['required', 'url', 'max:255'],
+                'documentation_file' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
+                'user_manual_url' => ['nullable', 'url', 'max:255'],
+                'handover_notes' => ['nullable', 'string'],
+                'handover_deliverables' => ['required', 'json'],
+                'maintenance_warranty_months' => ['required', 'integer', 'min:0'],
+                'maintenance_notes' => ['nullable', 'string'],
+            ]);
+
+            try {
+                $payload = $validated;
+                unset($payload['documentation_file']);
+
+                if ($request->hasFile('documentation_file')) {
+                    $response = $api->sendWithFile(
+                        "proposals/{$proposal}/handover/prepare",
+                        'documentation_file',
+                        $request->file('documentation_file'),
+                        $payload
+                    );
+                } else {
+                    $response = $api->post("proposals/{$proposal}/handover/prepare", $payload);
+                }
+
+                if ($response->successful()) {
+                    return redirect()->route('pengurus-tefa.bast')->with('success', 'BAST berhasil disiapkan untuk persetujuan PIC Klien.');
+                }
+
+                $errors = $response->json('errors');
+                return back()->withInput()->withErrors(is_array($errors) ? $errors : [
+                    'handover' => $response->json('message') ?? 'BAST gagal disiapkan.',
+                ]);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::error('Gagal menyiapkan BAST: ' . $exception->getMessage(), [
+                    'proposal_id' => $proposal,
+                ]);
+                return back()->withInput()->withErrors([
+                    'handover' => 'Tidak dapat menghubungi backend BAST. Silakan coba kembali.',
+                ]);
+            }
+        })->whereNumber('proposal')->name('bast.prepare');
+
+        Route::get('/proposals/{proposal}/bast/documentation', function (ApiService $api, int $proposal) {
+            try {
+                $response = $api->get("proposals/{$proposal}/handover/documentation");
+                if (!$response->successful()) {
+                    return back()->with('error', $response->json('message') ?? 'Dokumentasi BAST tidak dapat diunduh.');
+                }
+
+                return response($response->body(), 200, [
+                    'Content-Type' => $response->header('Content-Type') ?? 'application/octet-stream',
+                    'Content-Disposition' => $response->header('Content-Disposition') ?? 'attachment; filename="dokumentasi-api"',
+                ]);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::error('Gagal mengunduh dokumentasi BAST: ' . $exception->getMessage(), [
+                    'proposal_id' => $proposal,
+                ]);
+                return back()->with('error', 'Dokumentasi BAST tidak dapat diunduh dari server.');
+            }
+        })->whereNumber('proposal')->name('bast.documentation');
         Route::get('/klien-mitra', function (ApiService $api) use ($readApiList) {
             $clients = [];
             $error = null;
