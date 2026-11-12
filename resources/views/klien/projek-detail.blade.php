@@ -583,7 +583,7 @@
                                     Proposal sedang dalam alur peninjauan TEVARA Teaching Factory.
                                 </p>
                             </div>
-                            {{-- F-06 UAT Box --}}
+                            {{-- UAT Box --}}
                             <div class="p-3.5 rounded-xl bg-[#EAF3FF] border border-blue-200 space-y-2.5">
                                 <div class="flex items-center gap-2 text-[#0B3B82]">
                                     <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
