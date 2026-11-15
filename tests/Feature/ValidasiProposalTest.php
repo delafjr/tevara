@@ -292,8 +292,6 @@ class ValidasiProposalTest extends TestCase
         $response->assertRedirect(route('pengurus-tefa.validasi-proposal'));
         $response->assertSessionHas('success');
     }
-<<<<<<< HEAD
-=======
 
     public function test_halaman_detail_proposal_menampilkan_tombol_dan_modal_tolak(): void
     {
@@ -343,5 +341,4 @@ class ValidasiProposalTest extends TestCase
 
         $response->assertSessionHasErrors(['review_notes']);
     }
->>>>>>> 856cb827cfe2072d9c5422a577c60ffd59d764ac
 }

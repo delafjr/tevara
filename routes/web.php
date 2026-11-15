@@ -688,9 +688,16 @@ Route::middleware('auth.api')->group(function () {
         Route::get('/pembayaran', fn () => redirect()->route('klien.tagihan'));
 
         Route::patch('/projek-saya/{proposal}/bast/approve', function (Request $request, ApiService $api, int $proposal) {
+            if ($request->hasAny(['nomor_bast', 'bast_number', 'tanggal_serah_terima', 'handover_date'])) {
+                return back()->withInput()->withErrors([
+                    'nomor_bast' => 'Nomor BAST dan tanggal serah terima tidak boleh dimanipulasi manual. Nilai ini digenerate murni di sisi server.',
+                ]);
+            }
+
             $validated = $request->validate([
                 'client_signoff_name' => ['required', 'string', 'max:255'],
                 'client_approved' => ['required', 'accepted'],
+                'maintenance_warranty_months' => ['nullable', 'integer', 'min:0'],
             ]);
 
             try {
@@ -1248,14 +1255,23 @@ Route::middleware('auth.api')->group(function () {
         })->whereNumber('proposal')->name('bast.prepare.form');
 
         Route::post('/proposals/{proposal}/bast', function (Request $request, ApiService $api, int $proposal) {
+            if ($request->hasAny(['nomor_bast', 'bast_number', 'tanggal_serah_terima', 'handover_date'])) {
+                return back()->withInput()->withErrors([
+                    'nomor_bast' => 'Nomor BAST dan tanggal serah terima tidak boleh dimanipulasi manual. Nilai ini digenerate murni di sisi server.',
+                ]);
+            }
+
             $validated = $request->validate([
                 'repository_url' => ['required', 'url', 'max:255'],
-                'documentation_file' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
+                'documentation_file' => ['nullable', 'file', 'mimes:pdf,docx,zip,doc', 'max:10240'],
                 'user_manual_url' => ['nullable', 'url', 'max:255'],
                 'handover_notes' => ['nullable', 'string'],
                 'handover_deliverables' => ['required', 'json'],
                 'maintenance_warranty_months' => ['required', 'integer', 'min:0'],
                 'maintenance_notes' => ['nullable', 'string'],
+            ], [
+                'documentation_file.mimes' => 'Berkas lampiran dokumentasi API harus berformat aman: .pdf, .docx, atau .zip.',
+                'documentation_file.max' => 'Ukuran berkas lampiran dokumentasi API maksimal 10 MB.',
             ]);
 
             try {
