@@ -58,6 +58,32 @@ class ValidasiProposalTest extends TestCase
         ]);
     }
 
+    private function fakeDetailApi(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals/13/pending' => Http::response([
+                'id'               => 13,
+                'proposal_code'    => 'PRSL-2026-490',
+                'title'            => 'Portal Berita Digital',
+                'background'       => 'Scope kerja sistem informasi.',
+                'target_audience'  => 'Masyarakat umum dan tim redaksi',
+                'category_name'    => 'Web',
+                'status'           => 'Submitted',
+                'desired_deadline' => '2027-05-25',
+                'estimated_budget' => '100000.00',
+                'client_name'      => 'PT. Maju Bersama Sentosa',
+                'pic'              => [
+                    'name'  => 'Budi Santoso',
+                    'email' => 'budi.santoso@majubersamasentosa.co.id',
+                    'no_hp' => '6281234567890',
+                ],
+                'modules' => [
+                    ['id' => 17, 'title' => 'Portal', 'description' => 'Modul berita'],
+                ],
+            ]),
+        ]);
+    }
+
     public function test_halaman_validasi_proposal_mengambil_data_pending_dari_api(): void
     {
         $this->fakeApi();
@@ -227,7 +253,8 @@ class ValidasiProposalTest extends TestCase
             ->get('/pengurus-tefa/validasi-proposal/13/setujui');
 
         $response->assertOk();
-        $response->assertSee('Persetujuan Proposal &amp; Pembentukan Proyek', false);
+        $response->assertSee('Persetujuan Proposal', false);
+        $response->assertSee('Pembentukan Proyek', false);
         $response->assertSee('Surat Perjanjian Kerja Sama &amp; SPK', false);
         $response->assertSee('Biaya yang Disepakati &amp; Skema Termin', false);
         $response->assertSee('Pembentukan Tim Pengembang TeFa', false);
@@ -265,4 +292,56 @@ class ValidasiProposalTest extends TestCase
         $response->assertRedirect(route('pengurus-tefa.validasi-proposal'));
         $response->assertSessionHas('success');
     }
+<<<<<<< HEAD
+=======
+
+    public function test_halaman_detail_proposal_menampilkan_tombol_dan_modal_tolak(): void
+    {
+        $this->fakeDetailApi();
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->get('/pengurus-tefa/validasi-proposal/13');
+
+        $response->assertOk();
+        $response->assertSee('Tolak');
+        $response->assertSee('Alasan Penolakan');
+        $response->assertSee(route('pengurus-tefa.validasi-proposal.tolak', 13), false);
+    }
+
+    public function test_proses_tolak_proposal_berhasil_dan_redirect_dengan_sukses(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals/13/review' => Http::response([
+                'message' => 'Review submitted successfully',
+                'data'    => [
+                    'id'           => 13,
+                    'status_id'    => 6,
+                    'review_notes' => 'Proyek berada di luar kapasitas sumber daya lab TeFa.',
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->post('/pengurus-tefa/validasi-proposal/13/tolak', [
+                'review_notes' => 'Proyek berada di luar kapasitas sumber daya lab TeFa saat ini.',
+            ]);
+
+        $response->assertRedirect(route('pengurus-tefa.validasi-proposal'));
+        $response->assertSessionHas('success');
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/api/v1/proposals/13/review')
+            && $request['decision'] === 'rejected'
+            && str_contains($request['review_notes'], 'di luar kapasitas'));
+    }
+
+    public function test_proses_tolak_proposal_gagal_bila_alasan_kosong(): void
+    {
+        $response = $this->withSession($this->sessionPengurus())
+            ->post('/pengurus-tefa/validasi-proposal/13/tolak', [
+                'review_notes' => '',
+            ]);
+
+        $response->assertSessionHasErrors(['review_notes']);
+    }
+>>>>>>> 856cb827cfe2072d9c5422a577c60ffd59d764ac
 }

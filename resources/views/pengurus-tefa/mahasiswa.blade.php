@@ -7,67 +7,58 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-surface-soft font-sans text-dark-text antialiased min-h-screen">
-@php $user = $user ?? session('user'); $firstName = explode(' ', $user['name'] ?? 'Pengurus')[0]; @endphp
+@php
+    $user = $user ?? session('user');
+    $mahasiswas = is_array($mahasiswas ?? null) ? $mahasiswas : [];
+    $studyPrograms = collect($mahasiswas)
+        ->map(fn ($student) => trim((string) ($student['study_program'] ?? $student['department'] ?? $student['jurusan'] ?? '')))
+        ->filter()
+        ->unique()
+        ->values();
+@endphp
 <div class="flex min-h-screen">
     <x-sidebar active="mahasiswa" />
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
-        <main class="flex-1 px-8 py-7 space-y-7">
-
-            {{-- Hero Card --}}
-            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
-                {{-- gradient dekoratif --}}
+        <main class="flex-1 px-8 py-7 space-y-7" x-data="{ searchQuery: '' }">
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6">
                 <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
-
                 <div class="relative z-10">
                     <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
                         Teaching Factory · Polines
                     </span>
-                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
-                        Mahasiswa <span class="text-[#FFB800]">Peserta TeFa</span>
-                    </h1>
-                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
-                        Pantau keterlibatan mahasiswa dalam setiap projek Teaching Factory.
-                    </p>
-                </div>
-
-                <div class="relative z-10 flex-shrink-0">
-                    <a href="#" class="flex items-center gap-2 bg-[#0B3B82] text-white font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-[#082a5c] transition-colors shadow-sm">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                        Tambah Mahasiswa
-                    </a>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">Mahasiswa <span class="text-[#FFB800]">Peserta TeFa</span></h1>
+                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">Data mahasiswa peserta Teaching Factory yang tersinkron dengan database.</p>
                 </div>
             </div>
 
-            {{-- Stats --}}
-            <div class="grid grid-cols-4 gap-4 items-stretch">
-                @php
-                $mhsStats = [
-                    ['label' => 'Total Mahasiswa', 'value' => '142', 'sub' => 'Terdaftar',       'color' => '#0B3B82', 'icon' => 'academic'],
-                    ['label' => 'Aktif di Projek', 'value' => '118', 'sub' => 'Sedang Berjalan', 'color' => '#0B3B82', 'icon' => 'play'],
-                    ['label' => 'Angkatan',        'value' => '3',   'sub' => 'Tahun Berjalan',  'color' => '#F59E0B', 'icon' => 'folder'],
-                    ['label' => 'Belum Terlibat',  'value' => '24',  'sub' => 'Perlu Penugasan', 'color' => '#DC2626', 'icon' => 'users'],
-                ];
-                @endphp
-                @foreach($mhsStats as $stat)
-                    <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
-                @endforeach
-            </div>
+            <section class="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="Ringkasan mahasiswa">
+                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Total Mahasiswa</p>
+                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ count($mahasiswas) }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Akun mahasiswa dari database</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Prodi Terdaftar</p>
+                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ $studyPrograms->count() }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Program studi pada database</p>
+                </div>
+            </section>
 
-            {{-- Tabel Mahasiswa --}}
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div class="px-6 py-4 border-b border-slate-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <p class="font-semibold text-[#1E293B] text-[15px]">Daftar Mahasiswa</p>
-                        <p class="text-xs text-slate-400 mt-0.5">142 mahasiswa terdaftar</p>
                     </div>
-                    <div class="flex gap-2">
-                        <input type="text" placeholder="Cari mahasiswa..." class="text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0B3B82] w-48">
-                        <select class="text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0B3B82]">
-                            <option>Semua Angkatan</option><option>2022</option><option>2023</option><option>2024</option>
-                        </select>
-                    </div>
+                    <label class="relative block w-full sm:w-80">
+                        <span class="sr-only">Cari nama, NIM, atau jurusan/prodi mahasiswa</span>
+                        <input type="search" x-model.debounce.150ms="searchQuery" placeholder="Cari nama, NIM, atau jurusan/prodi"
+                               class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-3 pr-3 text-sm focus:border-[#0B3B82] focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/10">
+                    </label>
                 </div>
+                @if (!empty($error))
+                    <div role="alert" class="border-b border-red-100 bg-red-50 px-6 py-3 text-sm text-red-700">{{ $error }}</div>
+                @endif
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
@@ -75,61 +66,29 @@
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-6 py-3">Nama Mahasiswa</th>
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">NIM</th>
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Jurusan / Prodi</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Angkatan</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Projek Saat Ini</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Peran</th>
-                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Status</th>
-                                <th class="px-3 py-3 w-10"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
-                            @php
-                            $mahasiswas = [
-                                ['name'=>'Ahmad Fajar Nugroho','nim'=>'4.31.22.0.01','prodi'=>'D4 TI','angkatan'=>2022,'projek'=>'Sistem Informasi UMKM','peran'=>'Full Stack Dev','status'=>'Aktif'],
-                                ['name'=>'Bella Savitri','nim'=>'4.31.22.0.02','prodi'=>'D4 TI','angkatan'=>2022,'projek'=>'Sistem Informasi UMKM','peran'=>'UI/UX Designer','status'=>'Aktif'],
-                                ['name'=>'Cahyo Pramono','nim'=>'4.31.23.0.01','prodi'=>'D4 TI','angkatan'=>2023,'projek'=>'Smart Farming IoT','peran'=>'IoT Engineer','status'=>'Aktif'],
-                                ['name'=>'Dewi Lestari','nim'=>'4.31.22.0.03','prodi'=>'D4 TI','angkatan'=>2022,'projek'=>'Website Company Profile','peran'=>'Front End Dev','status'=>'Selesai'],
-                                ['name'=>'Eko Prasetyo','nim'=>'4.31.24.0.01','prodi'=>'D4 TI','angkatan'=>2024,'projek'=>'—','peran'=>'—','status'=>'Belum Terlibat'],
-                                ['name'=>'Fani Rizki','nim'=>'4.31.23.0.02','prodi'=>'D4 Elektro','angkatan'=>2023,'projek'=>'Smart Farming IoT','peran'=>'Hardware Dev','status'=>'Aktif'],
-                                ['name'=>'Gilang Satria','nim'=>'4.31.22.0.04','prodi'=>'D4 TI','angkatan'=>2022,'projek'=>'Monitoring Produksi','peran'=>'Backend Dev','status'=>'Aktif'],
-                                ['name'=>'Hana Permatasari','nim'=>'4.31.24.0.02','prodi'=>'D4 TI','angkatan'=>2024,'projek'=>'—','peran'=>'—','status'=>'Belum Terlibat'],
-                                ['name'=>'Irfan Maulana','nim'=>'4.31.22.0.05','prodi'=>'D4 TI','angkatan'=>2022,'projek'=>'E-Commerce UMKM Batik','peran'=>'Full Stack Dev','status'=>'Aktif'],
-                                ['name'=>'Jessica Amelia','nim'=>'4.31.23.0.03','prodi'=>'D4 TI','angkatan'=>2023,'projek'=>'Sistem Parkir Cerdas','peran'=>'Embedded Dev','status'=>'Aktif'],
-                            ];
-                            $stStyle = ['Aktif' => 'bg-emerald-50 text-emerald-700 font-semibold', 'Selesai' => 'bg-[#EAF3FF] text-[#0B3B82] font-semibold', 'Belum Terlibat' => 'bg-slate-100 text-[#64748B] font-medium'];
-                            @endphp
-                            @foreach($mahasiswas as $m)
-                            <tr class="hover:bg-slate-50/60 transition-colors">
-                                <td class="px-6 py-3.5">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-[#0B3B82]/10 flex items-center justify-center text-[11px] font-bold text-[#0B3B82] flex-shrink-0">{{ strtoupper(substr($m['name'],0,1)).strtoupper(substr(explode(' ',$m['name'])[1]??'',0,1)) }}</div>
-                                        <p class="font-semibold text-[#1E293B] text-[13px]">{{ $m['name'] }}</p>
-                                    </div>
-                                </td>
-                                <td class="px-3 py-3.5 text-[11px] text-slate-500 font-mono">{{ $m['nim'] }}</td>
-                                <td class="px-3 py-3.5"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">{{ $m['prodi'] }}</span></td>
-                                <td class="px-3 py-3.5 text-[12px] text-slate-600">{{ $m['angkatan'] }}</td>
-                                <td class="px-3 py-3.5 text-[12px] text-slate-700 font-medium">{{ $m['projek'] }}</td>
-                                <td class="px-3 py-3.5 text-[12px] text-slate-500">{{ $m['peran'] }}</td>
-                                <td class="px-3 py-3.5"><span class="text-[11px] font-semibold px-2.5 py-1 rounded-full {{ $stStyle[$m['status']] ?? 'bg-slate-100 text-slate-600' }}">{{ $m['status'] }}</span></td>
-                                <td class="px-3 py-3.5">
-                                    <button class="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
-                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
-                                    </button>
-                                </td>
+                            @forelse($mahasiswas as $student)
+                                @php $searchable = strtolower(($student['name'] ?? '') . ' ' . ($student['nim'] ?? '') . ' ' . ($student['study_program'] ?? $student['department'] ?? $student['jurusan'] ?? '')); @endphp
+                                <tr data-search="{{ $searchable }}" x-show="!searchQuery || $el.dataset.search.includes(searchQuery.toLowerCase().trim())" class="hover:bg-slate-50/60 transition-colors">
+                                    <td class="px-6 py-3.5">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-[#0B3B82]/10 flex items-center justify-center text-[11px] font-bold text-[#0B3B82] flex-shrink-0">{{ strtoupper(substr($student['name'] ?? '?', 0, 1)) }}</div>
+                                            <p class="font-semibold text-[#1E293B] text-[13px]">{{ $student['name'] ?? '—' }}</p>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-3.5 text-[11px] text-slate-500 font-mono">{{ $student['nim'] ?? '—' }}</td>
+                                    <td class="px-3 py-3.5"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">{{ $student['study_program'] ?? $student['department'] ?? $student['jurusan'] ?? '—' }}</span></td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="3" class="px-6 py-10 text-center text-sm text-slate-500">Belum ada data mahasiswa di database.</td></tr>
+                            @endforelse
+                            <tr x-cloak x-show="searchQuery && Array.from($el.parentElement.querySelectorAll('tr[data-search]')).every(row => !row.dataset.search.includes(searchQuery.toLowerCase().trim()))">
+                                <td colspan="3" class="px-6 py-10 text-center text-sm text-slate-500">Tidak ada mahasiswa yang sesuai dengan pencarian.</td>
                             </tr>
-                            @endforeach
                         </tbody>
                     </table>
-                </div>
-                <div class="px-6 py-3.5 border-t border-slate-100 flex items-center justify-between">
-                    <p class="text-xs text-slate-400">Menampilkan 10 dari 142 mahasiswa</p>
-                    <div class="flex items-center gap-1">
-                        <button class="px-3 py-1.5 text-xs rounded-lg bg-[#0B3B82] text-white">1</button>
-                        <button class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-500 hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors">2</button>
-                        <button class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-500 hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors">3</button>
-                        <button class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-500 hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors">Next →</button>
-                    </div>
                 </div>
             </div>
         </main>

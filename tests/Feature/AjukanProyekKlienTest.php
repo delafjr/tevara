@@ -57,6 +57,20 @@ class AjukanProyekKlienTest extends TestCase
         ];
     }
 
+    private function sessionJurusan(): array
+    {
+        return [
+            'api_token'   => 'dummy-token',
+            'user'        => [
+                'id'    => 15,
+                'name'  => 'Budi Santoso',
+                'email' => 'budi.santoso@tevara.ac.id',
+                'roles' => ['jurusan'],
+            ],
+            'active_role' => 'jurusan',
+        ];
+    }
+
     public function test_halaman_ajukan_proyek_hanya_untuk_klien(): void
     {
         Http::fake($this->profileFakes());
@@ -82,7 +96,8 @@ class AjukanProyekKlienTest extends TestCase
             ->assertStatus(200)
             ->assertSee('Budi Santoso')
             ->assertSee('6281234567890')
-            ->assertSee('budi.santoso@majubersamasentosa.co.id');
+            ->assertSee('budi.santoso@majubersamasentosa.co.id')
+            ->assertDontSee('Gunakan email profil PIC');
     }
 
     public function test_nama_instansi_diisi_dengan_nama_perusahaan_bukan_nama_pic(): void
@@ -230,9 +245,11 @@ class AjukanProyekKlienTest extends TestCase
         });
     }
 
-    public function test_pengajuan_tanpa_ringkasan_pendek_ditolak(): void
+    public function test_pengajuan_menerima_ringkasan_di_bawah_100_karakter(): void
     {
-        Http::fake();
+        Http::fake([
+            '*/api/v1/proposals' => Http::response(['proposal_code' => 'PRSL-2026-0010'], 201),
+        ]);
 
         $this->withSession($this->sessionKlien())
             ->post('/klien/ajukan-proyek', [
@@ -241,13 +258,77 @@ class AjukanProyekKlienTest extends TestCase
                 'kontak_email'  => 'budi@majubersamasentosa.co.id',
                 'judul_proyek'  => 'Sistem Informasi',
                 'kategori_id'   => 1,
-                'ringkasan'     => 'terlalu singkat',
+                'ringkasan'     => 'Sistem inventaris sederhana.',
+                'target_pengguna' => 'Staf perusahaan',
                 'deadline'      => now()->addDays(60)->toDateString(),
+                'anggaran'      => 1000000,
                 'modul'         => json_encode([['judul' => 'Modul Auth', 'deskripsi' => '']]),
             ])
-            ->assertSessionHasErrors(['ringkasan']);
+            ->assertRedirect('/klien/ajukan-proyek')
+            ->assertSessionHasNoErrors();
 
-        Http::assertNothingSent();
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/api/v1/proposals')
+            && $request['background'] === 'Sistem inventaris sederhana.');
+    }
+
+    public function test_jurusan_menggunakan_kategori_backend_dan_dapat_mengajukan_proyek(): void
+    {
+        Http::fake($this->profileFakes([], [
+            ['id' => 21, 'name' => 'Otomasi Industri'],
+        ]) + [
+            '*/api/v1/proposals' => Http::response(['proposal_code' => 'PRSL-2026-0011'], 201),
+        ]);
+
+        $session = $this->sessionJurusan();
+        $this->withSession($session)
+            ->get('/jurusan/ajukan-proyek')
+            ->assertOk()
+            ->assertSee('action="' . route('jurusan.ajukan-proyek.store') . '"', false)
+            ->assertSee('<option value="21"', false)
+            ->assertSee('Otomasi Industri');
+
+        $this->withSession($session)
+            ->post('/jurusan/ajukan-proyek', [
+                'nama_instansi'   => 'Jurusan Teknologi Informasi',
+                'pic_nama'        => 'Budi Santoso',
+                'kontak_email'    => 'budi@tevara.ac.id',
+                'judul_proyek'    => 'Sistem Inventaris Laboratorium',
+                'kategori_id'     => 21,
+                'ringkasan'       => 'Sistem inventaris sederhana.',
+                'target_pengguna' => 'Pengelola laboratorium',
+                'deadline'        => now()->addDays(60)->toDateString(),
+                'anggaran'        => 1000000,
+                'modul'           => json_encode([['judul' => 'Inventaris', 'deskripsi' => '']]),
+            ])
+            ->assertRedirect('/jurusan/ajukan-proyek')
+            ->assertSessionHas('success');
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/api/v1/categories')
+            && !$request->hasHeader('Authorization'));
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/api/v1/proposals')
+            && $request['client_id'] === 15
+            && $request['category_id'] === 21
+            && $request['background'] === 'Sistem inventaris sederhana.');
+    }
+
+    public function test_jurusan_menampilkan_pengajuan_dari_backend_di_projek_saya(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals/mine' => Http::response([[
+                'id'            => 501,
+                'proposal_code' => 'PRSL-2026-0501',
+                'title'         => 'Proyek Jurusan Tersimpan',
+            ]], 200),
+        ]);
+
+        $this->withSession($this->sessionJurusan())
+            ->get('/jurusan/projek-saya')
+            ->assertOk()
+            ->assertSee('PRSL-2026-0501')
+            ->assertSee('Proyek Jurusan Tersimpan');
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/api/v1/proposals/mine')
+            && $request->hasHeader('Authorization'));
     }
 
     public function test_target_pengguna_dan_anggaran_wajib_diisi(): void

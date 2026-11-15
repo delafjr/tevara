@@ -26,18 +26,9 @@
     ];
     $deadlineMin = now()->addDays(30)->toDateString();
 
-    // Master kategori dari GET /categories. Fallback agar form tetap bisa dipakai bila API gagal.
-    $categories = $categories ?? [];
-    if (empty($categories)) {
-        $categories = [
-            ['id' => 1, 'name' => 'Web'],
-            ['id' => 2, 'name' => 'Mobile'],
-            ['id' => 3, 'name' => 'Desktop'],
-            ['id' => 4, 'name' => 'IoT'],
-            ['id' => 5, 'name' => 'Other'],
-        ];
-    }
+    $categories = is_array($categories ?? null) ? $categories : [];
     $selectedKategori = old('kategori_id', $categories[0]['id'] ?? '');
+    $submitRoute = request()->routeIs('jurusan.*') ? 'jurusan.ajukan-proyek.store' : 'klien.ajukan-proyek.store';
 
     // Modul dikirim sebagai JSON string dari repeater Alpine (hidden input) atau sudah array (flash old()).
     $oldModul = old('modul');
@@ -72,7 +63,7 @@
         {{-- == ( form utama : alpine scope untuk ringkasan + modul ) == --}}
         <form id="form-ajukan-proyek"
               method="POST"
-              action="{{ route('klien.ajukan-proyek.store') }}"
+              action="{{ route($submitRoute) }}"
               enctype="multipart/form-data"
               x-data="{
                   ringkasan: @js(old('ringkasan') ?: ''),
@@ -153,15 +144,7 @@
 
                             {{-- Email --}}
                             <div class="lg:col-span-2">
-                                <div class="flex items-center justify-between gap-4 mb-1.5">
-                                    <label for="kontak_email" class="text-[10.5px] font-bold tracking-wide uppercase text-slate-400">Kontak &mdash; Email <span class="text-red-500">*</span></label>
-                                    <button type="button" id="pakai-email-profil"
-                                            @click="document.getElementById('kontak_email').value = @js($profile['email'])"
-                                            class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0B3B82] hover:underline transition cursor-pointer">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/></svg>
-                                        Gunakan email profil PIC
-                                    </button>
-                                </div>
+                                <label for="kontak_email" class="{{ $label }}">Kontak &mdash; Email <span class="text-red-500">*</span></label>
                                 <input id="kontak_email" name="kontak_email" type="email" required
                                        placeholder="nama@perusahaan.co.id"
                                        value="{{ old('kontak_email') ?: $profile['email'] }}"
@@ -210,6 +193,9 @@
                                     </svg>
                                 </div>
                                 <p class="mt-1.5 text-[11px] text-slate-400">Daftar kategori mengikuti master data TEVARA.</p>
+                                @if (empty($categories))
+                                    <p class="mt-1.5 text-xs text-red-500" role="alert">Kategori proyek belum dapat dimuat dari database. Silakan coba lagi nanti.</p>
+                                @endif
                                 @error('kategori_id') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                             </div>
 
@@ -217,13 +203,12 @@
                             <div>
                                 <div class="flex items-center justify-between mb-1.5">
                                     <label for="ringkasan" class="text-[10.5px] font-bold tracking-wide uppercase text-slate-400">Ringkasan Kebutuhan Proyek <span class="text-red-500">*</span></label>
-                                    <span class="text-[11px] font-semibold"
-                                          :class="ringkasan.length < 100 ? 'text-amber-600' : 'text-emerald-600'"
-                                          x-text="ringkasan.length + '/500 karakter minimum'">0/500 karakter minimum</span>
+                                    <span class="text-[11px] font-semibold text-slate-500"
+                                          x-text="ringkasan.length + '/500 karakter maksimum'">0/500 karakter maksimum</span>
                                 </div>
-                                <textarea id="ringkasan" name="ringkasan" rows="4" required minlength="100" maxlength="500"
+                                <textarea id="ringkasan" name="ringkasan" rows="4" required maxlength="500"
                                           x-model="ringkasan"
-                                          placeholder="Uraikan kebutuhan utama proyek dalam 100-500 karakter, contoh: Kami membutuhkan aplikasi untuk mengelola data stok multi-outlet…"
+                                          placeholder="Uraikan kebutuhan utama proyek, maksimal 500 karakter."
                                           class="{{ $errors->has('ringkasan') ? $inputErr : $inputOk }}">{{ old('ringkasan') }}</textarea>
                                 @error('ringkasan') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                             </div>
@@ -337,7 +322,7 @@
                         <svg class="w-4 h-4 flex-shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
                         Pengajuan diteruskan ke administrators TEVARA untuk ditinjau
                     </p>
-                    <button type="submit"
+                    <button type="submit" @disabled(empty($categories))
                             class="inline-flex items-center gap-2 rounded-xl bg-[#0B3B82] px-6 py-3 text-sm font-bold text-white hover:bg-[#0a3372] transition shadow-sm shadow-[#0B3B82]/25 cursor-pointer">
                         Ajukan Proyek Sekarang
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>

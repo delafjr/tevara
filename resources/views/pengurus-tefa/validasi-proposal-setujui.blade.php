@@ -34,8 +34,8 @@
         ? date('Y-m-d', strtotime((string)$proposal['desired_deadline'])) 
         : date('Y-m-d', strtotime('+3 months'));
     $proposalId = (int) ($proposal['id'] ?? 0);
-    $defaultSpkNumber = !empty($proposal['spk_number']) 
-        ? $proposal['spk_number'] 
+    $defaultSpkNumber = !empty($proposal['spk_number'])
+        ? $proposal['spk_number']
         : 'SPK/TEFA/' . date('Y') . '/' . str_pad((string) $proposalId, 3, '0', STR_PAD_LEFT);
 @endphp
 

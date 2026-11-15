@@ -165,6 +165,9 @@
                 </div>
             </div>
 
+            {{-- ── NOTIFIKASI & AKTIVITAS HIGHLIGHT ── --}}
+            <x-dashboard-notifications :notifications="$notifications ?? []" :unread-count="$unreadCount ?? 0" />
+
             {{-- ── 4 STAT CARDS ── --}}
             <div class="grid grid-cols-4 gap-4">
                 @php
