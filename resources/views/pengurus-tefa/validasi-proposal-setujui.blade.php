@@ -30,6 +30,7 @@
     $estimatedBudget = (float) ($proposal['estimated_budget'] ?? 0);
     $initialTotalAmount = $estimatedBudget > 0 ? $estimatedBudget : 25000000;
     $defaultStartDate = date('Y-m-d');
+    $defaultTerm1DueDate = date('Y-m-d', strtotime('+1 week'));
     $defaultDeadline = !empty($proposal['desired_deadline']) 
         ? date('Y-m-d', strtotime((string)$proposal['desired_deadline'])) 
         : date('Y-m-d', strtotime('+3 months'));
@@ -49,6 +50,7 @@
                   defaultScope: {{ json_encode($proposal['background'] ?? 'Pengembangan sistem software dan implementasi modul sesuai kebutuhan klien.') }},
                   defaultStart: '{{ $defaultStartDate }}',
                   defaultEnd: '{{ $defaultDeadline }}',
+                  defaultTerm1Due: '{{ $defaultTerm1DueDate }}',
                   dosens: {{ json_encode($dosens ?? []) }},
                   mahasiswas: {{ json_encode($mahasiswas ?? []) }},
                   roles: {{ json_encode($projectRoles ?? []) }}
@@ -347,16 +349,23 @@
 
                         <div class="space-y-3">
                             <template x-for="(term, index) in terms" :key="term.id">
-                                <div class="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 hover:border-slate-300 transition-all shadow-2xs">
+                                <div class="bg-white border rounded-2xl p-4 sm:p-5 transition-all shadow-2xs"
+                                     :class="!term.payment_date 
+                                        ? 'border-amber-300 border-l-4 border-l-amber-500 bg-amber-50/15' 
+                                        : 'border-slate-200/90 hover:border-slate-300'">
                                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                         {{-- Title & Info --}}
                                         <div class="flex items-center gap-3 min-w-[200px]">
-                                            <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 font-bold text-xs flex items-center justify-center flex-shrink-0"
+                                            <span class="w-8 h-8 rounded-lg font-bold text-xs flex items-center justify-center flex-shrink-0"
+                                                  :class="index === 0 
+                                                     ? 'bg-blue-50 text-blue-700' 
+                                                     : (index === terms.length - 1 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700')"
                                                   x-text="index + 1">
                                             </span>
                                             <div class="flex-1">
                                                 <input type="text"
                                                        x-model="term.name"
+                                                       @input="term.customName = true"
                                                        placeholder="Nama termin (misal: Termin 1 - Uang Muka)"
                                                        class="w-full text-xs font-bold text-[#1E293B] border-b border-transparent hover:border-slate-300 focus:border-[#0B3B82] focus:outline-none pb-0.5 transition">
                                                 <input type="text"
@@ -368,9 +377,19 @@
 
                                         {{-- Inputs: % & Amount & Date --}}
                                         <div class="flex flex-wrap items-center gap-3">
-                                            {{-- Percentage --}}
-                                            <div class="w-24">
-                                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Porsi (%)</label>
+                                            {{-- Percentage with Lock Toggle --}}
+                                            <div class="w-28">
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <label class="block text-[10px] font-bold text-slate-400">Porsi (%)</label>
+                                                    <button type="button"
+                                                            @click="toggleLock(index)"
+                                                            :title="term.locked ? 'Terkunci: persentase ini tidak diubah saat ratakan alokasi' : 'Bebas: persentase ini akan ikut disesuaikan saat ratakan alokasi'"
+                                                            class="inline-flex items-center gap-0.5 text-[9px] px-1 py-0.5 rounded transition cursor-pointer"
+                                                            :class="term.locked ? 'bg-amber-100 text-amber-800 font-bold' : 'text-slate-300 hover:text-slate-500'">
+                                                        <span x-show="term.locked">🔒 Kunci</span>
+                                                        <span x-show="!term.locked">🔓 Bebas</span>
+                                                    </button>
+                                                </div>
                                                 <div class="relative">
                                                     <input type="number"
                                                            x-model.number="term.percentage"
@@ -378,13 +397,14 @@
                                                            min="1"
                                                            max="100"
                                                            step="1"
-                                                           class="w-full pr-6 pl-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-[#1E293B] focus:outline-none focus:border-[#0B3B82] transition">
+                                                           :class="term.locked ? 'border-amber-300 bg-amber-50/20' : 'border-slate-200'"
+                                                           class="w-full pr-6 pl-3 py-1.5 rounded-lg border text-xs font-bold text-[#1E293B] focus:outline-none focus:border-[#0B3B82] transition">
                                                     <span class="absolute inset-y-0 right-0 pr-2 flex items-center text-xs text-slate-400 pointer-events-none">%</span>
                                                 </div>
                                             </div>
 
                                             {{-- Amount --}}
-                                            <div class="w-44">
+                                            <div class="w-40">
                                                 <label class="block text-[10px] font-bold text-slate-400 mb-1">Nominal (Rp)</label>
                                                 <input type="number"
                                                        x-model.number="term.amount"
@@ -394,12 +414,28 @@
                                                        class="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-[#0B3B82] focus:outline-none focus:border-[#0B3B82] transition">
                                             </div>
 
-                                            {{-- Date --}}
-                                            <div class="w-36">
-                                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Jatuh Tempo</label>
+                                            {{-- Date (Highlighted if empty) --}}
+                                            <div class="w-44">
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <label class="block text-[10px] font-bold text-slate-400">Jatuh Tempo</label>
+                                                    <span x-show="!term.payment_date"
+                                                          class="inline-flex items-center gap-1 text-[9px] font-bold text-amber-700 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded-full">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                                        Belum diisi
+                                                    </span>
+                                                    <span x-show="term.payment_date" class="text-[9px] font-bold text-emerald-600">
+                                                        ✓ Terisi
+                                                    </span>
+                                                </div>
                                                 <input type="date"
                                                        x-model="term.payment_date"
-                                                       class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82] transition">
+                                                       :class="!term.payment_date 
+                                                          ? 'border-amber-400 bg-amber-50/70 text-amber-900 ring-2 ring-amber-400/30' 
+                                                          : 'border-slate-200 bg-white text-slate-700'"
+                                                       class="w-full px-2.5 py-1.5 rounded-lg border text-xs font-medium focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition">
+                                                <p x-show="!term.payment_date" class="text-[10px] text-amber-600 font-semibold mt-1">
+                                                    ⚠️ Wajib diisi
+                                                </p>
                                             </div>
 
                                             {{-- Delete Button --}}
@@ -417,6 +453,25 @@
                                 </div>
                             </template>
                         </div>
+
+                        {{-- Alert jika ada deadline jatuh tempo belum diisi --}}
+                        <template x-if="hasEmptyDueDate()">
+                            <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-xs text-amber-800 flex flex-wrap items-center justify-between gap-3">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
+                                    </svg>
+                                    <span>
+                                        Perhatian: Terdapat <strong x-text="emptyDueDateCount() + ' termin'"></strong> yang belum memiliki tanggal jatuh tempo.
+                                    </span>
+                                </div>
+                                <button type="button"
+                                        @click="fillDefaultDueDates"
+                                        class="text-[11px] font-bold text-[#0B3B82] bg-white border border-slate-200 hover:bg-blue-50 px-3 py-1 rounded-lg transition shadow-2xs cursor-pointer">
+                                    Isi Otomatis (Bertahap)
+                                </button>
+                            </div>
+                        </template>
 
                         {{-- Calculation Balance Bar --}}
                         <div class="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border transition-colors"
@@ -450,12 +505,20 @@
                                 </div>
                             </div>
 
-                            <button type="button"
-                                    x-show="totalTermPercentage() !== 100"
-                                    @click="rebalanceTerms"
-                                    class="text-xs font-bold text-amber-900 underline hover:text-amber-950">
-                                Ratakan Alokasi ke 100%
-                            </button>
+                            <div class="flex items-center gap-2" x-show="totalTermPercentage() !== 100">
+                                <button type="button"
+                                        @click="adjustToFinalTerm"
+                                        class="inline-flex items-center gap-1 text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                                        title="Sesuaikan kekurangan/kelebihan persentase langsung ke Termin Pelunasan">
+                                    Pas-kan ke Pelunasan
+                                </button>
+                                <button type="button"
+                                        @click="rebalanceTerms"
+                                        class="inline-flex items-center gap-1 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                                        title="Ratakan sisa persentase ke termin yang tidak dikunci">
+                                    Ratakan Sisa Alokasi
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -740,14 +803,17 @@ function approvalForm(config) {
         isSubmitting: false,
 
         // Skema Termin Default: 3 Termin (30%, 40%, 30%)
+        // Jatuh tempo Termin 1 default H+1 minggu (7 hari dari sekarang)
         terms: [
             {
                 id: 1,
                 name: 'Termin 1 - Uang Muka (DP 30%)',
                 percentage: 30,
                 amount: Math.round((config.initialAmount || 0) * 0.3),
-                payment_date: config.defaultStart || '',
-                notes: 'Dibayarkan saat penandatanganan SPK / Kick-off proyek'
+                payment_date: config.defaultTerm1Due || '',
+                notes: 'Dibayarkan saat penandatanganan SPK / Kick-off proyek',
+                locked: true,
+                customName: false
             },
             {
                 id: 2,
@@ -755,7 +821,9 @@ function approvalForm(config) {
                 percentage: 40,
                 amount: Math.round((config.initialAmount || 0) * 0.4),
                 payment_date: '',
-                notes: 'Dibayarkan setelah demonstrasi modul utama & progress 50%'
+                notes: 'Dibayarkan setelah demonstrasi modul utama & progress 50%',
+                locked: false,
+                customName: false
             },
             {
                 id: 3,
@@ -763,7 +831,9 @@ function approvalForm(config) {
                 percentage: 30,
                 amount: Math.round((config.initialAmount || 0) * 0.3),
                 payment_date: config.defaultEnd || '',
-                notes: 'Dibayarkan setelah UAT selesai dan BAST ditandatangani'
+                notes: 'Dibayarkan setelah UAT selesai dan BAST ditandatangani',
+                locked: false,
+                customName: false
             }
         ],
 
@@ -799,16 +869,24 @@ function approvalForm(config) {
             this.recalculateAllTermAmounts();
         },
 
+        toggleLock(index) {
+            this.terms[index].locked = !this.terms[index].locked;
+        },
+
         onTermPercentageChange(index) {
             const term = this.terms[index];
+            term.locked = true;
             term.amount = Math.round((this.totalAmount * (term.percentage || 0)) / 100);
+            this.resequenceTerms();
         },
 
         onTermAmountChange(index) {
             const term = this.terms[index];
+            term.locked = true;
             if (this.totalAmount > 0) {
                 term.percentage = Math.round(((term.amount || 0) / this.totalAmount) * 100);
             }
+            this.resequenceTerms();
         },
 
         recalculateAllTermAmounts() {
@@ -825,29 +903,123 @@ function approvalForm(config) {
             return this.terms.reduce((sum, t) => sum + (Number(t.percentage) || 0), 0);
         },
 
-        addTerm() {
-            const seq = this.terms.length + 1;
-            const remainingPct = Math.max(0, 100 - this.totalTermPercentage());
-            const termAmount = Math.round((this.totalAmount * remainingPct) / 100);
-
-            this.terms.push({
-                id: Date.now(),
-                name: 'Termin ' + seq + ' - Tahap ' + seq,
-                percentage: remainingPct,
-                amount: termAmount,
-                payment_date: '',
-                notes: 'Syarat pencairan termin ' + seq
+        resequenceTerms() {
+            const total = this.terms.length;
+            this.terms.forEach((term, idx) => {
+                const seq = idx + 1;
+                if (!term.customName) {
+                    if (idx === 0) {
+                        term.name = 'Termin 1 - Uang Muka (DP ' + (term.percentage || 0) + '%)';
+                    } else if (idx === total - 1) {
+                        term.name = 'Termin ' + seq + ' - Pelunasan & BAST (' + (term.percentage || 0) + '%)';
+                    } else {
+                        const stageNum = total === 3 ? 'Sprint Utama' : 'Tahap ' + idx;
+                        term.name = 'Termin ' + seq + ' - Progress ' + stageNum + ' (' + (term.percentage || 0) + '%)';
+                    }
+                }
+                if (!term.notes || term.notes.startsWith('Syarat') || term.notes.startsWith('Dibayarkan')) {
+                    if (idx === 0) {
+                        term.notes = 'Dibayarkan saat penandatanganan SPK / Kick-off proyek';
+                    } else if (idx === total - 1) {
+                        term.notes = 'Dibayarkan setelah UAT selesai dan BAST ditandatangani';
+                    } else {
+                        const stageNum = total === 3 ? '50%' : 'tahap ' + idx;
+                        term.notes = 'Dibayarkan setelah demonstrasi modul utama & progress ' + stageNum;
+                    }
+                }
             });
+        },
+
+        addTerm() {
+            // Selalu sisipkan SEBELUM termin terakhir (Pelunasan & BAST)
+            const insertIndex = Math.max(1, this.terms.length - 1);
+            
+            let newPct = Math.max(0, 100 - this.totalTermPercentage());
+            
+            // Jika total alokasi sudah 100%, kurangi dari termin pelunasan secara proporsional
+            if (newPct === 0 && this.terms.length >= 2) {
+                const lastTerm = this.terms[this.terms.length - 1];
+                if (lastTerm.percentage > 15) {
+                    const borrow = 10;
+                    lastTerm.percentage -= borrow;
+                    lastTerm.amount = Math.round((this.totalAmount * lastTerm.percentage) / 100);
+                    newPct = borrow;
+                } else {
+                    newPct = 10;
+                }
+            } else if (newPct === 0) {
+                newPct = 10;
+            }
+
+            const newTerm = {
+                id: Date.now(),
+                name: '',
+                percentage: newPct,
+                amount: Math.round((this.totalAmount * newPct) / 100),
+                payment_date: '',
+                notes: '',
+                locked: false,
+                customName: false
+            };
+
+            this.terms.splice(insertIndex, 0, newTerm);
+            this.resequenceTerms();
         },
 
         removeTerm(index) {
             if (this.terms.length > 1) {
                 this.terms.splice(index, 1);
+                this.resequenceTerms();
+                this.recalculateAllTermAmounts();
+            }
+        },
+
+        adjustToFinalTerm() {
+            if (this.terms.length <= 1) return;
+            const otherSum = this.terms.slice(0, -1).reduce((sum, t) => sum + (Number(t.percentage) || 0), 0);
+            const remaining = 100 - otherSum;
+            if (remaining >= 0) {
+                const last = this.terms[this.terms.length - 1];
+                last.percentage = remaining;
+                last.amount = Math.round((this.totalAmount * remaining) / 100);
+                this.resequenceTerms();
+            } else {
+                alert('Total porsi termin sebelum pelunasan sudah ' + otherSum + '% (melebihi 100%). Kurangi salah satu termin terlebih dahulu.');
             }
         },
 
         rebalanceTerms() {
             if (this.terms.length === 0) return;
+
+            // Pisahkan termin yang dikunci (manual) vs yang bebas diratakan
+            const lockedTerms = this.terms.filter(t => t.locked);
+            const unlockedTerms = this.terms.filter(t => !t.locked);
+
+            // Jika ada termin terkunci dan ada termin bebas, bagikan sisa persentase hanya ke termin bebas
+            if (lockedTerms.length > 0 && unlockedTerms.length > 0) {
+                const lockedSum = lockedTerms.reduce((sum, t) => sum + (Number(t.percentage) || 0), 0);
+                const remainingPct = 100 - lockedSum;
+
+                if (remainingPct > 0) {
+                    const equalPct = Math.floor(remainingPct / unlockedTerms.length);
+                    const remainder = remainingPct - (equalPct * unlockedTerms.length);
+
+                    unlockedTerms.forEach((term, idx) => {
+                        term.percentage = idx === unlockedTerms.length - 1 ? equalPct + remainder : equalPct;
+                        term.amount = Math.round((this.totalAmount * term.percentage) / 100);
+                    });
+                    this.resequenceTerms();
+                    return;
+                }
+            }
+
+            // Jika semua termin terkunci, cukup sesuaikan ke termin pelunasan
+            if (lockedTerms.length === this.terms.length && this.terms.length > 1) {
+                this.adjustToFinalTerm();
+                return;
+            }
+
+            // Jika tidak ada yang dikunci, ratakan ke semua termin
             const equalPct = Math.floor(100 / this.terms.length);
             const remainder = 100 - (equalPct * this.terms.length);
 
@@ -855,6 +1027,48 @@ function approvalForm(config) {
                 term.percentage = idx === 0 ? equalPct + remainder : equalPct;
                 term.amount = Math.round((this.totalAmount * term.percentage) / 100);
             });
+            this.resequenceTerms();
+        },
+
+        hasEmptyDueDate() {
+            return this.terms.some(t => !t.payment_date);
+        },
+
+        emptyDueDateCount() {
+            return this.terms.filter(t => !t.payment_date).length;
+        },
+
+        fillDefaultDueDates() {
+            const n = this.terms.length;
+            if (n === 0) return;
+
+            // Termin 1: H+1 minggu dari sekarang
+            if (!this.terms[0].payment_date) {
+                this.terms[0].payment_date = config.defaultTerm1Due || '';
+            }
+
+            // Termin terakhir: target deadline proyek
+            if (n > 1 && !this.terms[n - 1].payment_date) {
+                this.terms[n - 1].payment_date = this.targetCompletionDate || config.defaultEnd || '';
+            }
+
+            // Termin pertengahan: distribusikan bertahap di antara tanggal termin 1 dan akhir
+            if (n > 2) {
+                const startStr = this.terms[0].payment_date || config.defaultTerm1Due;
+                const endStr = this.terms[n - 1].payment_date || this.targetCompletionDate || config.defaultEnd;
+                const start = new Date(startStr).getTime();
+                const end = new Date(endStr).getTime();
+
+                if (!isNaN(start) && !isNaN(end) && end > start) {
+                    const step = (end - start) / (n - 1);
+                    for (let i = 1; i < n - 1; i++) {
+                        if (!this.terms[i].payment_date) {
+                            const d = new Date(start + step * i);
+                            this.terms[i].payment_date = d.toISOString().split('T')[0];
+                        }
+                    }
+                }
+            }
         },
 
         addMember() {
@@ -895,6 +1109,18 @@ function approvalForm(config) {
             const unselectedStudent = this.teamMembers.some(m => !m.student_id);
             if (unselectedStudent) {
                 alert('Pastikan semua anggota tim mahasiswa telah dipilih dari daftar.');
+                event.preventDefault();
+                return false;
+            }
+
+            if (this.totalTermPercentage() !== 100) {
+                alert('Total alokasi termin harus pas 100% (saat ini ' + this.totalTermPercentage() + '%). Silakan klik "Pas-kan ke Pelunasan" atau "Ratakan Sisa Alokasi".');
+                event.preventDefault();
+                return false;
+            }
+
+            if (this.hasEmptyDueDate()) {
+                alert('Terdapat ' + this.emptyDueDateCount() + ' termin yang tanggal jatuh temponya belum diisi. Mohon lengkapi seluruh tanggal jatuh tempo atau klik "Isi Otomatis (Bertahap)".');
                 event.preventDefault();
                 return false;
             }

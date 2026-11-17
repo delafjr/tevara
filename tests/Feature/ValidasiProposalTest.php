@@ -261,6 +261,9 @@ class ValidasiProposalTest extends TestCase
         $response->assertSee('Pembentukan Tim Pengembang TeFa', false);
         $response->assertSee('Project Manager (Dosen TeFa)', false);
         $response->assertSee('Berkas Surat Perjanjian / Kontrak (SPK)', false);
+        $response->assertSee('Pas-kan ke Pelunasan', false);
+        $response->assertSee('Ratakan Sisa Alokasi', false);
+        $response->assertSee('Belum diisi', false);
     }
 
     public function test_proses_setujui_proposal_berhasil_menyimpan_dan_redirect(): void
