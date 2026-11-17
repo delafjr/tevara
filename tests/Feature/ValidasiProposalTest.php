@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -262,6 +261,9 @@ class ValidasiProposalTest extends TestCase
         $response->assertSee('Pembentukan Tim Pengembang TeFa', false);
         $response->assertSee('Project Manager (Dosen TeFa)', false);
         $response->assertSee('Berkas Surat Perjanjian / Kontrak (SPK)', false);
+        $response->assertSee('Pas-kan ke Pelunasan', false);
+        $response->assertSee('Ratakan Sisa Alokasi', false);
+        $response->assertSee('Belum diisi', false);
     }
 
     public function test_proses_setujui_proposal_berhasil_menyimpan_dan_redirect(): void
@@ -293,6 +295,12 @@ class ValidasiProposalTest extends TestCase
 
         $response->assertRedirect(route('pengurus-tefa.validasi-proposal'));
         $response->assertSessionHas('success');
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/proposals/13/contract')
+                && $request['members'] === [['student_id' => 50, 'role_id' => 2, 'joined_at' => '2026-11-01']]
+                && count($request['terms']) === 2;
+        });
     }
 
     public function test_proses_setujui_proposal_tidak_menyimpan_duplikat_berkas_di_web(): void
@@ -314,7 +322,6 @@ class ValidasiProposalTest extends TestCase
                 'start_date'                  => '2026-11-01',
                 'target_completion_date'      => '2027-02-28',
                 'pm_id'                       => 3,
-                'contract_file'               => UploadedFile::fake()->create('spk.pdf', 20, 'application/pdf'),
             ]);
 
         $response->assertRedirect(route('pengurus-tefa.validasi-proposal'));

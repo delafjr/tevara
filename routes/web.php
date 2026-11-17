@@ -1799,14 +1799,16 @@ Route::middleware('auth.api')->group(function () {
                 'maintenance_warranty_months' => 'nullable|integer|min:0',
                 'start_date'                  => 'required|date',
                 'target_completion_date'      => 'required|date|after_or_equal:start_date',
-                'contract_file'               => 'nullable|file|mimes:pdf,doc,docx|max:10240',
                 'pm_id'                       => 'required|integer',
-                'terms'                       => 'nullable|string',
-                'members'                     => 'nullable|string',
+                'terms'                       => 'nullable',
+                'members'                     => 'nullable',
             ]);
 
-            $terms = !empty($validated['terms']) ? json_decode($validated['terms'], true) : [];
-            $members = !empty($validated['members']) ? json_decode($validated['members'], true) : [];
+            $rawTerms = $request->input('terms');
+            $terms = is_string($rawTerms) ? (json_decode($rawTerms, true) ?? []) : (is_array($rawTerms) ? $rawTerms : []);
+
+            $rawMembers = $request->input('members');
+            $members = is_string($rawMembers) ? (json_decode($rawMembers, true) ?? []) : (is_array($rawMembers) ? $rawMembers : []);
 
             // Persetujuan, SPK, termin, dan tim pengembang sepenuhnya ditangani backend API.
             try {
@@ -1823,11 +1825,7 @@ Route::middleware('auth.api')->group(function () {
                     'members'                     => $members,
                 ];
 
-                if ($request->hasFile('contract_file')) {
-                    $response = $api->sendWithFile("proposals/{$proposal}/contract", 'contract_file', $request->file('contract_file'), $payload);
-                } else {
-                    $response = $api->post("proposals/{$proposal}/contract", $payload);
-                }
+                $response = $api->post("proposals/{$proposal}/contract", $payload);
 
                 if ($response->failed()) {
                     return back()->withInput()->with('error', 'Gagal menyetujui proposal: ' . ($response->json('message') ?? 'Terjadi kesalahan pada backend API.'));
