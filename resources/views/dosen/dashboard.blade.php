@@ -11,6 +11,13 @@
 @php
     $user = $user ?? session('user');
     $userName = $user['name'] ?? 'Dosen';
+
+    $dash = $dashboard ?? [];
+    $totalProjects     = (int) ($dash['total_projects'] ?? 0);
+    $activeProjects    = (int) ($dash['active_projects'] ?? 0);
+    $completedProjects = (int) ($dash['completed_projects'] ?? 0);
+    $waitingReview     = (int) ($dash['waiting_review'] ?? 0);
+    $projectsList      = is_array($dash['projects'] ?? null) ? $dash['projects'] : [];
 @endphp
 
 <div class="flex min-h-screen">
@@ -51,10 +58,10 @@
         {{-- ── 2. 4 STAT CARDS ── --}}
         @php
             $dosenStats = [
-                ['label' => 'Total Proyek',    'value' => 15, 'sub' => '+3 bulan ini',     'color' => '#0B3B82', 'icon' => 'folder'],
-                ['label' => 'Proyek Berjalan', 'value' => 9,  'sub' => 'Dalam Pengerjaan', 'color' => '#0B3B82', 'icon' => 'play'],
-                ['label' => 'Proyek Selesai',  'value' => 4,  'sub' => 'Siap Produksi',    'color' => '#0B3B82', 'icon' => 'check'],
-                ['label' => 'Menunggu Review', 'value' => 3,  'sub' => 'Perlu Review',     'color' => '#F59E0B', 'icon' => 'clock-file'],
+                ['label' => 'Total Proyek',    'value' => $totalProjects,     'sub' => 'Inisiatif Terdaftar', 'color' => '#0B3B82', 'icon' => 'folder'],
+                ['label' => 'Proyek Berjalan', 'value' => $activeProjects,    'sub' => 'Dalam Pengerjaan',    'color' => '#0B3B82', 'icon' => 'play'],
+                ['label' => 'Proyek Selesai',  'value' => $completedProjects, 'sub' => 'Siap Produksi',       'color' => '#0B3B82', 'icon' => 'check'],
+                ['label' => 'Menunggu Review', 'value' => $waitingReview,     'sub' => 'Perlu Review',        'color' => '#F59E0B', 'icon' => 'clock-file'],
             ];
         @endphp
 
@@ -93,117 +100,44 @@
 
                     {{-- Table Rows --}}
                     <div class="divide-y divide-slate-100/80">
-
-                        <!-- Row 1 -->
+                        @forelse($projectsList as $p)
+                        @php
+                            $statusKey = strtolower($p['status'] ?? 'other');
+                            $prog = (int) ($p['progress'] ?? 0);
+                            $badgeClass = match($statusKey) {
+                                'active', 'berjalan' => 'bg-[#EFF6FF] text-[#2563EB]',
+                                'testing'            => 'bg-purple-50 text-purple-700',
+                                'review'             => 'bg-[#FEF3C7] text-[#D97706]',
+                                'handover', 'completed', 'selesai' => 'bg-[#DCFCE7] text-[#16A34A]',
+                                default              => 'bg-slate-100 text-slate-600',
+                            };
+                            $barColor = $prog >= 100 ? '#16A34A' : ($prog >= 60 ? '#0B3B82' : ($prog >= 30 ? '#D97706' : '#DC2626'));
+                        @endphp
                         <div class="px-5 py-4 grid grid-cols-12 items-center hover:bg-slate-50/50 transition-colors">
                             <div class="col-span-5 pr-4">
-                                <p class="font-bold text-[#1E293B] text-[13px] leading-tight">Sistem Informasi UMKM</p>
-                                <p class="text-[11px] text-slate-400 mt-1 truncate">Pengembangan sistem informasi...</p>
+                                <p class="font-bold text-[#1E293B] text-[13px] leading-tight">{{ $p['title'] }}</p>
+                                <p class="text-[11px] text-slate-400 mt-1 capitalize">{{ $p['category'] ?? 'Lainnya' }}</p>
                             </div>
                             <div class="col-span-3">
-                                <span class="text-[12px] font-medium text-slate-600">PT. ABC Indonesia</span>
+                                <span class="text-[12px] font-medium text-slate-600">{{ $p['client_name'] ?? '—' }}</span>
                             </div>
                             <div class="col-span-2">
-                                <span class="bg-[#EFF6FF] text-[#2563EB] text-[11px] font-semibold px-3 py-1 rounded-full inline-block">
-                                    Berjalan
+                                <span class="{{ $badgeClass }} text-[11px] font-semibold px-3 py-1 rounded-full inline-block">
+                                    {{ $p['status'] }}
                                 </span>
                             </div>
                             <div class="col-span-2 flex items-center gap-3">
                                 <div class="w-20 h-2 bg-[#EFF6FF] rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#0B3B82] rounded-full" style="width: 75%"></div>
+                                    <div class="h-full rounded-full" style="width: {{ $prog }}%; background-color: {{ $barColor }}"></div>
                                 </div>
-                                <span class="text-xs font-medium text-slate-500">75%</span>
+                                <span class="text-xs font-medium text-slate-500">{{ $prog }}%</span>
                             </div>
                         </div>
-
-                        <!-- Row 2 -->
-                        <div class="px-5 py-4 grid grid-cols-12 items-center hover:bg-slate-50/50 transition-colors">
-                            <div class="col-span-5 pr-4">
-                                <p class="font-bold text-[#1E293B] text-[13px] leading-tight">Smart Farming IoT</p>
-                                <p class="text-[11px] text-slate-400 mt-1 truncate">Implementasi IoT untuk pertanian...</p>
-                            </div>
-                            <div class="col-span-3">
-                                <span class="text-[12px] font-medium text-slate-600">CV. Tani Maju</span>
-                            </div>
-                            <div class="col-span-2">
-                                <span class="bg-[#FEF3C7] text-[#D97706] text-[11px] font-semibold px-3 py-1 rounded-full inline-block">
-                                    Review
-                                </span>
-                            </div>
-                            <div class="col-span-2 flex items-center gap-3">
-                                <div class="w-20 h-2 bg-[#EFF6FF] rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#D97706] rounded-full" style="width: 60%"></div>
-                                </div>
-                                <span class="text-xs font-medium text-slate-500">60%</span>
-                            </div>
+                        @empty
+                        <div class="px-5 py-8 text-center text-xs text-slate-400">
+                            Belum ada projek yang ditugaskan ke Anda di database.
                         </div>
-
-                        <!-- Row 3 -->
-                        <div class="px-5 py-4 grid grid-cols-12 items-center hover:bg-slate-50/50 transition-colors">
-                            <div class="col-span-5 pr-4">
-                                <p class="font-bold text-[#1E293B] text-[13px] leading-tight">Website Company Profile</p>
-                                <p class="text-[11px] text-slate-400 mt-1 truncate">Pembuatan website profil...</p>
-                            </div>
-                            <div class="col-span-3">
-                                <span class="text-[12px] font-medium text-slate-600">PT. DEF Solusi</span>
-                            </div>
-                            <div class="col-span-2">
-                                <span class="bg-[#DCFCE7] text-[#16A34A] text-[11px] font-semibold px-3 py-1 rounded-full inline-block">
-                                    Selesai
-                                </span>
-                            </div>
-                            <div class="col-span-2 flex items-center gap-3">
-                                <div class="w-20 h-2 bg-[#EFF6FF] rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#16A34A] rounded-full" style="width: 100%"></div>
-                                </div>
-                                <span class="text-xs font-medium text-slate-500">100%</span>
-                            </div>
-                        </div>
-
-                        <!-- Row 4 -->
-                        <div class="px-5 py-4 grid grid-cols-12 items-center hover:bg-slate-50/50 transition-colors">
-                            <div class="col-span-5 pr-4">
-                                <p class="font-bold text-[#1E293B] text-[13px] leading-tight">Aplikasi Manajemen Inventori</p>
-                                <p class="text-[11px] text-slate-400 mt-1 truncate">Sistem inventori berbasis web...</p>
-                            </div>
-                            <div class="col-span-3">
-                                <span class="text-[12px] font-medium text-slate-600">Dinas Pendidikan</span>
-                            </div>
-                            <div class="col-span-2">
-                                <span class="bg-[#EFF6FF] text-[#2563EB] text-[11px] font-semibold px-3 py-1 rounded-full inline-block">
-                                    Berjalan
-                                </span>
-                            </div>
-                            <div class="col-span-2 flex items-center gap-3">
-                                <div class="w-20 h-2 bg-[#EFF6FF] rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#0B3B82] rounded-full" style="width: 40%"></div>
-                                </div>
-                                <span class="text-xs font-medium text-slate-500">40%</span>
-                            </div>
-                        </div>
-
-                        <!-- Row 5 -->
-                        <div class="px-5 py-4 grid grid-cols-12 items-center hover:bg-slate-50/50 transition-colors">
-                            <div class="col-span-5 pr-4">
-                                <p class="font-bold text-[#1E293B] text-[13px] leading-tight">IoT Monitoring Pertanian</p>
-                                <p class="text-[11px] text-slate-400 mt-1 truncate">Monitoring lingkungan pertanian...</p>
-                            </div>
-                            <div class="col-span-3">
-                                <span class="text-[12px] font-medium text-slate-600">CV. Tani Maju</span>
-                            </div>
-                            <div class="col-span-2">
-                                <span class="bg-[#FFE4E6] text-[#E11D48] text-[11px] font-semibold px-3 py-1 rounded-full inline-block">
-                                    Proposal
-                                </span>
-                            </div>
-                            <div class="col-span-2 flex items-center gap-3">
-                                <div class="w-20 h-2 bg-[#EFF6FF] rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#E11D48] rounded-full" style="width: 20%"></div>
-                                </div>
-                                <span class="text-xs font-medium text-slate-500">20%</span>
-                            </div>
-                        </div>
-
+                        @endforelse
                     </div>
                 </div>
             </div>

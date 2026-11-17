@@ -15,8 +15,8 @@
     $stats = $stats ?? [
         'total'          => 0,
         'testing'        => 0,
-        'waiting_signoff'=> 0,
-        'passed'         => 0,
+        'waiting_review' => 0,
+        'needs_improvement' => 0,
     ];
 @endphp
 
@@ -77,7 +77,7 @@
                         Manajemen Sesi &amp; <span class="text-[#FFB800]">Pengujian UAT</span>
                     </h1>
                     <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
-                        Kelola sesi pengujian penerimaan pengguna, input butir pengujian fitur, tandai fase testing, dan pantau tanda tangan (sign-off) klien.
+                        Periksa hasil pengujian yang dikirim Klien, tambahkan checklist tindak lanjut, dan verifikasi perbaikannya.
                     </p>
                 </div>
 
@@ -124,9 +124,9 @@
                 {{-- Menunggu Sign-off --}}
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5 flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Menunggu Sign-off</p>
-                        <p class="text-2xl font-bold text-indigo-600 mt-1">{{ $stats['waiting_signoff'] }}</p>
-                        <p class="text-[11px] text-indigo-600/80 mt-0.5">Sesi UAT siap ditinjau klien</p>
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Menunggu Pemeriksaan</p>
+                        <p class="text-2xl font-bold text-indigo-600 mt-1">{{ $stats['waiting_review'] }}</p>
+                        <p class="text-[11px] text-indigo-600/80 mt-0.5">Hasil yang dikirim Klien</p>
                     </div>
                     <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -135,12 +135,12 @@
                     </div>
                 </div>
 
-                {{-- Lulus UAT & Signed --}}
+                {{-- Checklist tindak lanjut --}}
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5 flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Lulus &amp; Disahkan</p>
-                        <p class="text-2xl font-bold text-emerald-600 mt-1">{{ $stats['passed'] }}</p>
-                        <p class="text-[11px] text-emerald-600/80 mt-0.5">UAT PASSED & Sign-off Klien</p>
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Perlu Perbaikan</p>
+                        <p class="text-2xl font-bold text-amber-600 mt-1">{{ $stats['needs_improvement'] }}</p>
+                        <p class="text-[11px] text-amber-600/80 mt-0.5">Checklist sedang ditindaklanjuti</p>
                     </div>
                     <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -155,7 +155,7 @@
                 <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h2 class="font-bold text-[#1E293B] text-base">Daftar Proyek &amp; Lembar UAT</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Tandai fase testing, isi butir pengujian fitur, dan pantau pengesahan klien.</p>
+                        <p class="text-xs text-slate-400 mt-0.5">Klien mengisi hasil UAT; Pengurus memeriksa dan meneruskan tindak lanjut.</p>
                     </div>
 
                     {{-- Search & Filters --}}
@@ -192,7 +192,7 @@
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Klien / Mitra</th>
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Status Proyek</th>
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Hasil UAT</th>
-                                <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Sign-off Klien</th>
+                                <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Pemeriksaan</th>
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-6 py-3.5 text-right">Aksi</th>
                             </tr>
                         </thead>
@@ -202,8 +202,7 @@
                                     $pId = $p['id'];
                                     $code = $p['proposal_code'] ?? ('PRJ-' . $pId);
                                     $title = $p['title'] ?? 'Proyek Tanpa Judul';
-                                    $clientName = $p['client']['name'] ?? $p['client_name'] ?? 'Klien Mitra';
-                                    $companyName = $p['client']['company_name'] ?? $p['client_company_name'] ?? '-';
+                                    $companyName = $p['client_company_name'] ?? $p['client']['company_name'] ?? $p['client_name'] ?? $p['client']['name'] ?? '—';
                                     $statusId = (int) ($p['status_id'] ?? 0);
                                     $statusName = $p['status']['name'] ?? $p['status'] ?? 'Active';
                                     $isTesting = ($statusId === 8 || strtolower($statusName) === 'testing');
@@ -217,6 +216,7 @@
                                     $isSigned = !empty($uat['signed_off_at']);
                                     $signerName = $uat['client_signoff_name'] ?? null;
                                     $sessionDate = $uat['session_date'] ?? null;
+                                    $reviewStatus = $uat['review_status'] ?? null;
                                 @endphp
                                 <tr class="hover:bg-slate-50/80 transition-colors"
                                     x-show="(
@@ -227,7 +227,7 @@
                                         (filterStatus === 'signed' && {{ $isSigned ? 'true' : 'false' }})
                                     ) && (
                                         searchQuery === '' ||
-                                        '{{ strtolower($code . ' ' . $title . ' ' . $clientName . ' ' . $statusName . ' ' . (strtolower(trim($statusName)) === 'submitted' ? 'siap diuji' : '')) }}'.includes(searchQuery.toLowerCase())
+                                        '{{ strtolower($code . ' ' . $title . ' ' . $companyName . ' ' . $statusName . ' ' . (in_array(strtolower(trim($statusName)), ['approved', 'siap diuji']) ? 'siap diuji' : '')) }}'.includes(searchQuery.toLowerCase())
                                     )">
                                     {{-- Kode & Title --}}
                                     <td class="px-6 py-4">
@@ -249,10 +249,9 @@
                                         </div>
                                     </td>
 
-                                    {{-- Klien --}}
+                                    {{-- Klien / Mitra (Hanya Nama Perusahaan) --}}
                                     <td class="px-4 py-4">
-                                        <p class="text-xs font-bold text-slate-800">{{ $clientName }}</p>
-                                        <p class="text-[11px] text-slate-400 mt-0.5">{{ $companyName }}</p>
+                                        <p class="text-xs font-bold text-slate-800">{{ $companyName }}</p>
                                     </td>
 
                                     {{-- Status Proyek --}}
@@ -272,7 +271,12 @@
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                                 Completed
                                             </span>
-                                        @elseif(strtolower(trim($statusName)) === 'submitted')
+                                        @elseif(in_array(strtolower(trim($statusName)), ['active', 'berjalan']))
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                                                Active
+                                            </span>
+                                        @elseif(in_array(strtolower(trim($statusName)), ['approved', 'siap diuji']))
                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-[#0B3B82] border border-blue-200">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
                                                 Siap Diuji
@@ -315,19 +319,27 @@
                                         @endif
                                     </td>
 
-                                    {{-- Sign-off Klien --}}
+                                    {{-- Status pemeriksaan --}}
                                     <td class="px-4 py-4">
-                                        @if($isSigned)
+                                        @if($reviewStatus === 'APPROVED')
                                             <div class="flex items-center gap-1.5">
                                                 <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold">✓</span>
                                                 <div>
-                                                    <p class="text-xs font-bold text-emerald-800">Ditandatangani</p>
-                                                    <p class="text-[10px] text-slate-400">Oleh: {{ $signerName }}</p>
+                                                    <p class="text-xs font-bold text-emerald-800">Disetujui Pengurus</p>
+                                                    <p class="text-[10px] text-slate-400">{{ $isSigned ? 'Telah disahkan Klien' : 'Menunggu persetujuan Klien' }}</p>
                                                 </div>
                                             </div>
-                                        @elseif($hasUat)
+                                        @elseif($reviewStatus === 'NEEDS_IMPROVEMENT')
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                                                Menunggu Klien
+                                                Checklist perbaikan
+                                            </span>
+                                        @elseif($reviewStatus === 'READY_FOR_RETEST')
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                                Siap diuji ulang
+                                            </span>
+                                        @elseif($hasUat)
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                                Menunggu pemeriksaan
                                             </span>
                                         @else
                                             <span class="text-xs text-slate-400">—</span>
@@ -341,22 +353,19 @@
                                                 {{-- 1. Sudah ada lembar UAT --}}
                                                 <a href="{{ route('pengurus-tefa.uat.detail', $pId) }}"
                                                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#0B3B82] text-white hover:bg-[#082a5c] transition shadow-2xs">
-                                                    <span>Detail &amp; Revisi UAT</span>
+                                                    <span>{{ $reviewStatus === 'PENDING_REVIEW' ? 'Periksa Hasil UAT' : 'Lihat Tindak Lanjut' }}</span>
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
                                                     </svg>
                                                 </a>
                                             @elseif($isTesting)
-                                                {{-- 2. Sudah fase Testing tapi belum ada sesi UAT: Buat Sesi UAT --}}
+                                                {{-- Klien yang mengirim sesi UAT --}}
                                                 <a href="{{ route('pengurus-tefa.uat.detail', $pId) }}"
                                                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-2xs">
-                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                                                    </svg>
-                                                    <span>Buat Sesi UAT</span>
+                                                    <span>Lihat Status UAT</span>
                                                 </a>
                                             @else
-                                                {{-- 3. Belum fase Testing: Tandai Testing terlebih dahulu (alur bertahap, tidak berbarengan) --}}
+                                                {{-- Belum fase Testing --}}
                                                 <button type="button"
                                                         @click="openTestingConfirm({{ $pId }}, '{{ addslashes($title) }}')"
                                                         title="Tandai proyek masuk fase Testing terlebih dahulu agar formulir UAT dapat dibuat"
@@ -412,7 +421,7 @@
             </div>
 
             <p class="text-xs text-slate-600 leading-relaxed">
-                Apakah Anda yakin ingin memindahkan status proyek <strong class="text-slate-900" x-text="selectedProposalTitle"></strong> ke fase <strong>Testing (Status ID = 8)</strong>? Setelah status proyek menjadi Testing, tombol <strong>Buat Sesi UAT</strong> akan aktif.
+                Apakah Anda yakin ingin menandai proyek <strong class="text-slate-900" x-text="selectedProposalTitle"></strong> siap diuji Klien? Setelah status menjadi Testing, Klien dapat mengisi hasil UAT dari halaman proyek.
             </p>
 
             <form :action="'/pengurus-tefa/proposals/' + selectedProposalId + '/status/testing'" method="POST" class="flex flex-col sm:flex-row items-center justify-end gap-2.5 pt-3">
@@ -432,7 +441,7 @@
                         name="next"
                         value="create_uat"
                         class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-600/30 transition cursor-pointer flex items-center justify-center gap-1.5">
-                    <span>Tandai &amp; Buat Sesi UAT</span>
+                    <span>Tandai Siap Diuji Klien</span>
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
                     </svg>
