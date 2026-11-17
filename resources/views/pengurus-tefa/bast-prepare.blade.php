@@ -67,8 +67,8 @@
                     </div>
                     <div>
                         <label class="mb-1 block text-xs font-semibold text-slate-700">Lampiran fisik dokumentasi API</label>
-                        <input type="file" name="documentation_file" accept=".pdf,.doc,.docx" @required(empty($project['documentation_url'])) class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
-                        <p class="mt-1 text-[11px] text-slate-400">{{ !empty($project['documentation_url']) ? 'Opsional: unggah jika ingin mengganti lampiran.' : 'Wajib diisi: PDF, DOC, atau DOCX, maksimal 10 MB.' }}</p>
+                        <input type="file" name="documentation_file" accept=".pdf,.docx,.zip,.doc" @required(empty($project['documentation_url'])) class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                        <p class="mt-1 text-[11px] text-slate-400">{{ !empty($project['documentation_url']) ? 'Opsional: unggah jika ingin mengganti lampiran (PDF, DOCX, ZIP maks 10 MB).' : 'Wajib diisi: PDF, DOCX, atau ZIP, maksimal 10 MB.' }}</p>
                         @if(!empty($project['documentation_url']))
                             <a href="{{ route('pengurus-tefa.bast.documentation', $project['id']) }}" class="mt-1 inline-block text-xs font-semibold text-blue-700 underline">Lihat lampiran saat ini</a>
                         @endif
