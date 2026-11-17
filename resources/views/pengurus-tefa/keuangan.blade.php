@@ -31,7 +31,12 @@
     $user = $user ?? session('user');
     $firstName = explode(' ', $user['name'] ?? 'Pengurus')[0];
     $pendingPayments = $pendingPayments ?? [];
+    $allPayments = $allPayments ?? [];
     $allProposals = $allProposals ?? [];
+
+    $verifiedPayments = collect($allPayments)->filter(fn($p) => strtoupper($p['status'] ?? '') === 'VERIFIED');
+    $totalVerifiedAmount = $verifiedPayments->sum(fn($p) => (float) ($p['amount'] ?? 0));
+    $paidProjectIds = $verifiedPayments->pluck('proposal_id')->filter()->unique()->count();
 @endphp
 
 <div class="flex min-h-screen overflow-x-hidden">
@@ -177,10 +182,10 @@
             <div class="grid grid-cols-4 gap-4 items-stretch">
                 @php
                 $keuStats = [
-                    ['label' => 'Total Pemasukan',   'value' => 'Rp 218 Jt', 'sub' => '↑ 32% vs 2025',  'color' => '#16A34A', 'icon' => 'check'],
-                    ['label' => 'Target Penerimaan', 'value' => 'Rp 300 Jt', 'sub' => '72% Tercapai',   'color' => '#0B3B82', 'icon' => 'folder'],
-                    ['label' => 'Projek Terbayar',   'value' => '11 Projek', 'sub' => 'Tahun 2026',    'color' => '#6366F1', 'icon' => 'clock-file'],
-                    ['label' => 'Antrean Verifikasi','value' => count($pendingPayments) . ' Tagihan',  'sub' => 'Butuh Tindakan', 'color' => '#F59E0B', 'icon' => 'calendar'],
+                    ['label' => 'Total Pemasukan',   'value' => 'Rp ' . number_format($totalVerifiedAmount, 0, ',', '.'), 'sub' => $verifiedPayments->count() . ' Transaksi Terverifikasi', 'color' => '#16A34A', 'icon' => 'check'],
+                    ['label' => 'Target Penerimaan', 'value' => 'Rp 100.000.000', 'sub' => round(min(100, ($totalVerifiedAmount / 100000000) * 100)) . '% Tercapai',   'color' => '#0B3B82', 'icon' => 'folder'],
+                    ['label' => 'Projek Terbayar',   'value' => $paidProjectIds . ' Projek', 'sub' => 'Dari database',    'color' => '#6366F1', 'icon' => 'clock-file'],
+                    ['label' => 'Antrean Verifikasi','value' => count($pendingPayments) . ' Tagihan',  'sub' => 'Menunggu Review', 'color' => '#F59E0B', 'icon' => 'calendar'],
                 ];
                 @endphp
                 @foreach($keuStats as $stat)
@@ -226,10 +231,9 @@
                     <p class="font-semibold text-[#1E293B] text-[15px] mb-4">Status Tagihan Proyek</p>
                     <div class="space-y-3">
                         @foreach([
-                            ['Lunas / Verified','11 projek','#16A34A'],
-                            ['Menunggu Verifikasi', count($pendingPayments) . ' tagihan','#F59E0B'],
-                            ['Belum Dibayar','5 projek','#EF4444'],
-                            ['Gratis/CSR','2 projek','#6366F1'],
+                            ['Lunas / Verified', $verifiedPayments->count() . ' transaksi', '#16A34A'],
+                            ['Menunggu Verifikasi', count($pendingPayments) . ' tagihan', '#F59E0B'],
+                            ['Total Proposal', count($allProposals) . ' projek', '#6366F1'],
                         ] as [$s,$v,$c])
                         <div class="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
                             <div class="flex items-center gap-2">
@@ -241,13 +245,16 @@
                         @endforeach
                     </div>
                     <div class="mt-4 pt-4 border-t border-slate-100">
-                        <p class="text-xs text-slate-400 mb-2">Target Penerimaan 2026</p>
+                        <p class="text-xs text-slate-400 mb-2">Target Penerimaan</p>
+                        @php
+                            $targetPercent = round(min(100, ($totalVerifiedAmount / 100000000) * 100));
+                        @endphp
                         <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-[#0B3B82] rounded-full" style="width:72%"></div>
+                            <div class="h-full bg-[#0B3B82] rounded-full" style="width:{{ $targetPercent }}%"></div>
                         </div>
                         <div class="flex justify-between mt-1">
-                            <span class="text-[11px] text-slate-500">Rp 218 Jt</span>
-                            <span class="text-[11px] font-bold text-[#0B3B82]">72% dari target</span>
+                            <span class="text-[11px] text-slate-500">Rp {{ number_format($totalVerifiedAmount, 0, ',', '.') }}</span>
+                            <span class="text-[11px] font-bold text-[#0B3B82]">{{ $targetPercent }}% dari target</span>
                         </div>
                     </div>
                 </div>
@@ -258,11 +265,8 @@
                 <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                     <div>
                         <p class="font-semibold text-[#1E293B] text-[15px]">Riwayat Transaksi Keuangan</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Semua transaksi buku kas TeFa</p>
+                        <p class="text-xs text-slate-400 mt-0.5">Semua data transaksi pembayaran yang tercatat di database</p>
                     </div>
-                    <select class="text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0B3B82]">
-                        <option>Oktober 2026</option><option>September 2026</option><option>Agustus 2026</option>
-                    </select>
                 </div>
                 <div class="w-full overflow-x-auto custom-scrollbar">
                     <table class="w-full text-sm min-w-[650px]">
@@ -277,27 +281,39 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
+                            @forelse($allPayments as $t)
                             @php
-                            $transactions = [
-                                ['date'=>'18 Okt 2026','ket'=>'Pembayaran DP 50%','projek'=>'Sistem Parkir Cerdas','klien'=>'Pemkot Semarang','jenis'=>'Pemasukan','jumlah'=>'+Rp 6.000.000'],
-                                ['date'=>'15 Okt 2026','ket'=>'Pembayaran Lunas','projek'=>'Website Company Profile','klien'=>'PT. DEF Solusi','jenis'=>'Pemasukan','jumlah'=>'+Rp 9.000.000'],
-                                ['date'=>'12 Okt 2026','ket'=>'Pembayaran Termin 2','projek'=>'Sistem Informasi UMKM','klien'=>'PT. ABC Indonesia','jenis'=>'Pemasukan','jumlah'=>'+Rp 5.000.000'],
-                                ['date'=>'08 Okt 2026','ket'=>'Pembayaran DP 40%','projek'=>'Aplikasi Smart Campus','klien'=>'Polines Internal','jenis'=>'Pemasukan','jumlah'=>'+Rp 8.000.000'],
-                                ['date'=>'01 Okt 2026','ket'=>'Pembayaran Termin 1','projek'=>'Monitoring IoT Industri','klien'=>'PT. Tekno Mandiri','jenis'=>'Pemasukan','jumlah'=>'+Rp 4.500.000'],
-                            ];
+                                $isVerified = strtoupper($t['status'] ?? '') === 'VERIFIED';
+                                $badgeClass = $isVerified ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700';
+                                $amountColor = $isVerified ? 'text-green-600' : 'text-slate-600';
+                                $dateStr = !empty($t['payment_date']) 
+                                    ? \Carbon\Carbon::parse($t['payment_date'])->translatedFormat('d M Y') 
+                                    : (!empty($t['created_at']) ? \Carbon\Carbon::parse($t['created_at'])->translatedFormat('d M Y') : '—');
                             @endphp
-                            @foreach($transactions as $t)
                             <tr class="hover:bg-slate-50/60 transition-colors">
-                                <td class="px-6 py-3 text-[12px] text-slate-500 whitespace-nowrap">{{ $t['date'] }}</td>
-                                <td class="px-4 py-3 text-[12px] font-semibold text-[#1E293B] whitespace-nowrap">{{ $t['ket'] }}</td>
-                                <td class="px-4 py-3 text-[12px] text-slate-600 whitespace-nowrap">{{ $t['projek'] }}</td>
-                                <td class="px-4 py-3 text-[12px] text-slate-600 whitespace-nowrap">{{ $t['klien'] }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-green-50 text-green-700">Pemasukan</span>
+                                <td class="px-6 py-3 text-[12px] text-slate-500 whitespace-nowrap">{{ $dateStr }}</td>
+                                <td class="px-4 py-3 text-[12px] font-semibold text-[#1E293B] whitespace-nowrap">
+                                    Termin {{ $t['term_sequence'] ?? 1 }}
+                                    @if(!empty($t['invoice_number']))
+                                        <span class="text-[10px] text-slate-400 font-normal">({{ $t['invoice_number'] }})</span>
+                                    @endif
                                 </td>
-                                <td class="px-6 py-3 text-right text-[13px] font-bold text-green-600 whitespace-nowrap">{{ $t['jumlah'] }}</td>
+                                <td class="px-4 py-3 text-[12px] text-slate-600 whitespace-nowrap">{{ $t['proposal']['title'] ?? ('Projek #' . ($t['proposal_id'] ?? '-')) }}</td>
+                                <td class="px-4 py-3 text-[12px] text-slate-600 whitespace-nowrap">{{ $t['proposal']['client']['name'] ?? '—' }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full {{ $badgeClass }}">{{ $t['status'] ?? 'PENDING' }}</span>
+                                </td>
+                                <td class="px-6 py-3 text-right text-[13px] font-bold {{ $amountColor }} whitespace-nowrap">
+                                    +Rp {{ number_format((float) ($t['amount'] ?? 0), 0, ',', '.') }}
+                                </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-8 text-center text-xs text-slate-400">
+                                    Belum ada transaksi pembayaran yang tercatat di database.
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

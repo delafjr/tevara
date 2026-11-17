@@ -308,6 +308,12 @@
                             </div>
                         </div>
 
+                        @php
+                            $statusLower = strtolower($status);
+                            $isPendingValidation = in_array($statusLower, ['submitted', 'under review', 'revision required', 'menunggu validasi'], true);
+                            $isExecuted = in_array($statusLower, ['active', 'testing', 'handover', 'completed', 'selesai'], true);
+                        @endphp
+                        @if ($isPendingValidation)
                         <div class="flex flex-wrap items-center gap-2">
                             <button type="button"
                                     @click="rejectModal = true"
@@ -330,6 +336,21 @@
                                 Setujui
                             </a>
                         </div>
+                        @elseif ($isExecuted)
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                Proposal Resmi Disetujui (Projek Aktif)
+                            </span>
+                            <a href="{{ route('pengurus-tefa.projek') }}" class="text-xs font-bold text-[#0B3B82] hover:underline inline-flex items-center gap-1">
+                                Kelola di Halaman Projek &rarr;
+                            </a>
+                        </div>
+                        @else
+                        <div>
+                            <span class="text-xs font-semibold text-slate-500">Status Proposal: {{ $status }}</span>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>

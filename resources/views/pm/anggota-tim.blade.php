@@ -22,61 +22,10 @@
         'AgriTech IoT'           => 'agritech',
     ];
 
-    // Data utama berasal dari endpoint dosen/dashboard. Jangan membuat data tim
-    // baru di frontend ketika backend belum mengirim detail anggotanya.
+    // Data utama berasal dari endpoint dosen/dashboard.
     $dashboard = is_array($dashboard ?? null) ? $dashboard : [];
     $apiProjects = is_array($dashboard['projects'] ?? null) ? $dashboard['projects'] : [];
-
-    // Data demo sementara agar halaman tetap bisa dipresentasikan sebelum API
-    // mengirim daftar project dan detail anggota yang sebenarnya.
-    $demoProjects = [
-        [
-            'id' => 'PRJ-DEMO-001', 'category' => 'IoT & Web Portal', 'status' => 'Aktif',
-            'title' => 'Sistem Monitoring Rantai Pasok Terpadu', 'client_name' => 'PT. ABC Indonesia',
-            'team' => [
-                ['name' => 'Ahmad Rifai', 'nim' => '22641181701', 'study_program' => 'D3 Teknik Informatika', 'role' => 'Fullstack Lead'],
-                ['name' => 'Siti Nurhaliza', 'nim' => '22641181722', 'study_program' => 'D3 Teknik Informatika', 'role' => 'UI/UX Designer'],
-                ['name' => 'Dimas Prasetyo', 'nim' => '22641181745', 'study_program' => 'D3 Teknik Informatika', 'role' => 'Backend Lead'],
-                ['name' => 'Kevin Sanjaya', 'nim' => '22641181763', 'study_program' => 'D3 Teknik Informatika', 'role' => 'QA Tester'],
-            ],
-        ],
-        [
-            'id' => 'PRJ-DEMO-002', 'category' => 'Mobile App (Flutter)', 'status' => 'Aktif',
-            'title' => 'Aplikasi Mobile Portal Layanan Nasabah', 'client_name' => 'PT. DEF Solusi Finansial',
-            'team' => [
-                ['name' => 'Bagas Rahmawan', 'nim' => '22641181801', 'study_program' => 'D3 Teknik Informatika', 'role' => 'Mobile Dev'],
-                ['name' => 'Putri Ayu Lestari', 'nim' => '22641181822', 'study_program' => 'D3 Teknik Informatika', 'role' => 'UI/UX Designer'],
-                ['name' => 'Daffa Syahputra', 'nim' => '22641181845', 'study_program' => 'D3 Teknik Informatika', 'role' => 'QA Tester'],
-            ],
-        ],
-        [
-            'id' => 'PRJ-DEMO-003', 'category' => 'IoT & Desktop', 'status' => 'Aktif',
-            'title' => 'Smart Warehouse Environmental Sensor', 'client_name' => 'Dinas Ketahanan Pangan',
-            'team' => [
-                ['name' => 'Budi Ramadhan', 'nim' => '22641181810', 'study_program' => 'D4 Teknik Telekomunikasi', 'role' => 'DevOps'],
-                ['name' => 'M. Irfan Hakim', 'nim' => '22641181833', 'study_program' => 'D3 Teknik Informatika', 'role' => 'Frontend Lead'],
-            ],
-        ],
-        [
-            'id' => 'PRJ-DEMO-004', 'category' => 'Web Dashboard', 'status' => 'Selesai',
-            'title' => 'Sistem Informasi Manajemen Inventori Sekolah', 'client_name' => 'Dinas Pendidikan Provinsi',
-            'team' => [
-                ['name' => 'Farhan Aditya', 'nim' => '22641181902', 'study_program' => 'D3 Teknik Informatika', 'role' => 'Frontend Lead'],
-                ['name' => 'Nurul Izzah', 'nim' => '22641181919', 'study_program' => 'D3 Teknik Informatika', 'role' => 'Backend Lead'],
-                ['name' => 'Hendra Wijaya', 'nim' => '22641181954', 'study_program' => 'D3 Teknik Informatika', 'role' => 'DevOps'],
-            ],
-        ],
-        [
-            'id' => 'PRJ-DEMO-005', 'category' => 'AgriTech IoT', 'status' => 'Inisiasi Tim',
-            'title' => 'Smart Farming IoT dan Irigasi Otomatis', 'client_name' => 'CV. Tani Maju Mandiri',
-            'team' => [
-                ['name' => 'M. Iqbal Kurniawan', 'nim' => '22641182001', 'study_program' => 'D4 Teknik Telekomunikasi', 'role' => 'Fullstack Lead'],
-                ['name' => 'M. Zaki Fadhilah', 'nim' => '22641182035', 'study_program' => 'D3 Teknik Informatika', 'role' => 'Backend Lead'],
-            ],
-        ],
-    ];
-    $usingDemoData = empty($apiProjects);
-    $apiProjects = $usingDemoData ? $demoProjects : $apiProjects;
+    $usingDemoData = false;
     $readValue = static function (array $item, array $keys, mixed $default = null): mixed {
         foreach ($keys as $key) {
             $value = data_get($item, $key);
