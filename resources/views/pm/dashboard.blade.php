@@ -23,62 +23,7 @@
     $completedProjects = (int) ($dash['completed_projects'] ?? 0);
     $waitingReview     = (int) ($dash['waiting_review'] ?? 0);
     $projectsList      = is_array($dash['projects'] ?? null) ? $dash['projects'] : [];
-    $usingDemoData     = empty($projectsList)
-        && $totalProjects === 0
-        && $activeProjects === 0
-        && $completedProjects === 0
-        && $waitingReview === 0;
-
-    if ($usingDemoData) {
-        $projectsList = [
-            [
-                'title' => 'Sistem Informasi UMKM',
-                'description' => 'Pengembangan sistem informasi untuk operasional UMKM.',
-                'client_name' => 'PT. ABC Indonesia',
-                'status' => 'Berjalan',
-                'progress' => 75,
-            ],
-            [
-                'title' => 'Smart Farming IoT',
-                'description' => 'Implementasi IoT untuk pertanian presisi.',
-                'client_name' => 'CV. Tani Maju',
-                'status' => 'Review',
-                'progress' => 60,
-            ],
-            [
-                'title' => 'Website Company Profile',
-                'description' => 'Pembuatan website profil perusahaan.',
-                'client_name' => 'PT. DEF Solusi',
-                'status' => 'Selesai',
-                'progress' => 100,
-            ],
-            [
-                'title' => 'Aplikasi Manajemen Inventori',
-                'description' => 'Sistem inventori berbasis web.',
-                'client_name' => 'Dinas Pendidikan',
-                'status' => 'Berjalan',
-                'progress' => 40,
-            ],
-            [
-                'title' => 'IoT Monitoring Pertanian',
-                'description' => 'Monitoring lingkungan pertanian berbasis IoT.',
-                'client_name' => 'CV. Tani Maju',
-                'status' => 'Proposal',
-                'progress' => 20,
-            ],
-        ];
-        $totalProjects = 15;
-        $activeProjects = 9;
-        $completedProjects = 4;
-        $waitingReview = 3;
-        $dash['category_distribution'] = [
-            ['web' => 6],
-            ['iot' => 4],
-            ['app' => 3],
-            ['system' => 2],
-            ['other' => 0],
-        ];
-    }
+    $usingDemoData     = false;
 
     // category_distribution dari API berbentuk [{"web": 1}, ...] → ratakan lalu jumlahkan per kategori.
     $categoryCounts = [];
