@@ -2132,69 +2132,16 @@ Route::middleware('auth.api')->group(function () {
             $error = null;
 
             try {
-                $response = $api->get('proposals');
-                if ($response->successful() && is_array($response->json())) {
-                    $proposals = $response->json();
-
-                    foreach ($proposals as &$p) {
-                        $pId = $p['id'] ?? null;
-                        if (!$pId) continue;
-                        try {
-                            $uatRes = $api->getUat((int) $pId);
-                            if ($uatRes->successful()) {
-                                $p['uat'] = $uatRes->json('data');
-                            }
-                        } catch (\Throwable) {
-                            // Abaikan per proposal bila belum ada
-                        }
-                    }
-                    unset($p);
+                $response = $api->getUatProposals();
+                if ($response->successful()) {
+                    $proposals = $response->json('data') ?? $response->json() ?? [];
+                } else {
+                    $error = $response->json('message') ?? 'Daftar proyek UAT tidak dapat dimuat.';
                 }
             } catch (\Throwable $e) {
                 $error = 'Gagal mengambil data proyek: ' . $e->getMessage();
             }
 
-            // Fallback default jika offline / belum ada data backend
-            if (empty($proposals)) {
-                $proposals = [
-                    [
-                        'id'            => 1,
-                        'proposal_code' => 'PRSL-2025-001',
-                        'title'         => 'Sistem Informasi Manajemen Teaching Factory',
-                        'client_name'   => 'Budi Santoso',
-                        'client_company_name' => 'PT. Maju Bersama Sentosa',
-                        'status'        => ['name' => 'Completed'],
-                        'status_id'     => 10,
-                        'uat'           => [
-                            'session_date'        => '2025-12-05',
-                            'overall_result'      => 'PASSED',
-                            'client_signoff_name' => 'Budi Santoso',
-                            'signed_off_at'       => '2025-12-05 15:30:00',
-                            'uat_items'           => array_fill(0, 7, []),
-                        ],
-                    ],
-                    [
-                        'id'            => 2,
-                        'proposal_code' => 'PRSL-2025-002',
-                        'title'         => 'Smart Farming IoT',
-                        'client_name'   => 'Dewi Rahayu',
-                        'client_company_name' => 'PT. Teknologi Nusantara',
-                        'status'        => ['name' => 'Active'],
-                        'status_id'     => 7,
-                        'uat'           => null,
-                    ],
-                    [
-                        'id'            => 3,
-                        'proposal_code' => 'PRSL-2026-003',
-                        'title'         => 'Website Portal Berita Kota Semarang',
-                        'client_name'   => 'Agus Widodo',
-                        'client_company_name' => 'Diskominfo Kota Semarang',
-                        'status'        => ['name' => 'Testing'],
-                        'status_id'     => 8,
-                        'uat'           => null,
-                    ],
-                ];
-            }
 
             $total = count($proposals);
             $testing = 0;
