@@ -33,133 +33,160 @@
             </div>
 
             {{-- Stat Cards --}}
+            @php
+            $dash = $dashboard ?? [];
+            $projectsList = is_array($dash['projects'] ?? null) ? $dash['projects'] : [];
+            $totalActive = count($projectsList);
+            $avgProgress = $totalActive > 0 ? (int) round(array_sum(array_column($projectsList, 'progress')) / $totalActive) : 0;
+            $needsAttention = count(array_filter($projectsList, fn($p) => ($p['progress'] ?? 0) < 50));
+            $delayed = count(array_filter($projectsList, fn($p) => !empty($p['deadline']) && strtotime($p['deadline']) < time() && ($p['progress'] ?? 0) < 100));
+
+            $monitoringStats = [
+                ['value' => (string) $totalActive, 'label' => 'Projek Berjalan', 'color' => '#0B3B82', 'sub' => 'Dari database'],
+                ['value' => (string) $needsAttention, 'label' => 'Perlu Perhatian', 'color' => '#F59E0B', 'sub' => 'Progress < 50%'],
+                ['value' => (string) $delayed, 'label' => 'Terlambat', 'color' => '#EF4444', 'sub' => 'Lewat target deadline'],
+                ['value' => $avgProgress . '%', 'label' => 'Rata-rata Progress', 'color' => '#16A34A', 'sub' => 'Dari ' . $totalActive . ' projek'],
+            ];
+            @endphp
             <div class="grid grid-cols-4 gap-4">
-                @foreach([
-                    ['17','Projek Berjalan','#0B3B82','On track'],
-                    ['4','Perlu Perhatian','#F59E0B','Progress lambat'],
-                    ['2','Terlambat','#EF4444','Deadline terlewat'],
-                    ['78%','Rata-rata Progress','#16A34A','Dari 17 projek'],
-                ] as [$v,$l,$c,$sub])
+                @foreach($monitoringStats as $stat)
                 <div class="bg-white rounded-xl px-5 py-5 border border-slate-100 shadow-sm">
-                    <p class="text-3xl font-bold leading-none" style="color:{{ $c }}">{{ $v }}</p>
-                    <p class="text-xs text-slate-400 mt-1.5 font-medium">{{ $l }}</p>
-                    <p class="text-[11px] mt-1 text-slate-500">{{ $sub }}</p>
+                    <p class="text-3xl font-bold leading-none" style="color:{{ $stat['color'] }}">{{ $stat['value'] }}</p>
+                    <p class="text-xs text-slate-400 mt-1.5 font-medium">{{ $stat['label'] }}</p>
+                    <p class="text-[11px] mt-1 text-slate-500">{{ $stat['sub'] }}</p>
                 </div>
                 @endforeach
             </div>
 
             {{-- Monitoring Cards Grid --}}
-            <div>
+            <div x-data="{ filter: 'all' }">
                 <div class="flex items-center justify-between mb-4">
                     <p class="font-semibold text-[#1E293B] text-[15px]">Status Semua Projek</p>
                     <div class="flex gap-2">
-                        <button class="text-xs px-3 py-1.5 rounded-lg bg-[#0B3B82] text-white font-semibold">Semua</button>
-                        <button class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors">Bermasalah</button>
-                        <button class="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors">On Track</button>
+                        <button type="button" @click="filter = 'all'" :class="filter === 'all' ? 'bg-[#0B3B82] text-white' : 'border border-slate-200 text-slate-500'" class="text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors">Semua</button>
+                        <button type="button" @click="filter = 'warning'" :class="filter === 'warning' ? 'bg-[#0B3B82] text-white' : 'border border-slate-200 text-slate-500'" class="text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors">Perlu Perhatian</button>
+                        <button type="button" @click="filter = 'ontrack'" :class="filter === 'ontrack' ? 'bg-[#0B3B82] text-white' : 'border border-slate-200 text-slate-500'" class="text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors">On Track</button>
                     </div>
                 </div>
                 <div class="space-y-3">
                     @php
-                    $monitorings = [
-                        ['name'=>'Sistem Informasi UMKM','pm'=>'Dimas Setiawan','klien'=>'PT. ABC Indonesia','prog'=>75,'sprint'=>3,'mhs'=>8,'status'=>'On Track','deadline'=>'12 Okt 2026','catatan'=>'Sprint 3 selesai tepat waktu, deliverable sudah disubmit.'],
-                        ['name'=>'Smart Farming IoT','pm'=>'Rizky Pratama','klien'=>'CV. Tani Maju','prog'=>60,'sprint'=>2,'mhs'=>6,'status'=>'On Track','deadline'=>'5 Nov 2026','catatan'=>'Hardware integration selesai, lanjut ke tahap pengujian.'],
-                        ['name'=>'Monitoring Produksi','pm'=>'Dimas Setiawan','klien'=>'CV. Tani Maju','prog'=>40,'sprint'=>2,'mhs'=>7,'status'=>'Perhatian','deadline'=>'25 Nov 2026','catatan'=>'Sprint 2 mundur 1 minggu, perlu evaluasi tim.'],
-                        ['name'=>'Sistem Parkir Cerdas','pm'=>'Ari Wibowo','klien'=>'Pemkot Semarang','prog'=>55,'sprint'=>3,'mhs'=>9,'status'=>'On Track','deadline'=>'1 Des 2026','catatan'=>'Integrasi sensor selesai, lanjut ke UI dashboard.'],
-                        ['name'=>'E-Commerce UMKM Batik','pm'=>'Siti Rahayu','klien'=>'Koperasi Batik','prog'=>80,'sprint'=>4,'mhs'=>6,'status'=>'On Track','deadline'=>'10 Nov 2026','catatan'=>'Hampir selesai, tinggal tahap QA dan testing akhir.'],
-                        ['name'=>'Aplikasi Inventori','pm'=>'Thomas Elang','klien'=>'PT. Maju Sentosa','prog'=>25,'sprint'=>1,'mhs'=>5,'status'=>'Perhatian','deadline'=>'18 Nov 2026','catatan'=>'Kickoff selesai, desain UI masih dalam review klien.'],
-                        ['name'=>'Absensi Digital','pm'=>'Budi Prasetyo','klien'=>'SMK Negeri 1','prog'=>30,'sprint'=>1,'mhs'=>5,'status'=>'Terlambat','deadline'=>'20 Des 2026','catatan'=>'Terlambat 2 minggu dari jadwal. Perlu meeting evaluasi.'],
-                    ];
-                    $stColor=['On Track'=>['dot'=>'#16A34A','badge'=>'bg-green-50 text-green-700'],'Perhatian'=>['dot'=>'#F59E0B','badge'=>'bg-amber-50 text-amber-700'],'Terlambat'=>['dot'=>'#EF4444','badge'=>'bg-red-50 text-red-600']];
-                    $pc=fn($p)=>$p>=70?'#16A34A':($p>=40?'#0B3B82':($p>=20?'#F59E0B':'#EF4444'));
+                    $pc = fn($p) => $p >= 70 ? '#16A34A' : ($p >= 40 ? '#0B3B82' : ($p >= 20 ? '#F59E0B' : '#EF4444'));
                     @endphp
-                    @foreach($monitorings as $m)
-                    @php $sc = $stColor[$m['status']]; @endphp
-                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm px-6 py-5 hover:border-slate-200 hover:shadow-md transition-all">
+                    @forelse($projectsList as $m)
+                    @php
+                        $prog = (int) ($m['progress'] ?? 0);
+                        $isWarning = $prog < 50;
+                        $statusLabel = $prog >= 70 ? 'On Track' : ($prog >= 40 ? 'Progres Stabil' : 'Perlu Perhatian');
+                        $badgeBg = $prog >= 70 ? 'bg-green-50 text-green-700' : ($prog >= 40 ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700');
+                        $dotColor = $prog >= 70 ? '#16A34A' : ($prog >= 40 ? '#0B3B82' : '#F59E0B');
+                    @endphp
+                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm px-6 py-5 hover:border-slate-200 hover:shadow-md transition-all"
+                         x-show="filter === 'all' || (filter === 'warning' && {{ $isWarning ? 'true' : 'false' }}) || (filter === 'ontrack' && {{ !$isWarning ? 'true' : 'false' }})">
                         <div class="flex items-start gap-5">
                             <div class="flex-1">
                                 <div class="flex items-center gap-2.5 mb-1.5">
-                                    <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:{{ $sc['dot'] }}"></span>
-                                    <p class="font-bold text-[#1E293B] text-[14px]">{{ $m['name'] }}</p>
-                                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full {{ $sc['badge'] }}">{{ $m['status'] }}</span>
+                                    <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:{{ $dotColor }}"></span>
+                                    <p class="font-bold text-[#1E293B] text-[14px]">{{ $m['title'] }}</p>
+                                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full {{ $badgeBg }}">{{ $statusLabel }}</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">{{ $m['status'] }}</span>
                                 </div>
-                                <div class="flex items-center gap-4 text-[12px] text-slate-500 mb-3">
-                                    <span>👤 {{ $m['pm'] }}</span>
-                                    <span>🏢 {{ $m['klien'] }}</span>
-                                    <span>🎓 {{ $m['mhs'] }} mahasiswa</span>
-                                    <span>📅 Deadline: {{ $m['deadline'] }}</span>
-                                    <span>📌 Sprint {{ $m['sprint'] }}</span>
+                                <div class="flex items-center gap-4 text-[12px] text-slate-500 mb-2">
+                                    <span>👤 PM: <strong>{{ $m['pm_name'] ?? '—' }}</strong></span>
+                                    <span>🏢 {{ $m['client_name'] ?? '—' }}</span>
+                                    <span>🎓 {{ $m['student_count'] ?? 0 }} mahasiswa</span>
+                                    <span>📅 Target: {{ $m['deadline'] ?? '—' }}</span>
                                 </div>
-                                <p class="text-[12px] text-slate-500 italic">{{ $m['catatan'] }}</p>
                             </div>
                             <div class="flex flex-col items-end gap-2 flex-shrink-0 min-w-[140px]">
                                 <div class="text-right">
-                                    <p class="text-2xl font-black" style="color:{{ $pc($m['prog']) }}">{{ $m['prog'] }}%</p>
-                                    <p class="text-[11px] text-slate-400">progress</p>
+                                    <p class="text-2xl font-black" style="color:{{ $pc($prog) }}">{{ $prog }}%</p>
+                                    <p class="text-[11px] text-slate-400">progress tim</p>
                                 </div>
                                 <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full" style="width:{{ $m['prog'] }}%;background:{{ $pc($m['prog']) }}"></div>
+                                    <div class="h-full rounded-full" style="width:{{ $prog }}%;background:{{ $pc($prog) }}"></div>
                                 </div>
-                                <a href="#" class="text-[11px] font-semibold text-[#0B3B82] hover:underline">Detail →</a>
+                                <a href="{{ route('pengurus-tefa.validasi-proposal.detail', $m['id']) }}" class="text-[11px] font-semibold text-[#0B3B82] hover:underline">Detail Projek →</a>
                             </div>
                         </div>
                     </div>
-                    @endforeach
+                    @empty
+                    <div class="bg-white rounded-xl border border-slate-100 p-8 text-center text-slate-400 text-xs">
+                        Tidak ada projek yang sedang berjalan untuk dimonitor.
+                    </div>
+                    @endforelse
                 </div>
             </div>
 
             {{-- Timeline & Beban Tim --}}
             <div class="grid grid-cols-2 gap-6">
                 {{-- Deadline Terdekat --}}
+                @php
+                $deadlines = collect($projectsList)
+                    ->filter(fn($p) => !empty($p['deadline']))
+                    ->sortBy('deadline')
+                    ->take(5);
+                @endphp
                 <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-                    <p class="font-semibold text-[#1E293B] text-[15px] mb-4">Deadline Terdekat</p>
+                    <p class="font-semibold text-[#1E293B] text-[15px] mb-4">Target Deadline Terdekat</p>
                     <div class="space-y-3">
-                        @foreach([
-                            ['Website Company Profile','10 Nov 2026','3 hari lagi','#EF4444'],
-                            ['Smart Farming IoT','5 Nov 2026','16 hari lagi','#F59E0B'],
-                            ['E-Commerce UMKM Batik','10 Nov 2026','21 hari lagi','#F59E0B'],
-                            ['Aplikasi Inventori','18 Nov 2026','29 hari lagi','#16A34A'],
-                            ['Monitoring Produksi','25 Nov 2026','36 hari lagi','#16A34A'],
-                        ] as [$proj,$dl,$sisa,$c])
+                        @forelse($deadlines as $dl)
+                        @php
+                            $diff = round((strtotime($dl['deadline']) - time()) / 86400);
+                            $isOverdue = $diff < 0;
+                            $badgeColor = $isOverdue ? '#EF4444' : ($diff <= 14 ? '#F59E0B' : '#16A34A');
+                            $sisaText = $isOverdue ? abs($diff) . ' hari terlewat' : ($diff == 0 ? 'Hari ini' : $diff . ' hari lagi');
+                        @endphp
                         <div class="flex items-center justify-between py-2.5 border-b border-slate-50 last:border-0">
                             <div>
-                                <p class="text-[13px] font-semibold text-[#1E293B] leading-tight">{{ $proj }}</p>
-                                <p class="text-[11px] text-slate-400 mt-0.5">{{ $dl }}</p>
+                                <p class="text-[13px] font-semibold text-[#1E293B] leading-tight">{{ $dl['title'] }}</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">{{ date('d M Y', strtotime($dl['deadline'])) }}</p>
                             </div>
-                            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full" style="background:{{ $c }}15;color:{{ $c }}">{{ $sisa }}</span>
+                            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full" style="background:{{ $badgeColor }}15;color:{{ $badgeColor }}">{{ $sisaText }}</span>
                         </div>
-                        @endforeach
+                        @empty
+                        <p class="text-xs text-slate-400 py-4 text-center">Tidak ada target deadline tercatat.</p>
+                        @endforelse
                     </div>
                 </div>
 
                 {{-- Beban PM --}}
+                @php
+                $pmWorkload = collect($projectsList)
+                    ->filter(fn($p) => !empty($p['pm_name']) && $p['pm_name'] !== '—')
+                    ->groupBy('pm_name')
+                    ->map(fn($group, $pm) => [
+                        'pm'      => $pm,
+                        'projek'  => $group->count(),
+                        'mhs'     => $group->sum('student_count') . ' mhs',
+                    ])
+                    ->values();
+                @endphp
                 <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
                     <p class="font-semibold text-[#1E293B] text-[15px] mb-4">Beban Project Manager</p>
                     <div class="space-y-4">
-                        @foreach([
-                            ['Dimas Setiawan',2,'15 mhs'],
-                            ['Rizky Pratama',1,'6 mhs'],
-                            ['Ari Wibowo',1,'9 mhs'],
-                            ['Siti Rahayu',1,'6 mhs'],
-                            ['Thomas Elang',1,'5 mhs'],
-                            ['Budi Prasetyo',1,'5 mhs'],
-                            ['Nadia Putri',1,'4 mhs'],
-                        ] as [$pm,$projek,$mhs])
+                        @forelse($pmWorkload as $item)
+                        @php
+                            $parts = explode(' ', $item['pm']);
+                            $initials = strtoupper(substr($parts[0] ?? 'P', 0, 1)) . strtoupper(substr($parts[1] ?? '', 0, 1));
+                        @endphp
                         <div>
                             <div class="flex items-center justify-between mb-1">
                                 <div class="flex items-center gap-2">
-                                    <div class="w-6 h-6 rounded-full bg-[#0B3B82]/10 flex items-center justify-center text-[9px] font-bold text-[#0B3B82] flex-shrink-0">{{ strtoupper(substr($pm,0,1)).strtoupper(substr(explode(' ',$pm)[1]??'',0,1)) }}</div>
-                                    <span class="text-[12px] font-semibold text-[#1E293B]">{{ $pm }}</span>
+                                    <div class="w-6 h-6 rounded-full bg-[#0B3B82]/10 flex items-center justify-center text-[9px] font-bold text-[#0B3B82] flex-shrink-0">{{ $initials }}</div>
+                                    <span class="text-[12px] font-semibold text-[#1E293B]">{{ $item['pm'] }}</span>
                                 </div>
                                 <div class="text-right">
-                                    <span class="text-[11px] font-bold text-[#0B3B82]">{{ $projek }} projek</span>
-                                    <span class="text-[11px] text-slate-400 ml-1.5">· {{ $mhs }}</span>
+                                    <span class="text-[11px] font-bold text-[#0B3B82]">{{ $item['projek'] }} projek</span>
+                                    <span class="text-[11px] text-slate-400 ml-1.5">· {{ $item['mhs'] }}</span>
                                 </div>
                             </div>
                             <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full rounded-full bg-[#0B3B82]" style="width:{{ min($projek*50,100) }}%"></div>
+                                <div class="h-full rounded-full bg-[#0B3B82]" style="width:{{ min($item['projek'] * 50, 100) }}%"></div>
                             </div>
                         </div>
-                        @endforeach
+                        @empty
+                        <p class="text-xs text-slate-400 py-4 text-center">Belum ada PM yang ditugaskan pada projek berjalan.</p>
+                        @endforelse
                     </div>
                 </div>
             </div>
