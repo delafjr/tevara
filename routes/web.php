@@ -2118,30 +2118,16 @@ Route::middleware('auth.api')->group(function () {
             $error = null;
 
             try {
-                $response = $api->get('proposals');
-                if ($response->successful() && is_array($response->json())) {
-                    $proposals = $response->json();
-
-                    foreach ($proposals as &$p) {
-                        $pId = $p['id'] ?? null;
-                        if (!$pId) continue;
-                        $uatRes = $api->getUat((int) $pId);
-                        if ($uatRes->successful()) {
-                            $p['uat'] = $uatRes->json('data');
-                        } elseif ($uatRes->status() === 404) {
-                            $p['uat'] = null;
-                        } else {
-                            $error = $uatRes->json('message') ?? 'Data UAT tidak dapat dimuat.';
-                            break;
-                        }
-                    }
-                    unset($p);
+                $response = $api->getUatProposals();
+                if ($response->successful()) {
+                    $proposals = $response->json('data') ?? $response->json() ?? [];
                 } else {
-                    $error = $response->json('message') ?? 'Daftar proyek tidak dapat dimuat.';
+                    $error = $response->json('message') ?? 'Daftar proyek UAT tidak dapat dimuat.';
                 }
             } catch (\Throwable $e) {
                 $error = 'Gagal mengambil data proyek: ' . $e->getMessage();
             }
+
 
             $total = count($proposals);
             $testing = 0;
