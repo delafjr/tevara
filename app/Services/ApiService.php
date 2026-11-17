@@ -189,7 +189,7 @@ class ApiService
     }
 
     /**
-     * Buat sesi UAT + item sekaligus (pengurus_tefa, dosen).
+     * Kirim hasil UAT beserta daftar fitur yang diuji oleh Klien.
      */
     public function createUat(int $proposalId, array $data): Response
     {
@@ -197,11 +197,19 @@ class ApiService
     }
 
     /**
-     * Update UAT / revisi item (pengurus_tefa, dosen).
+     * Perbarui hasil UAT selama sesi terbaru belum diperiksa Pengurus.
      */
     public function updateUat(int $proposalId, array $data): Response
     {
         return $this->put("proposals/{$proposalId}/uat", $data);
+    }
+
+    /**
+     * Simpan pemeriksaan Pengurus dan checklist tindak lanjut UAT.
+     */
+    public function reviewUat(int $proposalId, int $uatId, array $data): Response
+    {
+        return $this->patch("proposals/{$proposalId}/uat/{$uatId}/review", $data);
     }
 
     /**

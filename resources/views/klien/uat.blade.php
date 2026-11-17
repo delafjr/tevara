@@ -1,4 +1,4 @@
-{{-- == ( Lembar UAT & Sign-off Klien - F-06 ) == --}}
+{{-- == ( Lembar UAT & Sign-off Klien ) == --}}
 <!DOCTYPE html>
 <html lang="id">
 <head>

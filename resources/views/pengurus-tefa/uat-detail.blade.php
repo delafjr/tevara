@@ -160,7 +160,7 @@
                 </div>
             @endif
 
-            @if ($errors->any())
+            @if (isset($errors) && $errors->any())
                 <div class="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-700 shadow-xs">
                     <svg class="w-5 h-5 flex-shrink-0 text-red-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
@@ -177,7 +177,7 @@
             @endif
 
             {{-- Breadcrumb & Quick Actions --}}
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex flex-row items-center justify-between gap-4">
                 <a href="{{ route('pengurus-tefa.uat') }}"
                    class="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-[#0B3B82] transition-colors">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -225,6 +225,11 @@
                             @elseif($isCompleted)
                                 <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
                                     Status: Selesai / Completed (id=10)
+                                </span>
+                            @elseif(strtolower(trim($statusName)) === 'submitted')
+                                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-blue-50 text-[#0B3B82] border border-blue-200 inline-flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                                    Status: Siap Diuji
                                 </span>
                             @else
                                 <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">
@@ -420,30 +425,33 @@
             {{-- 2. INTERACTIVE FORM EDITOR (POST if new, PUT if update) --}}
             <div x-show="isEditMode || {{ !$hasUat ? 'true' : 'false' }}">
 
-                {{-- Non-testing warning alert --}}
                 @if(!$isTesting && !$hasUat)
-                    <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-5 flex items-start gap-4">
-                        <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
-                            </svg>
+                    {{-- Proyek belum testing: Harus tandai testing dulu sebelum formulir UAT dapat dibuat --}}
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50/70 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+                        <div class="flex items-start gap-4">
+                            <div class="w-11 h-11 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+                                </svg>
+                            </div>
+                            <div class="space-y-1">
+                                <h3 class="text-sm font-bold text-amber-900">Alur Pengujian: Proyek Belum Masuk Fase Testing</h3>
+                                <p class="text-xs text-amber-800 leading-relaxed max-w-2xl">
+                                    Sesuai alur sistem TeFa, proyek harus terlebih dahulu ditandai masuk fase <strong>Testing (Status ID = 8)</strong> sebelum formulir sesi UAT dapat dibuat dan diisi.
+                                </p>
+                            </div>
                         </div>
-                        <div class="space-y-1">
-                            <h3 class="text-sm font-bold text-amber-900">Perhatian: Proyek Belum Berstatus Testing</h3>
-                            <p class="text-xs text-amber-800 leading-relaxed">
-                                Sesuai aturan sistem TeFa (F-06), proyek harus berstatus <strong>Testing (Status ID = 8)</strong> sebelum sesi UAT dapat disimpan ke database API.
-                                Silakan klik tombol di bawah untuk menandai proyek masuk fase testing terlebih dahulu.
-                            </p>
-                            <form action="{{ route('pengurus-tefa.uat.status-testing', $proposalId) }}" method="POST" class="pt-2">
-                                @csrf
-                                <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-2xs transition cursor-pointer">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
-                                    </svg>
-                                    Ubah Status Proyek ke Testing Sekarang (PATCH /status/testing)
-                                </button>
-                            </form>
-                        </div>
+
+                        <form action="{{ route('pengurus-tefa.uat.status-testing', $proposalId) }}" method="POST" class="flex-shrink-0">
+                            @csrf
+                            <input type="hidden" name="next" value="create_uat">
+                            <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-sm shadow-amber-600/30 transition cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                                </svg>
+                                <span>Tandai Masuk Fase Testing Sekarang</span>
+                            </button>
+                        </form>
                     </div>
                 @endif
 

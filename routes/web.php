@@ -231,6 +231,26 @@ Route::middleware('auth.api')->group(function () {
         return back();
     })->name('notifications.read');
 
+    // ── Unduh dokumen SPK/kontrak (proxy ke backend, otorisasi di API) ──
+    Route::get('/dokumen/spk/{proposal}', function (ApiService $api, int $proposal) {
+        try {
+            $response = $api->get("proposals/{$proposal}/contract/file");
+
+            if ($response->failed()) {
+                return back()->with('error', $response->json('message') ?? 'Dokumen SPK belum dapat diunduh.');
+            }
+
+            return response($response->body(), 200, [
+                'Content-Type'        => $response->header('Content-Type') ?? 'application/octet-stream',
+                'Content-Disposition' => $response->header('Content-Disposition') ?? 'attachment; filename="spk-' . $proposal . '.pdf"',
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal mengunduh dokumen SPK: ' . $e->getMessage());
+
+            return back()->with('error', 'Dokumen SPK tidak dapat diunduh dari server TEVARA.');
+        }
+    })->whereNumber('proposal')->name('dokumen.spk');
+
     // Switch Role handlers (Strictly validated against allowed roles)
     Route::get('/switch-role/{role}', function ($role) {
         $user = session('user');
@@ -312,8 +332,120 @@ Route::middleware('auth.api')->group(function () {
             ->with('error', 'Pengajuan gagal: ' . ($response->json('message') ?? 'terjadi kesalahan pada server TEVARA.'));
     };
 
+    $loadBilling = function (ApiService $api): array {
+        $proposals = [];
+        $projectsBilling = [];
+        $error = null;
+
+        try {
+            $response = $api->get('proposals/mine');
+            if ($response->successful() && is_array($response->json())) {
+                $proposals = $response->json();
+
+                foreach ($proposals as $p) {
+                    $pId = $p['id'] ?? null;
+                    if (!$pId) continue;
+                    $detailRes = $api->get("proposals/{$pId}");
+                    if ($detailRes->successful() && is_array($detailRes->json())) {
+                        $detail = $detailRes->json();
+                        $payments = $detail['payments'] ?? [];
+                        if (!empty($payments)) {
+                            $totalBudget = (float) ($detail['total_amount'] ?? $detail['estimated_budget'] ?? 0);
+                            $totalPaid = 0;
+                            $termins = [];
+                            $hasOpen = false;
+
+                            foreach ($payments as $pay) {
+                                $amount = (float) ($pay['amount'] ?? 0);
+                                $status = strtoupper($pay['status'] ?? 'PENDING');
+                                $proofUrl = $pay['proof_url'] ?? null;
+                                if ($proofUrl && !str_starts_with($proofUrl, 'http')) {
+                                    $baseUrl = rtrim(config('services.backend_api.url') ?? env('BACKEND_API_URL', 'http://127.0.0.1:8000/api/v1'), '/');
+                                    $baseHost = preg_replace('#/api/v1$#', '', $baseUrl);
+                                    $proofUrl = $baseHost . '/storage/' . ltrim($proofUrl, '/');
+                                }
+
+                                $statusLabel = 'MENUNGGU PEMBAYARAN';
+                                $statusType = 'unpaid';
+                                $canUpload = true;
+                                $canDownload = false;
+
+                                if ($status === 'VERIFIED') {
+                                    $statusLabel = 'VERIFIED (Lunas)';
+                                    $statusType = 'verified';
+                                    $canUpload = false;
+                                    $canDownload = true;
+                                    $totalPaid += $amount;
+                                } elseif ($status === 'REJECTED') {
+                                    $statusLabel = 'DITOLAK (Upload Ulang)';
+                                    $statusType = 'rejected';
+                                    $canUpload = true;
+                                    $hasOpen = true;
+                                } elseif ($proofUrl) {
+                                    $statusLabel = 'DALAM VERIFIKASI';
+                                    $statusType = 'verifying';
+                                    $canUpload = false;
+                                } else {
+                                    $hasOpen = true;
+                                }
+
+                                $termins[] = [
+                                    'id'                 => $pay['id'],
+                                    'proposal_id'        => $pId,
+                                    'invoice_number'     => $pay['invoice_number'] ?? 'Belum diterbitkan',
+                                    'term_sequence'      => $pay['term_sequence'] ?? 1,
+                                    'name'               => 'Termin ' . ($pay['term_sequence'] ?? 1),
+                                    'desc'               => !empty($pay['due_date']) ? 'Jatuh tempo: ' . \Carbon\Carbon::parse($pay['due_date'])->translatedFormat('d M Y') : 'Pembayaran Termin ' . ($pay['term_sequence'] ?? 1),
+                                    'nominal'            => 'Rp ' . number_format($amount, 0, ',', '.'),
+                                    'amount'             => $amount,
+                                    'channel'            => match ($pay['payment_method'] ?? null) {
+                                        'BANK_TRANSFER' => 'Transfer Bank',
+                                        'VIRTUAL_ACCOUNT' => 'Virtual Account',
+                                        'CASH' => 'Tunai',
+                                        'OTHER' => 'Lainnya',
+                                        default => 'Belum dipilih',
+                                    },
+                                    'channel_icon'       => 'bank',
+                                    'status'             => $statusType,
+                                    'raw_status'         => $status,
+                                    'status_label'       => $statusLabel,
+                                    'due_date'           => !empty($pay['due_date']) ? 'Jatuh Tempo: ' . \Carbon\Carbon::parse($pay['due_date'])->translatedFormat('d M Y') : null,
+                                    'can_download'       => $canDownload,
+                                    'can_upload'         => $canUpload,
+                                    'proof_url'          => $proofUrl,
+                                    'verification_notes' => $pay['verification_notes'] ?? null,
+                                ];
+                            }
+
+                            $paidPercent = $totalBudget > 0 ? round(($totalPaid / $totalBudget) * 100, 1) : 0;
+
+                            $projectsBilling[] = [
+                                'id'              => $detail['proposal_code'] ?? ('PRJ-' . $pId),
+                                'proposal_id'     => $pId,
+                                'spk'             => $detail['spk_number'] ?? 'SPK belum tercatat',
+                                'spk_status'      => $detail['status']['name'] ?? $detail['status'] ?? 'Aktif',
+                                'spk_status_type' => 'success',
+                                'title'           => $detail['title'] ?? 'Proyek Tanpa Judul',
+                                'period'          => 'Target: ' . (!empty($detail['desired_deadline']) ? \Carbon\Carbon::parse($detail['desired_deadline'])->translatedFormat('d M Y') : '-'),
+                                'total_value'     => 'Rp ' . number_format($totalBudget, 0, ',', '.'),
+                                'paid_percent'    => $paidPercent,
+                                'paid_status'     => $paidPercent . '% Terbayar',
+                                'has_open'        => $hasOpen,
+                                'termins'         => $termins,
+                            ];
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
+        }
+
+        return [$proposals, $projectsBilling, $error];
+    };
+
     // Klien: Ajukan Proyek Baru & Projek Saya
-    Route::middleware('auth.api:klien')->prefix('klien')->name('klien.')->group(function () use ($storeProposal) {
+    Route::middleware('auth.api:klien')->prefix('klien')->name('klien.')->group(function () use ($storeProposal, $loadBilling) {
         Route::get('/projek-saya', function (ApiService $api) {
             $proposals = [];
             $error = null;
@@ -468,114 +600,8 @@ Route::middleware('auth.api')->group(function () {
             }
         })->whereNumber('proposal')->name('projek-saya.revisi.store');
 
-        Route::get('/tagihan', function (ApiService $api) {
-            $proposals = [];
-            $projectsBilling = [];
-            $error = null;
-
-            try {
-                $response = $api->get('proposals/mine');
-                if ($response->successful() && is_array($response->json())) {
-                    $proposals = $response->json();
-
-                    foreach ($proposals as $p) {
-                        $pId = $p['id'] ?? null;
-                        if (!$pId) continue;
-                        $detailRes = $api->get("proposals/{$pId}");
-                        if ($detailRes->successful() && is_array($detailRes->json())) {
-                            $detail = $detailRes->json();
-                            $payments = $detail['payments'] ?? [];
-                            if (!empty($payments)) {
-                                $totalBudget = (float) ($detail['total_amount'] ?? $detail['estimated_budget'] ?? 0);
-                                $totalPaid = 0;
-                                $termins = [];
-                                $hasOpen = false;
-
-                                foreach ($payments as $pay) {
-                                    $amount = (float) ($pay['amount'] ?? 0);
-                                    $status = strtoupper($pay['status'] ?? 'PENDING');
-                                    $proofUrl = $pay['proof_url'] ?? null;
-                                    if ($proofUrl && !str_starts_with($proofUrl, 'http')) {
-                                        $baseUrl = rtrim(config('services.backend_api.url') ?? env('BACKEND_API_URL', 'http://127.0.0.1:8000/api/v1'), '/');
-                                        $baseHost = preg_replace('#/api/v1$#', '', $baseUrl);
-                                        $proofUrl = $baseHost . '/storage/' . ltrim($proofUrl, '/');
-                                    }
-
-                                    $statusLabel = 'MENUNGGU PEMBAYARAN';
-                                    $statusType = 'unpaid';
-                                    $canUpload = true;
-                                    $canDownload = false;
-
-                                    if ($status === 'VERIFIED') {
-                                        $statusLabel = 'VERIFIED (Lunas)';
-                                        $statusType = 'verified';
-                                        $canUpload = false;
-                                        $canDownload = true;
-                                        $totalPaid += $amount;
-                                    } elseif ($status === 'REJECTED') {
-                                        $statusLabel = 'DITOLAK (Upload Ulang)';
-                                        $statusType = 'rejected';
-                                        $canUpload = true;
-                                        $hasOpen = true;
-                                    } elseif ($proofUrl) {
-                                        $statusLabel = 'DALAM VERIFIKASI';
-                                        $statusType = 'verifying';
-                                        $canUpload = false;
-                                    } else {
-                                        $hasOpen = true;
-                                    }
-
-                                    $termins[] = [
-                                        'id'                 => $pay['id'],
-                                        'proposal_id'        => $pId,
-                                        'invoice_number'     => $pay['invoice_number'] ?? 'Belum diterbitkan',
-                                        'term_sequence'      => $pay['term_sequence'] ?? 1,
-                                        'name'               => 'Termin ' . ($pay['term_sequence'] ?? 1),
-                                        'desc'               => !empty($pay['due_date']) ? 'Jatuh tempo: ' . \Carbon\Carbon::parse($pay['due_date'])->translatedFormat('d M Y') : 'Pembayaran Termin ' . ($pay['term_sequence'] ?? 1),
-                                        'nominal'            => 'Rp ' . number_format($amount, 0, ',', '.'),
-                                        'amount'             => $amount,
-                                        'channel'            => match ($pay['payment_method'] ?? null) {
-                                            'BANK_TRANSFER' => 'Transfer Bank',
-                                            'VIRTUAL_ACCOUNT' => 'Virtual Account',
-                                            'CASH' => 'Tunai',
-                                            'OTHER' => 'Lainnya',
-                                            default => 'Belum dipilih',
-                                        },
-                                        'channel_icon'       => 'bank',
-                                        'status'             => $statusType,
-                                        'raw_status'         => $status,
-                                        'status_label'       => $statusLabel,
-                                        'due_date'           => !empty($pay['due_date']) ? 'Jatuh Tempo: ' . \Carbon\Carbon::parse($pay['due_date'])->translatedFormat('d M Y') : null,
-                                        'can_download'       => $canDownload,
-                                        'can_upload'         => $canUpload,
-                                        'proof_url'          => $proofUrl,
-                                        'verification_notes' => $pay['verification_notes'] ?? null,
-                                    ];
-                                }
-
-                                $paidPercent = $totalBudget > 0 ? round(($totalPaid / $totalBudget) * 100, 1) : 0;
-
-                                $projectsBilling[] = [
-                                    'id'              => $detail['proposal_code'] ?? ('PRJ-' . $pId),
-                                    'proposal_id'     => $pId,
-                                    'spk'             => $detail['spk_number'] ?? 'SPK belum tercatat',
-                                    'spk_status'      => $detail['status']['name'] ?? $detail['status'] ?? 'Aktif',
-                                    'spk_status_type' => 'success',
-                                    'title'           => $detail['title'] ?? 'Proyek Tanpa Judul',
-                                    'period'          => 'Target: ' . (!empty($detail['desired_deadline']) ? \Carbon\Carbon::parse($detail['desired_deadline'])->translatedFormat('d M Y') : '-'),
-                                    'total_value'     => 'Rp ' . number_format($totalBudget, 0, ',', '.'),
-                                    'paid_percent'    => $paidPercent,
-                                    'paid_status'     => $paidPercent . '% Terbayar',
-                                    'has_open'        => $hasOpen,
-                                    'termins'         => $termins,
-                                ];
-                            }
-                        }
-                    }
-                }
-            } catch (\Throwable $e) {
-                $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
-            }
+        Route::get('/tagihan', function (ApiService $api) use ($loadBilling) {
+            [$proposals, $projectsBilling, $error] = $loadBilling($api);
 
             return view('klien.tagihan', [
                 'user'            => session('user'),
@@ -688,9 +714,16 @@ Route::middleware('auth.api')->group(function () {
         Route::get('/pembayaran', fn () => redirect()->route('klien.tagihan'));
 
         Route::patch('/projek-saya/{proposal}/bast/approve', function (Request $request, ApiService $api, int $proposal) {
+            if ($request->hasAny(['nomor_bast', 'bast_number', 'tanggal_serah_terima', 'handover_date'])) {
+                return back()->withInput()->withErrors([
+                    'nomor_bast' => 'Nomor BAST dan tanggal serah terima tidak boleh dimanipulasi manual. Nilai ini digenerate murni di sisi server.',
+                ]);
+            }
+
             $validated = $request->validate([
                 'client_signoff_name' => ['required', 'string', 'max:255'],
                 'client_approved' => ['required', 'accepted'],
+                'maintenance_warranty_months' => ['nullable', 'integer', 'min:0'],
             ]);
 
             try {
@@ -745,44 +778,61 @@ Route::middleware('auth.api')->group(function () {
             ->name('ajukan-proyek.store');
 
         // ==========================================
-        // F-06 : UAT & Sign-Off Klien
+        // UAT & Sign-Off Klien
         // ==========================================
         Route::get('/projek-saya/{proposal}/uat', function (ApiService $api, int $proposal) {
-            $detail = [];
+            $proposalResponse = $api->get("proposals/{$proposal}");
+            if (! $proposalResponse->successful() || ! is_array($proposalResponse->json())) {
+                abort($proposalResponse->status() ?: 502, $proposalResponse->json('message') ?? 'Data proyek tidak dapat dimuat.');
+            }
+            $detail = $proposalResponse->json();
             $uat = null;
             $error = null;
 
             try {
-                $pRes = $api->get("proposals/{$proposal}");
-                if ($pRes->successful() && is_array($pRes->json())) {
-                    $detail = $pRes->json();
-                }
-
                 $uatRes = $api->getUat($proposal);
                 if ($uatRes->successful()) {
                     $uat = $uatRes->json('data');
+                } elseif ($uatRes->status() !== 404) {
+                    abort($uatRes->status(), $uatRes->json('message') ?? 'Data UAT tidak dapat dimuat.');
                 }
             } catch (\Throwable $e) {
                 $error = 'Tidak dapat terhubung ke server: ' . $e->getMessage();
             }
 
-            if (empty($detail)) {
-                $detail = [
-                    'id'            => $proposal,
-                    'proposal_code' => 'PRJ-' . $proposal,
-                    'title'         => 'Projek ' . $proposal,
-                    'status'        => ['name' => 'Testing'],
-                    'status_id'     => 8,
-                ];
-            }
-
-            return view('klien.uat', [
+            return view('klien.uat-workflow', [
                 'user'     => session('user'),
                 'proposal' => $detail,
                 'uat'      => $uat,
                 'error'    => $error,
             ]);
         })->whereNumber('proposal')->name('projek-saya.uat');
+
+        Route::post('/projek-saya/{proposal}/uat', function (Request $request, ApiService $api, int $proposal) {
+            $validated = $request->validate([
+                'client_notes' => ['nullable', 'string'],
+                'items' => ['required', 'array', 'min:1'],
+                'items.*.feature_name' => ['required', 'string', 'max:255'],
+                'items.*.test_scenario' => ['nullable', 'string'],
+                'items.*.result' => ['required', 'in:PASSED,FAILED,BUG_FOUND'],
+                'items.*.bug_severity' => ['nullable', 'in:MINOR,MAJOR,CRITICAL'],
+                'items.*.bug_description' => ['nullable', 'string'],
+                'items.*.client_feedback' => ['nullable', 'string'],
+            ]);
+
+            try {
+                $response = $api->createUat($proposal, $validated);
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('klien.projek-saya.uat', $proposal)
+                        ->with('success', 'Hasil pengujian berhasil dikirim kepada Pengurus TeFa untuk diperiksa.');
+                }
+
+                return back()->withInput()->with('error', $response->json('message') ?? 'Hasil UAT tidak dapat dikirim.');
+            } catch (\Throwable $e) {
+                return back()->withInput()->with('error', 'Tidak dapat terhubung ke server backend: ' . $e->getMessage());
+            }
+        })->whereNumber('proposal')->name('projek-saya.uat.submit');
 
         Route::post('/projek-saya/{proposal}/uat/signoff', function (Request $request, ApiService $api, int $proposal) {
             $validated = $request->validate([
@@ -797,7 +847,7 @@ Route::middleware('auth.api')->group(function () {
                 if ($response->successful()) {
                     return redirect()
                         ->route('klien.projek-saya.uat', $proposal)
-                        ->with('success', 'Sign-off UAT berhasil disahkan! Status proyek telah ditingkatkan ke tahap Handover.');
+                        ->with('success', 'Persetujuan UAT berhasil dicatat. Proyek dapat dilanjutkan ke tahap BAST.');
                 }
 
                 return back()
@@ -839,7 +889,22 @@ Route::middleware('auth.api')->group(function () {
         return redirect()->route('dashboard');
     })->name('dashboard-mahasiswa');
 
-    Route::get('/mahasiswa/project', fn () => view('mahasiswa.project', ['user' => session('user')]))->name('mahasiswa.project');
+    Route::get('/mahasiswa/project', function (ApiService $api) {
+        $dashboardData = [];
+        try {
+            $response = $api->get('mahasiswa/dashboard');
+            if ($response->successful()) {
+                $dashboardData = $response->json('data', []);
+            }
+        } catch (\Throwable) {
+            $dashboardData = [];
+        }
+
+        return view('mahasiswa.project', [
+            'user'      => session('user'),
+            'dashboard' => $dashboardData,
+        ]);
+    })->name('mahasiswa.project');
 
     Route::get('/mahasiswa/task', function (Request $request, ApiService $api) {
         $projects = [];
@@ -1114,12 +1179,26 @@ Route::middleware('auth.api')->group(function () {
             }
         })->name('task.review');
 
-        // Shortcut PM ke UAT detail
-        Route::get('/proposals/{proposal}/uat', fn ($proposal) => redirect()->route('pengurus-tefa.uat.detail', $proposal))->name('uat.detail');
+        Route::get('/proposals/{proposal}/uat', function (ApiService $api, int $proposal) {
+            $projectResponse = $api->get("proposals/{$proposal}");
+            if (! $projectResponse->successful() || ! is_array($projectResponse->json())) {
+                abort($projectResponse->status() ?: 502, $projectResponse->json('message') ?? 'Data proyek tidak dapat dimuat.');
+            }
+
+            $uatResponse = $api->getUat($proposal);
+            if ($uatResponse->failed() && $uatResponse->status() !== 404) {
+                abort($uatResponse->status(), $uatResponse->json('message') ?? 'Data UAT tidak dapat dimuat.');
+            }
+
+            return view('pm.uat-show', [
+                'proposal' => $projectResponse->json(),
+                'uat' => $uatResponse->successful() ? $uatResponse->json('data') : null,
+            ]);
+        })->whereNumber('proposal')->name('uat.detail');
     });
 
     // Jurusan uses the same proposal workflow and backend master data as clients.
-    Route::middleware('auth.api:jurusan')->prefix('jurusan')->name('jurusan.')->group(function () use ($storeProposal) {
+    Route::middleware('auth.api:jurusan')->prefix('jurusan')->name('jurusan.')->group(function () use ($storeProposal, $loadBilling) {
         Route::get('/ajukan-proyek', function (ApiService $api) {
             return view('klien.ajukan-proyek', [
                 'user'       => session('user'),
@@ -1163,12 +1242,14 @@ Route::middleware('auth.api')->group(function () {
                 'error'                     => $error,
             ]);
         })->name('projek-saya');
-        Route::get('/tagihan', function () {
+        Route::get('/tagihan', function (ApiService $api) use ($loadBilling) {
+            [$proposals, $projectsBilling, $error] = $loadBilling($api);
+
             return view('klien.tagihan', [
                 'user'            => session('user'),
-                'projectsBilling' => [],
-                'proposals'       => [],
-                'error'           => null,
+                'projectsBilling' => $projectsBilling,
+                'proposals'       => $proposals,
+                'error'           => $error,
             ]);
         })->name('tagihan');
     });
@@ -1198,7 +1279,27 @@ Route::middleware('auth.api')->group(function () {
     };
 
     Route::middleware('auth.api:pengurus_tefa')->prefix('pengurus-tefa')->name('pengurus-tefa.')->group(function () use ($readApiList) {
-        Route::get('/projek', fn () => view('pengurus-tefa.projek', ['user' => session('user')]))->name('projek');
+        Route::get('/projek', function (ApiService $api) {
+            $dashboardData = [];
+            $error = null;
+
+            try {
+                $response = $api->get('tefa/dashboard');
+                if ($response->successful()) {
+                    $dashboardData = $response->json('data', []);
+                } else {
+                    $error = $response->json('message') ?? 'Gagal memuat data projek.';
+                }
+            } catch (\Throwable $e) {
+                $error = 'Tidak dapat terhubung ke backend: ' . $e->getMessage();
+            }
+
+            return view('pengurus-tefa.projek', [
+                'user'      => session('user'),
+                'dashboard' => $dashboardData,
+                'error'     => $error,
+            ]);
+        })->name('projek');
 
         Route::get('/bast', function (ApiService $api) use ($readApiList) {
             $projects = [];
@@ -1248,14 +1349,23 @@ Route::middleware('auth.api')->group(function () {
         })->whereNumber('proposal')->name('bast.prepare.form');
 
         Route::post('/proposals/{proposal}/bast', function (Request $request, ApiService $api, int $proposal) {
+            if ($request->hasAny(['nomor_bast', 'bast_number', 'tanggal_serah_terima', 'handover_date'])) {
+                return back()->withInput()->withErrors([
+                    'nomor_bast' => 'Nomor BAST dan tanggal serah terima tidak boleh dimanipulasi manual. Nilai ini digenerate murni di sisi server.',
+                ]);
+            }
+
             $validated = $request->validate([
                 'repository_url' => ['required', 'url', 'max:255'],
-                'documentation_file' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
+                'documentation_file' => ['nullable', 'file', 'mimes:pdf,docx,zip,doc', 'max:10240'],
                 'user_manual_url' => ['nullable', 'url', 'max:255'],
                 'handover_notes' => ['nullable', 'string'],
                 'handover_deliverables' => ['required', 'json'],
                 'maintenance_warranty_months' => ['required', 'integer', 'min:0'],
                 'maintenance_notes' => ['nullable', 'string'],
+            ], [
+                'documentation_file.mimes' => 'Berkas lampiran dokumentasi API harus berformat aman: .pdf, .docx, atau .zip.',
+                'documentation_file.max' => 'Ukuran berkas lampiran dokumentasi API maksimal 10 MB.',
             ]);
 
             try {
@@ -1399,7 +1509,7 @@ Route::middleware('auth.api')->group(function () {
 
             return view('pengurus-tefa.mahasiswa', ['user' => session('user'), 'mahasiswas' => $mahasiswas, 'error' => $error]);
         })->name('mahasiswa');
-        Route::get('/keuangan', fn () => view('pengurus-tefa.keuangan', ['user' => session('user')]))->name('keuangan');
+
         Route::get('/validasi-proposal', function (ApiService $api) {
             $pendingProposals = [];
             $allProposals = [];
@@ -1439,7 +1549,22 @@ Route::middleware('auth.api')->group(function () {
                 if ($response->successful() && is_array($data)) {
                     $detail = $data;
                 } else {
-                    $error = $response->json('message') ?? 'Detail proposal tidak ditemukan.';
+                    $altResponse = $api->get("proposals/{$proposal}");
+                    if ($altResponse->successful() && is_array($altResponse->json())) {
+                        $raw = $altResponse->json();
+                        $detail = array_merge($raw, [
+                            'category_name' => $raw['category']['name'] ?? $raw['category_name'] ?? 'Other',
+                            'status'        => $raw['status']['name'] ?? $raw['status'] ?? '-',
+                            'client_name'   => $raw['client_company_name'] ?? $raw['client']['name'] ?? '-',
+                            'pic'           => [
+                                'name'  => $raw['client']['name'] ?? '-',
+                                'email' => $raw['client']['email'] ?? '-',
+                                'no_hp' => $raw['client']['phone_number'] ?? '-',
+                            ],
+                        ]);
+                    } else {
+                        $error = $response->json('message') ?? 'Detail proposal tidak ditemukan.';
+                    }
                 }
             } catch (\Throwable) {
                 $error = 'Gagal mengambil detail proposal dari server TEVARA.';
@@ -1680,15 +1805,10 @@ Route::middleware('auth.api')->group(function () {
                 'members'                     => 'nullable|string',
             ]);
 
-            $contractFileUrl = null;
-            if ($request->hasFile('contract_file')) {
-                $contractFileUrl = $request->file('contract_file')->store('contracts', 'public');
-            }
-
             $terms = !empty($validated['terms']) ? json_decode($validated['terms'], true) : [];
             $members = !empty($validated['members']) ? json_decode($validated['members'], true) : [];
 
-            // 1. Coba kirim via HTTP API jika tevara-api sedang berjalan
+            // Persetujuan, SPK, termin, dan tim pengembang sepenuhnya ditangani backend API.
             try {
                 $payload = [
                     'spk_number'                  => $validated['spk_number'],
@@ -1713,105 +1833,9 @@ Route::middleware('auth.api')->group(function () {
                     return back()->withInput()->with('error', 'Gagal menyetujui proposal: ' . ($response->json('message') ?? 'Terjadi kesalahan pada backend API.'));
                 }
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Gagal menghubungi backend API untuk persetujuan proposal: ' . $e->getMessage());
-            }
+                \Illuminate\Support\Facades\Log::error('Gagal menghubungi backend API untuk persetujuan proposal: ' . $e->getMessage());
 
-            // 2. Direct database update di SQLite tevara-api agar data selalu konsisten & tersimpan
-            $sqlitePath = base_path('../tevara-api/database/database.sqlite');
-            if (file_exists($sqlitePath)) {
-                try {
-                    $pdo = new \PDO("sqlite:" . $sqlitePath);
-                    $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-
-                    $year = date('Y', strtotime($validated['start_date']));
-                    $spkNumber = !empty($validated['spk_number']) ? $validated['spk_number'] : "SPK/TEFA/{$year}/" . str_pad((string) $proposal, 3, '0', STR_PAD_LEFT);
-                    $projectCode = "PRJ-{$year}/" . str_pad((string) $proposal, 3, '0', STR_PAD_LEFT);
-
-                    $stmt = $pdo->prepare("UPDATE proposals SET
-                        spk_number = :spk,
-                        project_code = :prj,
-                        scope_of_work = :scope,
-                        total_amount = :amount,
-                        payment_terms_description = :pay_terms,
-                        start_date = :s_date,
-                        target_completion_date = :c_date,
-                        pm_id = :pm,
-                        status_id = 7,
-                        contract_file_url = COALESCE(:contract_url, contract_file_url),
-                        updated_at = datetime('now')
-                        WHERE id = :id");
-
-                    $stmt->execute([
-                        ':spk'          => $spkNumber,
-                        ':prj'          => $projectCode,
-                        ':scope'        => $validated['scope_of_work'],
-                        ':amount'       => $validated['total_amount'],
-                        ':pay_terms'    => $validated['payment_terms_description'] ?? 'Termin pembayaran telah disepakati sesuai SPK.',
-                        ':s_date'       => $validated['start_date'],
-                        ':c_date'       => $validated['target_completion_date'],
-                        ':pm'           => !empty($validated['pm_id']) ? $validated['pm_id'] : null,
-                        ':contract_url' => $contractFileUrl,
-                        ':id'           => $proposal,
-                    ]);
-
-                    // Update / Insert maintenance warranty
-                    $wMonths = (int) ($validated['maintenance_warranty_months'] ?? 3);
-                    $stmtM = $pdo->prepare("INSERT INTO project_maintenances (proposal_id, maintenance_warranty_months, created_at, updated_at)
-                        VALUES (:pid, :wm, datetime('now'), datetime('now'))
-                        ON CONFLICT(proposal_id) DO UPDATE SET maintenance_warranty_months = :wm2, updated_at = datetime('now')");
-                    $stmtM->execute([':pid' => $proposal, ':wm' => $wMonths, ':wm2' => $wMonths]);
-
-                    // Sync termin pembayaran (payments table)
-                    if (is_array($terms) && count($terms) > 0) {
-                        $delP = $pdo->prepare("DELETE FROM payments WHERE proposal_id = ?");
-                        $delP->execute([$proposal]);
-
-                        $insP = $pdo->prepare("INSERT INTO payments (proposal_id, term_sequence, amount, payment_date, verification_notes, status, created_at, updated_at)
-                            VALUES (:pid, :seq, :amt, :pdate, :notes, 'PENDING', datetime('now'), datetime('now'))");
-                        foreach ($terms as $idx => $t) {
-                            if (!empty($t['amount']) && (float) $t['amount'] > 0) {
-                                $insP->execute([
-                                    ':pid'   => $proposal,
-                                    ':seq'   => $t['term_sequence'] ?? ($idx + 1),
-                                    ':amt'   => (float) $t['amount'],
-                                    ':pdate' => !empty($t['payment_date']) ? $t['payment_date'] : null,
-                                    ':notes' => $t['name'] ?? $t['notes'] ?? ('Termin ' . ($idx + 1)),
-                                ]);
-                            }
-                        }
-                    }
-
-                    // Sync anggota tim pengembang (project_teams table)
-                    if (is_array($members) && count($members) > 0) {
-                        $delT = $pdo->prepare("DELETE FROM project_teams WHERE proposal_id = ?");
-                        $delT->execute([$proposal]);
-
-                        $insT = $pdo->prepare("INSERT INTO project_teams (proposal_id, user_id, role_id, joined_at)
-                            VALUES (:pid, :uid, :rid, :jdate)");
-                        foreach ($members as $m) {
-                            $sid = $m['student_id'] ?? $m['user_id'] ?? null;
-                            $rid = $m['role_id'] ?? null;
-                            if ($sid && $rid) {
-                                $insT->execute([
-                                    ':pid'   => $proposal,
-                                    ':uid'   => (int) $sid,
-                                    ':rid'   => (int) $rid,
-                                    ':jdate' => !empty($m['joined_at']) ? $m['joined_at'] : $validated['start_date'],
-                                ]);
-                            }
-                        }
-                    }
-
-                    // Catat status history
-                    $stmtH = $pdo->prepare("INSERT INTO proposal_status_histories (proposal_id, status_id, note, changed_by, created_at, updated_at)
-                        VALUES (:pid, 7, 'Proposal disetujui, SPK diterbitkan, dan tim pengembang resmi dibentuk.', :uid, datetime('now'), datetime('now'))");
-                    $stmtH->execute([
-                        ':pid' => $proposal,
-                        ':uid' => session('user.id') ?? 1,
-                    ]);
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('Direct sqlite approval error: ' . $e->getMessage());
-                }
+                return back()->withInput()->with('error', 'Tidak dapat terhubung ke backend: ' . $e->getMessage());
             }
 
             return redirect()->route('pengurus-tefa.validasi-proposal')
@@ -1820,6 +1844,7 @@ Route::middleware('auth.api')->group(function () {
 
         Route::get('/keuangan', function (ApiService $api) {
             $pendingPayments = [];
+            $allPayments = [];
             $allProposals = [];
             $error = null;
 
@@ -1842,66 +1867,27 @@ Route::middleware('auth.api')->group(function () {
             }
 
             try {
+                $resPayments = $api->get('payments');
+                if ($resPayments->successful() && is_array($resPayments->json('data'))) {
+                    $allPayments = $resPayments->json('data');
+                }
+            } catch (\Throwable) {
+                $allPayments = [];
+            }
+
+            try {
                 $resAll = $api->get('proposals');
                 if ($resAll->successful() && is_array($resAll->json())) {
                     $allProposals = $resAll->json();
                 }
             } catch (\Throwable) {
-                // Biarkan kosong jika tidak dapat dimuat
-            }
-
-            // Fallback sampel agar form verifikasi dan antrean langsung siap didemokan jika antrean kosong
-            if (empty($pendingPayments)) {
-                $pendingPayments = [
-                    [
-                        'id'                 => 2,
-                        'proposal_id'        => 1,
-                        'term_sequence'      => 2,
-                        'amount'             => 25200000,
-                        'payment_date'       => '2026-11-01',
-                        'payment_method'     => 'Transfer Bank (Giro Mandiri)',
-                        'transfer_reference' => 'TRF20261101-089',
-                        'proof_url'          => 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&auto=format&fit=crop&q=80',
-                        'status'             => 'PENDING',
-                        'proposal'           => [
-                            'id'           => 1,
-                            'project_code' => 'PRSL-2025-001',
-                            'title'        => 'Sistem Informasi Manajemen Teaching Factory',
-                            'client'       => [
-                                'name'  => 'Budi Santoso',
-                                'email' => 'budi.santoso@majubersamasentosa.co.id',
-                            ],
-                        ],
-                    ],
-                ];
-            }
-
-            if (empty($allProposals)) {
-                $allProposals = [
-                    [
-                        'id'            => 1,
-                        'proposal_code' => 'PRSL-2025-001',
-                        'title'         => 'Sistem Informasi Manajemen Teaching Factory',
-                        'client_name'   => 'Budi Santoso',
-                    ],
-                    [
-                        'id'            => 2,
-                        'proposal_code' => 'PRSL-2025-002',
-                        'title'         => 'Smart Farming IoT',
-                        'client_name'   => 'Dewi Rahayu',
-                    ],
-                    [
-                        'id'            => 3,
-                        'proposal_code' => 'PRSL-2026-003',
-                        'title'         => 'Website Portal Berita Kota Semarang',
-                        'client_name'   => 'Agus Widodo',
-                    ],
-                ];
+                $allProposals = [];
             }
 
             return view('pengurus-tefa.keuangan', [
                 'user'            => session('user'),
                 'pendingPayments' => $pendingPayments,
+                'allPayments'     => $allPayments,
                 'allProposals'    => $allProposals,
                 'error'           => $error,
             ]);
@@ -2125,7 +2111,7 @@ Route::middleware('auth.api')->group(function () {
         })->whereNumber('proposal')->whereNumber('payment')->name('payments.verify');
 
         // ==========================================
-        // F-06 : UAT (User Acceptance Testing) - Pengurus TeFa
+        // UAT (User Acceptance Testing) - Pengurus TeFa
         // ==========================================
         Route::get('/uat', function (ApiService $api) {
             $proposals = [];
@@ -2145,8 +2131,8 @@ Route::middleware('auth.api')->group(function () {
 
             $total = count($proposals);
             $testing = 0;
-            $waitingSignoff = 0;
-            $passed = 0;
+            $waitingReview = 0;
+            $needsImprovement = 0;
 
             foreach ($proposals as $p) {
                 $stId = (int) ($p['status_id'] ?? 0);
@@ -2154,12 +2140,11 @@ Route::middleware('auth.api')->group(function () {
                 if ($stId === 8 || strtolower($p['status']['name'] ?? $p['status'] ?? '') === 'testing') {
                     $testing++;
                 }
-                if (!empty($uatData)) {
-                    if (!empty($uatData['signed_off_at'])) {
-                        $passed++;
-                    } else {
-                        $waitingSignoff++;
-                    }
+                if (($uatData['review_status'] ?? null) === 'PENDING_REVIEW') {
+                    $waitingReview++;
+                }
+                if (($uatData['review_status'] ?? null) === 'NEEDS_IMPROVEMENT') {
+                    $needsImprovement++;
                 }
             }
 
@@ -2169,8 +2154,8 @@ Route::middleware('auth.api')->group(function () {
                 'stats'     => [
                     'total'           => $total,
                     'testing'         => $testing,
-                    'waiting_signoff' => $waitingSignoff,
-                    'passed'          => $passed,
+                    'waiting_review'  => $waitingReview,
+                    'needs_improvement' => $needsImprovement,
                 ],
                 'error'     => $error,
             ]);
@@ -2179,52 +2164,82 @@ Route::middleware('auth.api')->group(function () {
         Route::get('/proposals/{proposal}/uat', function (ApiService $api, int $proposal) {
             $detail = [];
             $uat = null;
+            $members = [];
             $error = null;
 
             try {
                 $pRes = $api->get("proposals/{$proposal}");
                 if ($pRes->successful() && is_array($pRes->json())) {
                     $detail = $pRes->json();
+                } else {
+                    $error = $pRes->json('message') ?? 'Data proyek tidak dapat dimuat.';
                 }
 
                 $uatRes = $api->getUat($proposal);
                 if ($uatRes->successful()) {
                     $uat = $uatRes->json('data');
+                } elseif ($uatRes->status() !== 404) {
+                    $error = $uatRes->json('message') ?? 'Data UAT tidak dapat dimuat.';
+                }
+
+                $teamRes = $api->get("proposals/{$proposal}/team");
+                if ($teamRes->successful() && is_array($teamRes->json())) {
+                    $members = $teamRes->json();
+                } elseif ($teamRes->failed()) {
+                    $error = $teamRes->json('message') ?? 'Anggota tim proyek tidak dapat dimuat.';
                 }
             } catch (\Throwable $e) {
                 $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
             }
 
-            if (empty($detail)) {
-                $detail = [
-                    'id'            => $proposal,
-                    'proposal_code' => 'PRJ-' . $proposal,
-                    'title'         => 'Website Portal Berita Kota Semarang',
-                    'status'        => ['name' => 'Testing'],
-                    'status_id'     => 8,
-                    'client'        => ['name' => 'Agus Widodo', 'company_name' => 'Diskominfo Kota Semarang'],
-                    'modules'       => [
-                        ['title' => 'Portal Berita Publik & SEO', 'description' => 'Halaman berita responsif, sistem komentar, dan sitemap SEO.'],
-                        ['title' => 'Dashboard Redaksi & Wartawan', 'description' => 'Manajemen draft artikel, approval redaktur, dan analitik pembaca.'],
-                        ['title' => 'Integrasi API Open Data Pemkot', 'description' => 'Streaming data pengumuman dinas dan agenda pemerintah kota.'],
-                    ],
-                ];
-            }
-
-            return view('pengurus-tefa.uat-detail', [
+            return view('pengurus-tefa.uat-review', [
                 'user'     => session('user'),
                 'proposal' => $detail,
                 'uat'      => $uat,
+                'members'  => $members,
                 'error'    => $error,
             ]);
         })->whereNumber('proposal')->name('uat.detail');
 
-        Route::post('/proposals/{proposal}/status/testing', function (ApiService $api, int $proposal) {
+        Route::post('/proposals/{proposal}/uat/{uat}/review', function (Request $request, ApiService $api, int $proposal, int $uat) {
+            $validated = $request->validate([
+                'decision' => ['required', 'in:APPROVED,NEEDS_IMPROVEMENT'],
+                'review_notes' => ['nullable', 'string'],
+                'corrections' => ['required_if:decision,NEEDS_IMPROVEMENT', 'array', 'min:1'],
+                'corrections.*.item_id' => ['required', 'integer', 'distinct'],
+                'corrections.*.note' => ['required', 'string', 'max:5000'],
+                'corrections.*.assigned_student_id' => ['required', 'integer'],
+                'corrections.*.due_date' => ['nullable', 'date'],
+            ]);
+
+            try {
+                $response = $api->reviewUat($proposal, $uat, $validated);
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('pengurus-tefa.uat.detail', $proposal)
+                        ->with('success', $validated['decision'] === 'APPROVED'
+                            ? 'Hasil UAT disetujui. Klien dapat mengesahkan hasilnya.'
+                            : 'Checklist perbaikan telah diteruskan kepada mahasiswa.');
+                }
+
+                return back()->withInput()->with('error', $response->json('message') ?? 'Pemeriksaan UAT gagal disimpan.');
+            } catch (\Throwable $e) {
+                return back()->withInput()->with('error', 'Tidak dapat terhubung ke server backend: ' . $e->getMessage());
+            }
+        })->whereNumber('proposal')->whereNumber('uat')->name('uat.review');
+
+        Route::post('/proposals/{proposal}/status/testing', function (Request $request, ApiService $api, int $proposal) {
             try {
                 $response = $api->setProposalTesting($proposal);
 
                 if ($response->successful()) {
-                    return back()->with('success', 'Status proyek berhasil diperbarui ke Testing (id=8). Formulir UAT sekarang telah aktif!');
+                    if ($request->input('next') === 'create_uat') {
+                        return redirect()
+                            ->route('pengurus-tefa.uat.detail', $proposal)
+                            ->with('success', 'Proyek siap diuji. Klien dapat mengirim hasil UAT dari halaman proyek.');
+                    }
+
+                    return back()->with('success', 'Proyek telah ditandai siap diuji oleh Klien.');
                 }
 
                 return back()->with('error', 'Gagal memperbarui status ke testing: ' . ($response->json('message') ?? 'Terjadi kesalahan backend.'));
@@ -2233,72 +2248,26 @@ Route::middleware('auth.api')->group(function () {
             }
         })->whereNumber('proposal')->name('uat.status-testing');
 
-        Route::post('/proposals/{proposal}/uat', function (Request $request, ApiService $api, int $proposal) {
-            $validated = $request->validate([
-                'session_date'            => ['required', 'date'],
-                'overall_result'          => ['required', 'in:PASSED,FAILED,PARTIAL'],
-                'client_notes'            => ['nullable', 'string'],
-                'items'                   => ['required', 'array', 'min:1'],
-                'items.*.feature_name'    => ['required', 'string', 'max:255'],
-                'items.*.test_scenario'   => ['nullable', 'string'],
-                'items.*.result'          => ['required', 'in:PASSED,FAILED,BUG_FOUND'],
-                'items.*.bug_severity'    => ['nullable', 'in:MINOR,MAJOR,CRITICAL'],
-                'items.*.bug_description' => ['nullable', 'string'],
-                'items.*.client_feedback' => ['nullable', 'string'],
-            ]);
+        Route::get('/monitoring', function (ApiService $api) {
+            $dashboardData = [];
+            $error = null;
 
             try {
-                $response = $api->createUat($proposal, $validated);
-
+                $response = $api->get('tefa/dashboard');
                 if ($response->successful()) {
-                    return redirect()
-                        ->route('pengurus-tefa.uat.detail', $proposal)
-                        ->with('success', 'Sesi UAT berhasil dibuat dan diterbitkan! Klien sekarang dapat melihat dan menandatangani lembar UAT.');
+                    $dashboardData = $response->json('data', []);
+                } else {
+                    $error = $response->json('message') ?? 'Gagal memuat data monitoring.';
                 }
-
-                return back()
-                    ->withInput()
-                    ->with('error', 'Gagal membuat UAT: ' . ($response->json('message') ?? 'Terjadi kesalahan pada backend.'));
             } catch (\Throwable $e) {
-                return back()
-                    ->withInput()
-                    ->with('error', 'Tidak dapat terhubung ke server backend: ' . $e->getMessage());
+                $error = 'Tidak dapat terhubung ke backend: ' . $e->getMessage();
             }
-        })->whereNumber('proposal')->name('uat.store');
 
-        Route::put('/proposals/{proposal}/uat', function (Request $request, ApiService $api, int $proposal) {
-            $validated = $request->validate([
-                'session_date'            => ['required', 'date'],
-                'overall_result'          => ['required', 'in:PASSED,FAILED,PARTIAL'],
-                'client_notes'            => ['nullable', 'string'],
-                'items'                   => ['required', 'array', 'min:1'],
-                'items.*.feature_name'    => ['required', 'string', 'max:255'],
-                'items.*.test_scenario'   => ['nullable', 'string'],
-                'items.*.result'          => ['required', 'in:PASSED,FAILED,BUG_FOUND'],
-                'items.*.bug_severity'    => ['nullable', 'in:MINOR,MAJOR,CRITICAL'],
-                'items.*.bug_description' => ['nullable', 'string'],
-                'items.*.client_feedback' => ['nullable', 'string'],
+            return view('pengurus-tefa.monitoring', [
+                'user'      => session('user'),
+                'dashboard' => $dashboardData,
+                'error'     => $error,
             ]);
-
-            try {
-                $response = $api->updateUat($proposal, $validated);
-
-                if ($response->successful()) {
-                    return redirect()
-                        ->route('pengurus-tefa.uat.detail', $proposal)
-                        ->with('success', 'Lembar UAT berhasil diperbarui (revisi item tersimpan).');
-                }
-
-                return back()
-                    ->withInput()
-                    ->with('error', 'Gagal memperbarui UAT: ' . ($response->json('message') ?? 'Terjadi kesalahan backend.'));
-            } catch (\Throwable $e) {
-                return back()
-                    ->withInput()
-                    ->with('error', 'Tidak dapat terhubung ke server backend: ' . $e->getMessage());
-            }
-        })->whereNumber('proposal')->name('uat.update');
-
-        Route::get('/monitoring', fn () => view('pengurus-tefa.monitoring', ['user' => session('user')]))->name('monitoring');
+        })->name('monitoring');
     });
 });
