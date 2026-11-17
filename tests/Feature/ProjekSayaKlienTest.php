@@ -171,6 +171,8 @@ class ProjekSayaKlienTest extends TestCase
             ->assertSee('Dosen Backend')
             ->assertSee('Manajemen Barang')
             ->assertSee('Mahasiswa Aktif')
+            ->assertSee('Unduh SPK')
+            ->assertSee(route('dokumen.spk', 501), false)
             ->assertDontSee('PRJ-2026/014')
             ->assertDontSee('Sistem Monitoring Rantai Pasok Terpadu');
     }

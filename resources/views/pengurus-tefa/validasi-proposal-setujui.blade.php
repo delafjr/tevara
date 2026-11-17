@@ -253,7 +253,7 @@
                         {{-- Upload Surat Perjanjian Box --}}
                         <div class="flex flex-col">
                             <label class="block text-xs font-bold text-[#1E293B] mb-1.5">
-                                Berkas Surat Perjanjian / Kontrak (SPK) <span class="text-red-500">*</span>
+                                Berkas Surat Perjanjian / Kontrak (SPK) <span class="text-[10px] font-semibold text-slate-400">(opsional)</span>
                             </label>
 
                             <div class="flex-1 flex flex-col justify-center border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-[#0B3B82] hover:bg-slate-50/50 transition-all cursor-pointer relative"
