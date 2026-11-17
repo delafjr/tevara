@@ -577,9 +577,9 @@
                                         required
                                         class="w-full px-4 py-3 rounded-xl border border-slate-200 text-xs text-[#1E293B] font-semibold focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition bg-white">
                                     <option value="">-- Pilih Dosen Project Manager --</option>
-                                    <template x-for="dosen in dosens" :key="dosen.id">
-                                        <option :value="dosen.id" x-text="dosen.name + ' (' + (dosen.nidn || dosen.email) + ')'"></option>
-                                    </template>
+                                    @foreach ($dosens as $dosen)
+                                        <option value="{{ $dosen['id'] }}">{{ $dosen['name'] }} ({{ $dosen['nidn'] ?? $dosen['email'] }})</option>
+                                    @endforeach
                                 </select>
                             </div>
 
@@ -660,9 +660,9 @@
                                                         required
                                                         class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-[#1E293B] font-medium focus:outline-none focus:border-[#0B3B82] transition bg-white">
                                                     <option value="">-- Pilih Mahasiswa --</option>
-                                                    <template x-for="mhs in mahasiswas" :key="mhs.id">
-                                                        <option :value="mhs.id" x-text="mhs.name + ' (' + (mhs.nim || mhs.study_program || mhs.email) + ')'"></option>
-                                                    </template>
+                                                    @foreach ($mahasiswas as $mhs)
+                                                        <option value="{{ $mhs['id'] }}">{{ $mhs['name'] }} ({{ $mhs['nim'] ?? $mhs['study_program'] ?? $mhs['email'] }})</option>
+                                                    @endforeach
                                                 </select>
                                             </div>
                                         </div>
@@ -673,9 +673,9 @@
                                             <select x-model.number="member.role_id"
                                                     required
                                                     class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-[#1E293B] font-semibold focus:outline-none focus:border-[#0B3B82] transition bg-white">
-                                                <template x-for="role in roles" :key="role.id">
-                                                    <option :value="role.id" x-text="role.name"></option>
-                                                </template>
+                                                @foreach ($projectRoles as $role)
+                                                    <option value="{{ $role['id'] }}">{{ $role['name'] }}</option>
+                                                @endforeach
                                             </select>
                                         </div>
 
@@ -1073,7 +1073,7 @@ function approvalForm(config) {
 
         addMember() {
             this.teamMembers.push({
-                id: Date.now(),
+                id: Date.now() + Math.random(),
                 student_id: '',
                 role_id: this.roles.length > 0 ? this.roles[0].id : 1,
                 joined_at: this.startDate || ''
@@ -1082,7 +1082,7 @@ function approvalForm(config) {
 
         addMemberWithRole(roleId) {
             this.teamMembers.push({
-                id: Date.now(),
+                id: Date.now() + Math.random(),
                 student_id: '',
                 role_id: roleId,
                 joined_at: this.startDate || ''
@@ -1113,6 +1113,13 @@ function approvalForm(config) {
                 return false;
             }
 
+            const studentIds = this.teamMembers.map(m => Number(m.student_id));
+            if (new Set(studentIds).size !== studentIds.length) {
+                alert('Terdapat mahasiswa yang dipilih lebih dari satu kali dalam tim. Harap pilih mahasiswa yang berbeda untuk setiap peran.');
+                event.preventDefault();
+                return false;
+            }
+
             if (this.totalTermPercentage() !== 100) {
                 alert('Total alokasi termin harus pas 100% (saat ini ' + this.totalTermPercentage() + '%). Silakan klik "Pas-kan ke Pelunasan" atau "Ratakan Sisa Alokasi".');
                 event.preventDefault();
@@ -1124,6 +1131,12 @@ function approvalForm(config) {
                 event.preventDefault();
                 return false;
             }
+
+            // Sync hidden inputs directly before submit to guarantee values
+            const termsInput = document.querySelector('input[name="terms"]');
+            if (termsInput) termsInput.value = JSON.stringify(this.terms);
+            const membersInput = document.querySelector('input[name="members"]');
+            if (membersInput) membersInput.value = JSON.stringify(this.teamMembers);
 
             this.isSubmitting = true;
             return true;

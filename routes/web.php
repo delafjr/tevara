@@ -1800,12 +1800,15 @@ Route::middleware('auth.api')->group(function () {
                 'start_date'                  => 'required|date',
                 'target_completion_date'      => 'required|date|after_or_equal:start_date',
                 'pm_id'                       => 'required|integer',
-                'terms'                       => 'nullable|string',
-                'members'                     => 'nullable|string',
+                'terms'                       => 'nullable',
+                'members'                     => 'nullable',
             ]);
 
-            $terms = !empty($validated['terms']) ? json_decode($validated['terms'], true) : [];
-            $members = !empty($validated['members']) ? json_decode($validated['members'], true) : [];
+            $rawTerms = $request->input('terms');
+            $terms = is_string($rawTerms) ? (json_decode($rawTerms, true) ?? []) : (is_array($rawTerms) ? $rawTerms : []);
+
+            $rawMembers = $request->input('members');
+            $members = is_string($rawMembers) ? (json_decode($rawMembers, true) ?? []) : (is_array($rawMembers) ? $rawMembers : []);
 
             // Persetujuan, SPK, termin, dan tim pengembang sepenuhnya ditangani backend API.
             try {

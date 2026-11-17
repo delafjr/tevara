@@ -295,6 +295,12 @@ class ValidasiProposalTest extends TestCase
 
         $response->assertRedirect(route('pengurus-tefa.validasi-proposal'));
         $response->assertSessionHas('success');
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/proposals/13/contract')
+                && $request['members'] === [['student_id' => 50, 'role_id' => 2, 'joined_at' => '2026-11-01']]
+                && count($request['terms']) === 2;
+        });
     }
 
     public function test_proses_setujui_proposal_tidak_menyimpan_duplikat_berkas_di_web(): void
