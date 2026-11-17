@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -314,7 +313,6 @@ class ValidasiProposalTest extends TestCase
                 'start_date'                  => '2026-11-01',
                 'target_completion_date'      => '2027-02-28',
                 'pm_id'                       => 3,
-                'contract_file'               => UploadedFile::fake()->create('spk.pdf', 20, 'application/pdf'),
             ]);
 
         $response->assertRedirect(route('pengurus-tefa.validasi-proposal'));

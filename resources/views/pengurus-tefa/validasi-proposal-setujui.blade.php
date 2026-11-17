@@ -152,7 +152,6 @@
             <form id="approvalProjectForm"
                   action="{{ route('pengurus-tefa.validasi-proposal.setujui.store', $proposalId) }}"
                   method="POST"
-                  enctype="multipart/form-data"
                   @submit="prepareSubmit"
                   class="space-y-7">
                 @csrf
@@ -171,7 +170,7 @@
                         </span>
                         <div>
                             <h2 class="text-base font-bold text-[#1E293B]">Surat Perjanjian Kerja Sama &amp; SPK</h2>
-                            <p class="text-xs text-slate-400 mt-0.5">Unggah dokumen kontrak kesepakatan resmi dan tentukan ruang lingkup kerja serta periode pengerjaan.</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Tentukan ruang lingkup kerja serta periode pengerjaan. Dokumen SPK akan digenerate otomatis oleh sistem.</p>
                         </div>
                     </div>
 
@@ -250,62 +249,22 @@
                             </div>
                         </div>
 
-                        {{-- Upload Surat Perjanjian Box --}}
+                        {{-- Info: Dokumen SPK digenerate otomatis --}}
                         <div class="flex flex-col">
                             <label class="block text-xs font-bold text-[#1E293B] mb-1.5">
-                                Berkas Surat Perjanjian / Kontrak (SPK) <span class="text-[10px] font-semibold text-slate-400">(opsional)</span>
+                                Berkas Surat Perjanjian / Kontrak (SPK)
                             </label>
 
-                            <div class="flex-1 flex flex-col justify-center border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-[#0B3B82] hover:bg-slate-50/50 transition-all cursor-pointer relative"
-                                 @dragover.prevent="isDragging = true"
-                                 @dragleave.prevent="isDragging = false"
-                                 @drop.prevent="handleFileDrop($event)"
-                                 :class="{ 'border-[#0B3B82] bg-blue-50/30 ring-2 ring-[#0B3B82]/10': isDragging }">
-
-                                <input type="file"
-                                       id="contract_file"
-                                       name="contract_file"
-                                       accept=".pdf,.doc,.docx"
-                                       @change="handleFileSelect($event)"
-                                       class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-
-                                <template x-if="!fileName">
-                                    <div class="space-y-3">
-                                        <div class="w-14 h-14 rounded-2xl bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center mx-auto">
-                                            <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs font-bold text-[#1E293B]">Tarik &amp; lepas file dokumen kontrak di sini</p>
-                                            <p class="text-[11px] text-slate-400 mt-1">atau <span class="text-[#0B3B82] font-semibold underline">pilih berkas dari komputer</span></p>
-                                        </div>
-                                        <p class="text-[10px] text-slate-400">Format didukung: PDF, DOC, DOCX (Maksimal 10 MB)</p>
-                                    </div>
-                                </template>
-
-                                <template x-if="fileName">
-                                    <div class="relative z-20 space-y-3 py-2">
-                                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto ring-1 ring-emerald-200">
-                                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 mb-1">
-                                                Berkas Terpilih
-                                            </span>
-                                            <p class="text-xs font-bold text-slate-800 break-all" x-text="fileName"></p>
-                                            <p class="text-[11px] text-slate-400 mt-0.5" x-text="fileSize"></p>
-                                        </div>
-                                        <button type="button"
-                                                @click.stop="removeFile"
-                                                class="inline-flex items-center gap-1.5 text-xs text-red-600 hover:text-red-700 font-semibold bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors">
-                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
-                                            Ganti / Hapus File
-                                        </button>
-                                    </div>
-                                </template>
+                            <div class="flex-1 flex flex-col justify-center items-center border-2 border-dashed border-emerald-200 rounded-2xl p-6 text-center bg-emerald-50/30">
+                                <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 ring-1 ring-emerald-200">
+                                    <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                                    </svg>
+                                </div>
+                                <p class="text-xs font-bold text-emerald-700">Dokumen SPK akan digenerate otomatis</p>
+                                <p class="text-[11px] text-slate-500 mt-1 max-w-xs leading-relaxed">
+                                    Sistem akan membuat dokumen DOCX berdasarkan data yang diisi di formulir ini. File dapat diunduh setelah persetujuan selesai.
+                                </p>
                             </div>
 
                             <p class="text-[11px] text-slate-400 mt-2">
@@ -530,7 +489,6 @@
 
                         {{-- Total Team Member Badge --}}
                         <div class="text-right">
-                            <span class="text-[10px] font-bold tracking-wide uppercase text-slate-400">Kekuatan Tim</span>
                             <p class="text-sm font-bold text-[#1E293B]">
                                 1 PM + <span class="text-[#0B3B82]" x-text="teamMembers.length"></span> Mahasiswa
                             </p>
@@ -779,9 +737,6 @@ function approvalForm(config) {
         roles: config.roles || [],
 
         selectedPmId: '',
-        isDragging: false,
-        fileName: null,
-        fileSize: null,
         isSubmitting: false,
 
         // Skema Termin Default: 3 Termin (30%, 40%, 30%)
@@ -928,32 +883,6 @@ function approvalForm(config) {
 
         countMembersWithRole(roleId) {
             return this.teamMembers.filter(m => Number(m.role_id) === Number(roleId)).length;
-        },
-
-        handleFileSelect(event) {
-            const file = event.target.files?.[0];
-            if (file) {
-                this.fileName = file.name;
-                this.fileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
-            }
-        },
-
-        handleFileDrop(event) {
-            this.isDragging = false;
-            const files = event.dataTransfer?.files;
-            if (files && files.length > 0) {
-                const fileInput = document.getElementById('contract_file');
-                fileInput.files = files;
-                this.fileName = files[0].name;
-                this.fileSize = (files[0].size / (1024 * 1024)).toFixed(2) + ' MB';
-            }
-        },
-
-        removeFile() {
-            const fileInput = document.getElementById('contract_file');
-            if (fileInput) fileInput.value = '';
-            this.fileName = null;
-            this.fileSize = null;
         },
 
         prepareSubmit(event) {
