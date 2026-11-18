@@ -17,7 +17,7 @@
     <x-sidebar active="project" />
     <main class="ml-64 flex-1 space-y-6 px-8 py-7">
         <a href="{{ route('pm.project') }}" class="text-sm font-semibold text-slate-500 hover:text-[#0B3B82]">← Kembali ke proyek</a>
-        <section class="rounded-2xl border border-slate-100 bg-white p-7 shadow-sm">
+        <section class="rounded-2xl border border-slate-100 bg-white p-7 shadow-sm mt-4">
             <p class="text-xs font-bold uppercase tracking-wide text-[#0B3B82]">Ringkasan UAT · hanya untuk dilihat</p>
             <h1 class="mt-2 text-2xl font-bold text-slate-900">{{ $proposal['title'] ?? 'Proyek' }}</h1>
             <p class="mt-1 text-sm text-slate-500">{{ $proposal['proposal_code'] ?? '' }}</p>
