@@ -277,6 +277,34 @@ Route::middleware('auth.api')->group(function () {
         return redirect()->route('dashboard');
     })->name('switch-role');
 
+    // Halaman Profil Pengguna untuk semua role
+    Route::get('/profile', function (ApiService $api) {
+        $user = session('user') ?? [];
+        try {
+            $response = $api->get('auth/me');
+            if ($response->successful()) {
+                $userData = $response->json('data') ?? $response->json('user');
+                if (is_array($userData)) {
+                    $user = array_merge($user, $userData);
+                    session(['user' => $user]);
+                }
+            }
+        } catch (\Throwable) {
+            // Gunakan session user bila endpoint backend tidak merespons
+        }
+
+        $allRoles = ApiService::getUserRoles($user);
+        $effectiveRoles = ApiService::getEffectiveRoles($user);
+        $activeRole = session('active_role') ?? ($effectiveRoles[0] ?? 'klien');
+
+        return view('profile', [
+            'user'           => $user,
+            'allRoles'       => $allRoles,
+            'effectiveRoles' => $effectiveRoles,
+            'activeRole'     => $activeRole,
+        ]);
+    })->name('profile');
+
     $storeProposal = function (Request $request, ApiService $api, string $redirectRoute) {
         // Modul dikirim sebagai JSON string dari repeater Alpine, decode dulu agar rule array berlaku.
         $request->merge([
