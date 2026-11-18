@@ -1506,6 +1506,115 @@ Route::middleware('auth.api')->group(function () {
                 'error'   => $error,
             ]);
         })->name('klien-mitra');
+
+        Route::get('/klien-mitra/registrasi', function () {
+            return view('pengurus-tefa.klien-mitra-create', [
+                'user' => session('user'),
+            ]);
+        })->name('klien-mitra.registrasi');
+
+        Route::post('/klien-mitra/registrasi', function (Request $request, ApiService $api) {
+            $validated = $request->validate([
+                'name'                  => ['required', 'string', 'max:150'],
+                'email'                 => ['required', 'email'],
+                'password'              => ['required', 'string', 'min:8', 'confirmed'],
+                'password_confirmation' => ['required', 'string', 'min:8'],
+                'phone_number'          => ['nullable', 'string', 'max:20'],
+                'address'               => ['nullable', 'string', 'max:500'],
+                'client_type'           => ['nullable', 'string', 'in:EXTERNAL,INTERNAL'],
+                'pic_name'              => ['nullable', 'string', 'max:100'],
+                'pic_email'             => ['nullable', 'email'],
+                'pic_phone'             => ['nullable', 'string', 'max:20'],
+                'pic_position'          => ['nullable', 'string', 'max:100'],
+                'pic_password'          => ['nullable', 'string', 'min:8', 'confirmed'],
+                'pic_password_confirmation' => ['nullable', 'string', 'min:8'],
+            ], [
+                'name.required'         => 'Nama perusahaan wajib diisi.',
+                'email.required'        => 'Email perusahaan wajib diisi.',
+                'email.email'           => 'Format email perusahaan tidak valid.',
+                'password.required'     => 'Password akun wajib diisi.',
+                'password.min'          => 'Password minimal 8 karakter.',
+                'password.confirmed'    => 'Konfirmasi password tidak cocok.',
+                'pic_password.min'       => 'Password PIC minimal 8 karakter.',
+                'pic_password.confirmed' => 'Konfirmasi password PIC tidak cocok.',
+            ]);
+
+            try {
+                $response = $api->post('users/company', $validated);
+
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('pengurus-tefa.klien-mitra')
+                        ->with('success', "Perusahaan '{$validated['name']}' berhasil didaftarkan.");
+                }
+
+                $errors = $response->json('errors');
+                if (is_array($errors) && !empty($errors)) {
+                    return back()->withInput()->withErrors($errors);
+                }
+
+                $message = $response->json('message') ?? 'Gagal mendaftarkan perusahaan. Silakan coba kembali.';
+                return back()->withInput()->with('error', $message);
+            } catch (\Throwable $e) {
+                return back()->withInput()->with('error', 'Terjadi kesalahan saat menghubungi server: ' . $e->getMessage());
+            }
+        })->name('klien-mitra.registrasi.store');
+
+        Route::get('/klien-mitra/registrasi-pic', function (ApiService $api) use ($readApiList) {
+            $companies = [];
+            try {
+                $response = $api->get('companies');
+                $companies = $readApiList($response);
+            } catch (\Throwable) {
+                $companies = [];
+            }
+
+            return view('pengurus-tefa.klien-mitra-pic-create', [
+                'user'      => session('user'),
+                'companies' => $companies,
+            ]);
+        })->name('klien-mitra.pic.registrasi');
+
+        Route::post('/klien-mitra/registrasi-pic', function (Request $request, ApiService $api) {
+            $validated = $request->validate([
+                'client_profile_id'     => ['required', 'integer'],
+                'name'                  => ['required', 'string', 'max:100'],
+                'position'              => ['required', 'string', 'max:100'],
+                'email'                 => ['required', 'email'],
+                'phone_number'          => ['nullable', 'string', 'max:20'],
+                'password'              => ['required', 'string', 'min:8', 'confirmed'],
+                'password_confirmation' => ['required', 'string', 'min:8'],
+            ], [
+                'client_profile_id.required' => 'Perusahaan wajib dipilih.',
+                'name.required'              => 'Nama PIC wajib diisi.',
+                'position.required'          => 'Posisi/jabatan PIC wajib diisi.',
+                'email.required'             => 'Email PIC wajib diisi.',
+                'email.email'                => 'Format email PIC tidak valid.',
+                'password.required'          => 'Password akun wajib diisi.',
+                'password.min'               => 'Password minimal 8 karakter.',
+                'password.confirmed'         => 'Konfirmasi password tidak cocok.',
+            ]);
+
+            try {
+                $response = $api->post('users/pic', $validated);
+
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('pengurus-tefa.klien-mitra')
+                        ->with('success', "PIC '{$validated['name']}' berhasil didaftarkan.");
+                }
+
+                $errors = $response->json('errors');
+                if (is_array($errors) && !empty($errors)) {
+                    return back()->withInput()->withErrors($errors);
+                }
+
+                $message = $response->json('message') ?? 'Gagal mendaftarkan PIC. Silakan coba kembali.';
+                return back()->withInput()->with('error', $message);
+            } catch (\Throwable $e) {
+                return back()->withInput()->with('error', 'Terjadi kesalahan saat menghubungi server: ' . $e->getMessage());
+            }
+        })->name('klien-mitra.pic.registrasi.store');
         Route::get('/dosen', function (ApiService $api) use ($readApiList) {
             $dosens = [];
             $error = null;
