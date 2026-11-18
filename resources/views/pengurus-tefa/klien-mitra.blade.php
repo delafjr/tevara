@@ -19,7 +19,7 @@
         <main class="flex-1 px-8 py-7 space-y-7" x-data="{ searchQuery: '' }">
 
             {{-- Hero Card --}}
-            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                 {{-- gradient dekoratif --}}
                 <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
 
@@ -36,7 +36,25 @@
                     </p>
                 </div>
 
+                <div class="relative z-10 flex-shrink-0">
+                    <a href="{{ route('pengurus-tefa.klien-mitra.registrasi') }}"
+                       class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B3B82] hover:bg-[#092d64] text-white text-xs font-semibold shadow-sm transition-all duration-150">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Registrasi Perusahaan
+                    </a>
+                </div>
             </div>
+
+            @if (session('success'))
+                <div role="alert" class="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
 
             @if (!empty($error))
                 <div role="alert" class="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">{{ $error }}</div>
