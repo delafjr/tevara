@@ -103,7 +103,7 @@
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Status</th>
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3 w-32">Progress</th>
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Deadline</th>
-                                <th class="px-3 py-3 w-10"></th>
+                                <th class="text-center text-[11px] font-semibold text-slate-400 px-3 py-3 w-24">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -116,11 +116,13 @@
                             <tr class="hover:bg-slate-50/60 transition-colors"
                                 x-show="(statusFilter === 'Semua Status' || statusFilter.toLowerCase() === '{{ $statusKey }}') && (!search || '{{ strtolower(addslashes($p['title'] ?? '')) }}'.includes(search.toLowerCase()) || '{{ strtolower(addslashes($p['client_name'] ?? '')) }}'.includes(search.toLowerCase()))">
                                 <td class="px-6 py-3.5">
-                                    <p class="font-semibold text-[#1E293B] text-[13px] leading-tight">{{ $p['title'] }}</p>
+                                    <a href="{{ route('pengurus-tefa.projek.detail', $p['id']) }}" class="font-semibold text-[#1E293B] hover:text-[#0B3B82] text-[13px] leading-tight block transition-colors">
+                                        {{ $p['title'] }}
+                                    </a>
                                     <p class="text-[11px] text-slate-400 mt-0.5 capitalize">{{ $p['category'] ?? 'Lainnya' }}</p>
                                 </td>
                                 <td class="px-3 py-3.5 text-[12px] text-slate-600">{{ $p['client_name'] ?? '—' }}</td>
-                                <td class="px-3 py-3.5 text-[12px] text-slate-600">{{ $p['pm_name'] ?? '—' }}</td>
+                                <td class="px-3 py-3.5 text-[12px] text-slate-600 font-medium">{{ $p['pm_name'] ?? '—' }}</td>
                                 <td class="px-3 py-3.5"><span class="text-[12px] font-semibold text-[#0B3B82]">{{ $p['student_count'] ?? 0 }} mhs</span></td>
                                 <td class="px-3 py-3.5"><span class="text-[11px] font-semibold px-2.5 py-1 rounded-full {{ $badgeClass }}">{{ $p['status'] }}</span></td>
                                 <td class="px-3 py-3.5 w-32">
@@ -132,9 +134,10 @@
                                     </div>
                                 </td>
                                 <td class="px-3 py-3.5 text-[12px] text-slate-500">{{ $p['deadline'] ?? '—' }}</td>
-                                <td class="px-3 py-3.5">
-                                    <a href="{{ route('pengurus-tefa.validasi-proposal.detail', $p['id']) }}" class="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors inline-block" title="Lihat Detail">
-                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
+                                <td class="px-3 py-3.5 text-center">
+                                    <a href="{{ route('pengurus-tefa.projek.detail', $p['id']) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#EAF3FF] text-[#0B3B82] hover:bg-[#0B3B82] hover:text-white text-[11px] font-bold transition-all" title="Lihat Detail Projek">
+                                        <span>Detail</span>
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                                     </a>
                                 </td>
                             </tr>

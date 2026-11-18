@@ -1301,6 +1301,35 @@ Route::middleware('auth.api')->group(function () {
             ]);
         })->name('projek');
 
+        Route::get('/projek/{proposal}', function (ApiService $api, int $proposal) {
+            $proposalData = [];
+            $uatData = null;
+            $error = null;
+
+            try {
+                $pRes = $api->get("proposals/{$proposal}");
+                if ($pRes->successful()) {
+                    $proposalData = $pRes->json();
+                } else {
+                    $error = $pRes->json('message') ?? 'Data projek tidak dapat dimuat.';
+                }
+
+                $uatRes = $api->getUat($proposal);
+                if ($uatRes->successful()) {
+                    $uatData = $uatRes->json('data');
+                }
+            } catch (\Throwable $e) {
+                $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
+            }
+
+            return view('pengurus-tefa.projek-detail', [
+                'user'     => session('user'),
+                'proposal' => $proposalData,
+                'uat'      => $uatData,
+                'error'    => $error,
+            ]);
+        })->whereNumber('proposal')->name('projek.detail');
+
         Route::get('/bast', function (ApiService $api) use ($readApiList) {
             $projects = [];
             $error = null;
