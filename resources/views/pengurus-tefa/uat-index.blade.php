@@ -416,7 +416,6 @@
                 </div>
                 <div>
                     <h3 class="text-base font-bold text-slate-900">Tandai Fase Testing (UAT)</h3>
-                    <p class="text-xs text-slate-500">Shortcut PATCH /proposals/{id}/status/testing</p>
                 </div>
             </div>
 
