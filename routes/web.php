@@ -231,6 +231,26 @@ Route::middleware('auth.api')->group(function () {
         return back();
     })->name('notifications.read');
 
+    // ── Unduh dokumen SPK/kontrak (proxy ke backend, otorisasi di API) ──
+    Route::get('/dokumen/spk/{proposal}', function (ApiService $api, int $proposal) {
+        try {
+            $response = $api->get("proposals/{$proposal}/contract/file");
+
+            if ($response->failed()) {
+                return back()->with('error', $response->json('message') ?? 'Dokumen SPK belum dapat diunduh.');
+            }
+
+            return response($response->body(), 200, [
+                'Content-Type'        => $response->header('Content-Type') ?? 'application/octet-stream',
+                'Content-Disposition' => $response->header('Content-Disposition') ?? 'attachment; filename="spk-' . $proposal . '.pdf"',
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal mengunduh dokumen SPK: ' . $e->getMessage());
+
+            return back()->with('error', 'Dokumen SPK tidak dapat diunduh dari server TEVARA.');
+        }
+    })->whereNumber('proposal')->name('dokumen.spk');
+
     // Switch Role handlers (Strictly validated against allowed roles)
     Route::get('/switch-role/{role}', function ($role) {
         $user = session('user');
@@ -1779,21 +1799,18 @@ Route::middleware('auth.api')->group(function () {
                 'maintenance_warranty_months' => 'nullable|integer|min:0',
                 'start_date'                  => 'required|date',
                 'target_completion_date'      => 'required|date|after_or_equal:start_date',
-                'contract_file'               => 'nullable|file|mimes:pdf,doc,docx|max:10240',
                 'pm_id'                       => 'required|integer',
-                'terms'                       => 'nullable|string',
-                'members'                     => 'nullable|string',
+                'terms'                       => 'nullable',
+                'members'                     => 'nullable',
             ]);
 
-            $contractFileUrl = null;
-            if ($request->hasFile('contract_file')) {
-                $contractFileUrl = $request->file('contract_file')->store('contracts', 'public');
-            }
+            $rawTerms = $request->input('terms');
+            $terms = is_string($rawTerms) ? (json_decode($rawTerms, true) ?? []) : (is_array($rawTerms) ? $rawTerms : []);
 
-            $terms = !empty($validated['terms']) ? json_decode($validated['terms'], true) : [];
-            $members = !empty($validated['members']) ? json_decode($validated['members'], true) : [];
+            $rawMembers = $request->input('members');
+            $members = is_string($rawMembers) ? (json_decode($rawMembers, true) ?? []) : (is_array($rawMembers) ? $rawMembers : []);
 
-            // 1. Coba kirim via HTTP API jika tevara-api sedang berjalan
+            // Persetujuan, SPK, termin, dan tim pengembang sepenuhnya ditangani backend API.
             try {
                 $payload = [
                     'spk_number'                  => $validated['spk_number'],
@@ -1808,115 +1825,15 @@ Route::middleware('auth.api')->group(function () {
                     'members'                     => $members,
                 ];
 
-                if ($request->hasFile('contract_file')) {
-                    $response = $api->sendWithFile("proposals/{$proposal}/contract", 'contract_file', $request->file('contract_file'), $payload);
-                } else {
-                    $response = $api->post("proposals/{$proposal}/contract", $payload);
-                }
+                $response = $api->post("proposals/{$proposal}/contract", $payload);
 
                 if ($response->failed()) {
                     return back()->withInput()->with('error', 'Gagal menyetujui proposal: ' . ($response->json('message') ?? 'Terjadi kesalahan pada backend API.'));
                 }
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Gagal menghubungi backend API untuk persetujuan proposal: ' . $e->getMessage());
-            }
+                \Illuminate\Support\Facades\Log::error('Gagal menghubungi backend API untuk persetujuan proposal: ' . $e->getMessage());
 
-            // 2. Direct database update di SQLite tevara-api agar data selalu konsisten & tersimpan
-            $sqlitePath = base_path('../tevara-api/database/database.sqlite');
-            if (file_exists($sqlitePath)) {
-                try {
-                    $pdo = new \PDO("sqlite:" . $sqlitePath);
-                    $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-
-                    $year = date('Y', strtotime($validated['start_date']));
-                    $spkNumber = !empty($validated['spk_number']) ? $validated['spk_number'] : "SPK/TEFA/{$year}/" . str_pad((string) $proposal, 3, '0', STR_PAD_LEFT);
-                    $projectCode = "PRJ-{$year}/" . str_pad((string) $proposal, 3, '0', STR_PAD_LEFT);
-
-                    $stmt = $pdo->prepare("UPDATE proposals SET
-                        spk_number = :spk,
-                        project_code = :prj,
-                        scope_of_work = :scope,
-                        total_amount = :amount,
-                        payment_terms_description = :pay_terms,
-                        start_date = :s_date,
-                        target_completion_date = :c_date,
-                        pm_id = :pm,
-                        status_id = 7,
-                        contract_file_url = COALESCE(:contract_url, contract_file_url),
-                        updated_at = datetime('now')
-                        WHERE id = :id");
-
-                    $stmt->execute([
-                        ':spk'          => $spkNumber,
-                        ':prj'          => $projectCode,
-                        ':scope'        => $validated['scope_of_work'],
-                        ':amount'       => $validated['total_amount'],
-                        ':pay_terms'    => $validated['payment_terms_description'] ?? 'Termin pembayaran telah disepakati sesuai SPK.',
-                        ':s_date'       => $validated['start_date'],
-                        ':c_date'       => $validated['target_completion_date'],
-                        ':pm'           => !empty($validated['pm_id']) ? $validated['pm_id'] : null,
-                        ':contract_url' => $contractFileUrl,
-                        ':id'           => $proposal,
-                    ]);
-
-                    // Update / Insert maintenance warranty
-                    $wMonths = (int) ($validated['maintenance_warranty_months'] ?? 3);
-                    $stmtM = $pdo->prepare("INSERT INTO project_maintenances (proposal_id, maintenance_warranty_months, created_at, updated_at)
-                        VALUES (:pid, :wm, datetime('now'), datetime('now'))
-                        ON CONFLICT(proposal_id) DO UPDATE SET maintenance_warranty_months = :wm2, updated_at = datetime('now')");
-                    $stmtM->execute([':pid' => $proposal, ':wm' => $wMonths, ':wm2' => $wMonths]);
-
-                    // Sync termin pembayaran (payments table)
-                    if (is_array($terms) && count($terms) > 0) {
-                        $delP = $pdo->prepare("DELETE FROM payments WHERE proposal_id = ?");
-                        $delP->execute([$proposal]);
-
-                        $insP = $pdo->prepare("INSERT INTO payments (proposal_id, term_sequence, amount, payment_date, verification_notes, status, created_at, updated_at)
-                            VALUES (:pid, :seq, :amt, :pdate, :notes, 'PENDING', datetime('now'), datetime('now'))");
-                        foreach ($terms as $idx => $t) {
-                            if (!empty($t['amount']) && (float) $t['amount'] > 0) {
-                                $insP->execute([
-                                    ':pid'   => $proposal,
-                                    ':seq'   => $t['term_sequence'] ?? ($idx + 1),
-                                    ':amt'   => (float) $t['amount'],
-                                    ':pdate' => !empty($t['payment_date']) ? $t['payment_date'] : null,
-                                    ':notes' => $t['name'] ?? $t['notes'] ?? ('Termin ' . ($idx + 1)),
-                                ]);
-                            }
-                        }
-                    }
-
-                    // Sync anggota tim pengembang (project_teams table)
-                    if (is_array($members) && count($members) > 0) {
-                        $delT = $pdo->prepare("DELETE FROM project_teams WHERE proposal_id = ?");
-                        $delT->execute([$proposal]);
-
-                        $insT = $pdo->prepare("INSERT INTO project_teams (proposal_id, user_id, role_id, joined_at)
-                            VALUES (:pid, :uid, :rid, :jdate)");
-                        foreach ($members as $m) {
-                            $sid = $m['student_id'] ?? $m['user_id'] ?? null;
-                            $rid = $m['role_id'] ?? null;
-                            if ($sid && $rid) {
-                                $insT->execute([
-                                    ':pid'   => $proposal,
-                                    ':uid'   => (int) $sid,
-                                    ':rid'   => (int) $rid,
-                                    ':jdate' => !empty($m['joined_at']) ? $m['joined_at'] : $validated['start_date'],
-                                ]);
-                            }
-                        }
-                    }
-
-                    // Catat status history
-                    $stmtH = $pdo->prepare("INSERT INTO proposal_status_histories (proposal_id, status_id, note, changed_by, created_at, updated_at)
-                        VALUES (:pid, 7, 'Proposal disetujui, SPK diterbitkan, dan tim pengembang resmi dibentuk.', :uid, datetime('now'), datetime('now'))");
-                    $stmtH->execute([
-                        ':pid' => $proposal,
-                        ':uid' => session('user.id') ?? 1,
-                    ]);
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('Direct sqlite approval error: ' . $e->getMessage());
-                }
+                return back()->withInput()->with('error', 'Tidak dapat terhubung ke backend: ' . $e->getMessage());
             }
 
             return redirect()->route('pengurus-tefa.validasi-proposal')
@@ -2199,30 +2116,16 @@ Route::middleware('auth.api')->group(function () {
             $error = null;
 
             try {
-                $response = $api->get('proposals');
-                if ($response->successful() && is_array($response->json())) {
-                    $proposals = $response->json();
-
-                    foreach ($proposals as &$p) {
-                        $pId = $p['id'] ?? null;
-                        if (!$pId) continue;
-                        $uatRes = $api->getUat((int) $pId);
-                        if ($uatRes->successful()) {
-                            $p['uat'] = $uatRes->json('data');
-                        } elseif ($uatRes->status() === 404) {
-                            $p['uat'] = null;
-                        } else {
-                            $error = $uatRes->json('message') ?? 'Data UAT tidak dapat dimuat.';
-                            break;
-                        }
-                    }
-                    unset($p);
+                $response = $api->getUatProposals();
+                if ($response->successful()) {
+                    $proposals = $response->json('data') ?? $response->json() ?? [];
                 } else {
-                    $error = $response->json('message') ?? 'Daftar proyek tidak dapat dimuat.';
+                    $error = $response->json('message') ?? 'Daftar proyek UAT tidak dapat dimuat.';
                 }
             } catch (\Throwable $e) {
                 $error = 'Gagal mengambil data proyek: ' . $e->getMessage();
             }
+
 
             $total = count($proposals);
             $testing = 0;

@@ -202,8 +202,7 @@
                                     $pId = $p['id'];
                                     $code = $p['proposal_code'] ?? ('PRJ-' . $pId);
                                     $title = $p['title'] ?? 'Proyek Tanpa Judul';
-                                    $clientName = $p['client']['name'] ?? $p['client_name'] ?? 'Klien Mitra';
-                                    $companyName = $p['client']['company_name'] ?? $p['client_company_name'] ?? '-';
+                                    $companyName = $p['client_company_name'] ?? $p['client']['company_name'] ?? $p['client_name'] ?? $p['client']['name'] ?? '—';
                                     $statusId = (int) ($p['status_id'] ?? 0);
                                     $statusName = $p['status']['name'] ?? $p['status'] ?? 'Active';
                                     $isTesting = ($statusId === 8 || strtolower($statusName) === 'testing');
@@ -228,7 +227,7 @@
                                         (filterStatus === 'signed' && {{ $isSigned ? 'true' : 'false' }})
                                     ) && (
                                         searchQuery === '' ||
-                                        '{{ strtolower($code . ' ' . $title . ' ' . $clientName . ' ' . $statusName . ' ' . (strtolower(trim($statusName)) === 'submitted' ? 'siap diuji' : '')) }}'.includes(searchQuery.toLowerCase())
+                                        '{{ strtolower($code . ' ' . $title . ' ' . $companyName . ' ' . $statusName . ' ' . (in_array(strtolower(trim($statusName)), ['approved', 'siap diuji']) ? 'siap diuji' : '')) }}'.includes(searchQuery.toLowerCase())
                                     )">
                                     {{-- Kode & Title --}}
                                     <td class="px-6 py-4">
@@ -250,10 +249,9 @@
                                         </div>
                                     </td>
 
-                                    {{-- Klien --}}
+                                    {{-- Klien / Mitra (Hanya Nama Perusahaan) --}}
                                     <td class="px-4 py-4">
-                                        <p class="text-xs font-bold text-slate-800">{{ $clientName }}</p>
-                                        <p class="text-[11px] text-slate-400 mt-0.5">{{ $companyName }}</p>
+                                        <p class="text-xs font-bold text-slate-800">{{ $companyName }}</p>
                                     </td>
 
                                     {{-- Status Proyek --}}
@@ -273,7 +271,12 @@
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                                 Completed
                                             </span>
-                                        @elseif(strtolower(trim($statusName)) === 'submitted')
+                                        @elseif(in_array(strtolower(trim($statusName)), ['active', 'berjalan']))
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                                                Active
+                                            </span>
+                                        @elseif(in_array(strtolower(trim($statusName)), ['approved', 'siap diuji']))
                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-[#0B3B82] border border-blue-200">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
                                                 Siap Diuji

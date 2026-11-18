@@ -173,6 +173,14 @@ class ApiService
     // ==========================================
 
     /**
+     * Ambil semua proyek yang layak UAT beserta data UAT terbarunya (1 endpoint efisien).
+     */
+    public function getUatProposals(): Response
+    {
+        return $this->get('proposals/uats');
+    }
+
+    /**
      * Detail UAT proyek + semua item (klien, pengurus_tefa, dosen).
      */
     public function getUat(int $proposalId): Response

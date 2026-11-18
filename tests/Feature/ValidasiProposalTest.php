@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ValidasiProposalTest extends TestCase
@@ -260,6 +261,9 @@ class ValidasiProposalTest extends TestCase
         $response->assertSee('Pembentukan Tim Pengembang TeFa', false);
         $response->assertSee('Project Manager (Dosen TeFa)', false);
         $response->assertSee('Berkas Surat Perjanjian / Kontrak (SPK)', false);
+        $response->assertSee('Pas-kan ke Pelunasan', false);
+        $response->assertSee('Ratakan Sisa Alokasi', false);
+        $response->assertSee('Belum diisi', false);
     }
 
     public function test_proses_setujui_proposal_berhasil_menyimpan_dan_redirect(): void
@@ -291,6 +295,124 @@ class ValidasiProposalTest extends TestCase
 
         $response->assertRedirect(route('pengurus-tefa.validasi-proposal'));
         $response->assertSessionHas('success');
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/proposals/13/contract')
+                && $request['members'] === [['student_id' => 50, 'role_id' => 2, 'joined_at' => '2026-11-01']]
+                && count($request['terms']) === 2;
+        });
+    }
+
+    public function test_proses_setujui_proposal_tidak_menyimpan_duplikat_berkas_di_web(): void
+    {
+        Storage::fake('public');
+        Http::fake([
+            '*/api/v1/proposals/13/contract' => Http::response([
+                'message' => 'Data SPK/kontrak berhasil disimpan',
+            ], 200),
+        ]);
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->post('/pengurus-tefa/validasi-proposal/13/setujui', [
+                'spk_number'                  => 'SPK/TEFA/2026/013',
+                'scope_of_work'               => 'Pengerjaan modul frontend dan backend.',
+                'total_amount'                => 50000000,
+                'payment_terms_description'   => '3 Termin pembayaran',
+                'maintenance_warranty_months' => 3,
+                'start_date'                  => '2026-11-01',
+                'target_completion_date'      => '2027-02-28',
+                'pm_id'                       => 3,
+            ]);
+
+        $response->assertRedirect(route('pengurus-tefa.validasi-proposal'));
+
+        // Berkas hanya disimpan sekali, di disk privat backend API.
+        $this->assertSame([], Storage::disk('public')->allFiles('contracts'));
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/proposals/13/contract'));
+    }
+
+    public function test_proses_setujui_proposal_gagal_jika_backend_mengembalikan_error(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals/13/contract' => Http::response([
+                'message' => 'SPK gagal disimpan',
+            ], 500),
+        ]);
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->from('/pengurus-tefa/validasi-proposal/13/setujui')
+            ->post('/pengurus-tefa/validasi-proposal/13/setujui', [
+                'scope_of_work'          => 'Pengerjaan modul frontend dan backend.',
+                'total_amount'           => 50000000,
+                'start_date'             => '2026-11-01',
+                'target_completion_date' => '2027-02-28',
+                'pm_id'                  => 3,
+            ]);
+
+        $response->assertRedirect('/pengurus-tefa/validasi-proposal/13/setujui');
+        $response->assertSessionHas('error');
+    }
+
+    public function test_dokumen_spk_dapat_diunduh_melalui_web(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals/13/contract/file' => Http::response('%PDF-1.4 berkas spk', 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename=SPK-TEFA-2026-013.pdf',
+            ]),
+        ]);
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->get('/dokumen/spk/13');
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'application/pdf');
+        $response->assertHeader('Content-Disposition', 'attachment; filename=SPK-TEFA-2026-013.pdf');
+    }
+
+    public function test_dokumen_spk_menampilkan_error_jika_berkas_tidak_tersedia(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals/13/contract/file' => Http::response([
+                'message' => 'Dokumen SPK belum tersedia untuk proposal ini.',
+            ], 404),
+        ]);
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->from('/pengurus-tefa/validasi-proposal/13')
+            ->get('/dokumen/spk/13');
+
+        $response->assertRedirect('/pengurus-tefa/validasi-proposal/13');
+        $response->assertSessionHas('error', 'Dokumen SPK belum tersedia untuk proposal ini.');
+    }
+
+    public function test_halaman_detail_proposal_menampilkan_unduh_spk_untuk_proposal_aktif(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals/13/pending' => Http::response([
+                'message' => 'Proposal tidak menunggu review.',
+            ], 404),
+            '*/api/v1/proposals/13' => Http::response([
+                'id'                => 13,
+                'proposal_code'     => 'PRSL-2026-490',
+                'title'             => 'Portal Berita Digital',
+                'background'        => 'Scope kerja sistem informasi.',
+                'status'            => ['id' => 7, 'name' => 'Active'],
+                'status_id'         => 7,
+                'category'          => ['id' => 1, 'name' => 'Web'],
+                'contract_file_url' => 'contracts/spk-13.pdf',
+                'spk_number'        => 'SPK/TEFA/2026/013',
+                'modules'           => [],
+            ], 200),
+        ]);
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->get('/pengurus-tefa/validasi-proposal/13');
+
+        $response->assertOk();
+        $response->assertSee('Unduh SPK');
+        $response->assertSee(route('dokumen.spk', 13), false);
     }
 
     public function test_halaman_detail_proposal_menampilkan_tombol_dan_modal_tolak(): void
