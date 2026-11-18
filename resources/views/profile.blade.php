@@ -17,7 +17,7 @@
 
     // Inisial avatar
     $cleanWords = array_values(array_filter(
-        explode(' ', $userName),
+        explode(' ', (string) $userName),
         fn($w) => !empty($w) && !str_contains($w, '.') && !str_contains($w, ',')
     ));
     if (count($cleanWords) >= 2) {
@@ -25,9 +25,12 @@
     } elseif (count($cleanWords) === 1) {
         $initials = mb_substr($cleanWords[0], 0, 2);
     } else {
-        $initials = mb_substr($userName, 0, 2);
+        $initials = mb_substr((string) $userName, 0, 2);
     }
-    $initials = strtoupper($initials);
+    $initials = strtoupper(trim($initials));
+    if ($initials === '') {
+        $initials = 'U';
+    }
 
     $roleLabels = [
         'klien'         => 'Klien & Mitra',
@@ -69,8 +72,11 @@
 
                 <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-6">
                     {{-- Avatar Initial --}}
-                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#0B3B82] to-[#1E56A0] text-white flex items-center justify-center text-2xl font-black shadow-md shadow-[#0B3B82]/20 flex-shrink-0">
-                        {{ $initials }}
+                    <div class="flex-shrink-0">
+                        <div class="w-20 h-20 rounded-full flex items-center justify-center font-extrabold text-2xl tracking-wider select-none shadow-md"
+                             style="width: 80px; height: 80px; min-width: 80px; min-height: 80px; border-radius: 9999px; background: linear-gradient(135deg, #0B3B82 0%, #1E56A0 100%); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 1.625rem; font-weight: 800; box-shadow: 0 4px 14px rgba(11, 59, 130, 0.25); border: 3px solid #FFFFFF;">
+                            {{ $initials }}
+                        </div>
                     </div>
 
                     {{-- User Details --}}
@@ -99,15 +105,6 @@
                                 </svg>
                                 {{ $userPhone }}
                             </span>
-
-                            @if (!empty($user['id']))
-                                <span class="inline-flex items-center gap-1.5">
-                                    <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15A2.25 2.25 0 0 0 2.25 6.75v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" />
-                                    </svg>
-                                    ID User: #{{ $user['id'] }}
-                                </span>
-                            @endif
                         </div>
                     </div>
                 </div>
@@ -291,13 +288,6 @@
                                 <dt class="text-slate-400 font-semibold uppercase tracking-wider text-[11px]">Terdaftar Sejak</dt>
                                 <dd class="font-semibold text-slate-800">
                                     {{ !empty($user['created_at']) ? \Carbon\Carbon::parse($user['created_at'])->translatedFormat('d M Y, H:i') : '—' }}
-                                </dd>
-                            </div>
-
-                            <div class="flex items-center justify-between py-1 border-b border-slate-50">
-                                <dt class="text-slate-400 font-semibold uppercase tracking-wider text-[11px]">Metode Autentikasi</dt>
-                                <dd class="font-semibold text-slate-800">
-                                    Token API Terenkripsi (Sanctum)
                                 </dd>
                             </div>
                         </dl>
