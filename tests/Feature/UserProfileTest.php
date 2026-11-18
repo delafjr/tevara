@@ -86,4 +86,73 @@ class UserProfileTest extends TestCase
         $response->assertSee('Sedang Digunakan');
         $response->assertSee('Beralih ke Role Ini');
     }
+
+    public function test_profile_page_renders_password_change_form_with_toggles_and_retype(): void
+    {
+        Http::fake([
+            '*auth/me' => Http::response([
+                'success' => true,
+                'data' => [
+                    'id'    => 10,
+                    'name'  => 'Ahmad Dani',
+                    'email' => 'ahmad.dani@mhs.polines.ac.id',
+                    'roles' => ['mahasiswa'],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->withSession([
+            'api_token'   => 'dummy-token',
+            'user'        => [
+                'id'    => 10,
+                'name'  => 'Ahmad Dani',
+                'email' => 'ahmad.dani@mhs.polines.ac.id',
+                'roles' => ['mahasiswa'],
+            ],
+            'active_role' => 'mahasiswa',
+        ])->get('/profile');
+
+        $response->assertStatus(200);
+        $response->assertSee('Keamanan &amp; Ubah Password', false);
+        $response->assertSee('name="password"', false);
+        $response->assertSee('name="password_confirmation"', false);
+        $response->assertSee('Ulangi Password Baru');
+        $response->assertSee('Toggle password visibility');
+    }
+
+    public function test_user_can_submit_password_update_successfully(): void
+    {
+        Http::fake([
+            '*auth/password' => Http::response([
+                'success' => true,
+                'message' => 'Password berhasil diperbarui',
+            ], 200),
+        ]);
+
+        $response = $this->withSession([
+            'api_token'   => 'dummy-token',
+            'user'        => ['id' => 10, 'name' => 'Ahmad Dani', 'roles' => ['mahasiswa']],
+            'active_role' => 'mahasiswa',
+        ])->put('/profile/password', [
+            'password'              => 'NewSecurePass123!',
+            'password_confirmation' => 'NewSecurePass123!',
+        ]);
+
+        $response->assertSessionHas('success', 'Password akun Anda berhasil diubah.');
+        $response->assertRedirect();
+    }
+
+    public function test_password_update_validates_retype_confirmation(): void
+    {
+        $response = $this->withSession([
+            'api_token'   => 'dummy-token',
+            'user'        => ['id' => 10, 'name' => 'Ahmad Dani', 'roles' => ['mahasiswa']],
+            'active_role' => 'mahasiswa',
+        ])->put('/profile/password', [
+            'password'              => 'NewSecurePass123!',
+            'password_confirmation' => 'DifferentPass123!',
+        ]);
+
+        $response->assertSessionHasErrors(['password']);
+    }
 }

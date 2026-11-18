@@ -305,6 +305,53 @@ Route::middleware('auth.api')->group(function () {
         ]);
     })->name('profile');
 
+    // Handler update password profil pengguna
+    Route::match(['post', 'put'], '/profile/password', function (Request $request, ApiService $api) {
+        $request->validate([
+            'current_password'      => ['nullable', 'string'],
+            'password'              => ['required', 'string', 'min:8', 'confirmed'],
+            'password_confirmation' => ['required', 'string'],
+        ], [
+            'password.required'              => 'Password baru wajib diisi.',
+            'password.min'                   => 'Password baru minimal 8 karakter.',
+            'password.confirmed'             => 'Konfirmasi password tidak cocok dengan password baru.',
+            'password_confirmation.required' => 'Ulangi password baru wajib diisi.',
+        ]);
+
+        try {
+            $payload = [
+                'password'              => $request->input('password'),
+                'password_confirmation' => $request->input('password_confirmation'),
+            ];
+            if ($request->filled('current_password')) {
+                $payload['current_password'] = $request->input('current_password');
+            }
+
+            $response = $api->put('auth/password', $payload);
+
+            // Fallback bila endpoint auth/password tidak tersedia
+            if ($response->status() === 404) {
+                $userId = session('user.id');
+                if ($userId) {
+                    $response = $api->put("users/{$userId}", [
+                        'password'              => $request->input('password'),
+                        'password_confirmation' => $request->input('password_confirmation'),
+                    ]);
+                }
+            }
+
+            if (!$response->successful()) {
+                $backendErrors = $response->json('errors') ?? [];
+                $message = $response->json('message') ?? 'Gagal mengubah password.';
+                return back()->withErrors($backendErrors)->with('error', $message);
+            }
+
+            return back()->with('success', 'Password akun Anda berhasil diubah.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Terjadi kesalahan sistem saat mengubah password: ' . $e->getMessage());
+        }
+    })->name('profile.password.update');
+
     $storeProposal = function (Request $request, ApiService $api, string $redirectRoute) {
         // Modul dikirim sebagai JSON string dari repeater Alpine, decode dulu agar rule array berlaku.
         $request->merge([
