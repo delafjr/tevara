@@ -1526,7 +1526,8 @@ Route::middleware('auth.api')->group(function () {
                 'pic_email'             => ['nullable', 'email'],
                 'pic_phone'             => ['nullable', 'string', 'max:20'],
                 'pic_position'          => ['nullable', 'string', 'max:100'],
-                'pic_password'          => ['nullable', 'string', 'min:8'],
+                'pic_password'          => ['nullable', 'string', 'min:8', 'confirmed'],
+                'pic_password_confirmation' => ['nullable', 'string', 'min:8'],
             ], [
                 'name.required'         => 'Nama perusahaan wajib diisi.',
                 'email.required'        => 'Email perusahaan wajib diisi.',
@@ -1534,6 +1535,8 @@ Route::middleware('auth.api')->group(function () {
                 'password.required'     => 'Password akun wajib diisi.',
                 'password.min'          => 'Password minimal 8 karakter.',
                 'password.confirmed'    => 'Konfirmasi password tidak cocok.',
+                'pic_password.min'       => 'Password PIC minimal 8 karakter.',
+                'pic_password.confirmed' => 'Konfirmasi password PIC tidak cocok.',
             ]);
 
             try {
