@@ -95,4 +95,67 @@ class PengurusRegistrasiPerusahaanTest extends TestCase
                 && $request['pic_name'] === 'Andi Prasetyo';
         });
     }
+
+    public function test_pengurus_tefa_can_access_pic_registration_page_with_company_dropdown(): void
+    {
+        Http::fake([
+            '*companies' => Http::response([
+                'success' => true,
+                'data' => [
+                    [
+                        'id' => 12,
+                        'name' => 'PT Maju Bersama',
+                        'email' => 'contact@majubersama.id',
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->get('/pengurus-tefa/klien-mitra/registrasi-pic');
+
+        $response->assertStatus(200);
+        $response->assertSee('Registrasi');
+        $response->assertSee('PIC Mitra / Klien');
+        $response->assertSee('PT Maju Bersama');
+        $response->assertSee('value="12"', false);
+    }
+
+    public function test_pengurus_tefa_can_submit_standalone_pic_registration(): void
+    {
+        Http::fake([
+            '*users/pic' => Http::response([
+                'success' => true,
+                'message' => 'PIC berhasil didaftarkan.',
+                'data' => [
+                    'id' => 101,
+                    'name' => 'Dewi Sartika',
+                    'email' => 'dewi@majubersama.id',
+                    'position' => 'Project Manager',
+                ],
+            ], 201),
+        ]);
+
+        $response = $this->withSession($this->sessionPengurus())
+            ->post('/pengurus-tefa/klien-mitra/registrasi-pic', [
+                'client_profile_id'     => 12,
+                'name'                  => 'Dewi Sartika',
+                'position'              => 'Project Manager',
+                'email'                 => 'dewi@majubersama.id',
+                'phone_number'          => '081233445566',
+                'password'              => 'Password123!',
+                'password_confirmation' => 'Password123!',
+            ]);
+
+        $response->assertRedirect('/pengurus-tefa/klien-mitra');
+        $response->assertSessionHas('success');
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), 'users/pic')
+                && (int) $request['client_profile_id'] === 12
+                && $request['name'] === 'Dewi Sartika'
+                && $request['position'] === 'Project Manager'
+                && $request['password_confirmation'] === 'Password123!';
+        });
+    }
 }

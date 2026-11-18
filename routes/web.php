@@ -1556,6 +1556,62 @@ Route::middleware('auth.api')->group(function () {
                 return back()->withInput()->with('error', 'Terjadi kesalahan saat menghubungi server: ' . $e->getMessage());
             }
         })->name('klien-mitra.registrasi.store');
+
+        Route::get('/klien-mitra/registrasi-pic', function (ApiService $api) use ($readApiList) {
+            $companies = [];
+            try {
+                $response = $api->get('companies');
+                $companies = $readApiList($response);
+            } catch (\Throwable) {
+                $companies = [];
+            }
+
+            return view('pengurus-tefa.klien-mitra-pic-create', [
+                'user'      => session('user'),
+                'companies' => $companies,
+            ]);
+        })->name('klien-mitra.pic.registrasi');
+
+        Route::post('/klien-mitra/registrasi-pic', function (Request $request, ApiService $api) {
+            $validated = $request->validate([
+                'client_profile_id'     => ['required', 'integer'],
+                'name'                  => ['required', 'string', 'max:100'],
+                'position'              => ['required', 'string', 'max:100'],
+                'email'                 => ['required', 'email'],
+                'phone_number'          => ['nullable', 'string', 'max:20'],
+                'password'              => ['required', 'string', 'min:8', 'confirmed'],
+                'password_confirmation' => ['required', 'string', 'min:8'],
+            ], [
+                'client_profile_id.required' => 'Perusahaan wajib dipilih.',
+                'name.required'              => 'Nama PIC wajib diisi.',
+                'position.required'          => 'Posisi/jabatan PIC wajib diisi.',
+                'email.required'             => 'Email PIC wajib diisi.',
+                'email.email'                => 'Format email PIC tidak valid.',
+                'password.required'          => 'Password akun wajib diisi.',
+                'password.min'               => 'Password minimal 8 karakter.',
+                'password.confirmed'         => 'Konfirmasi password tidak cocok.',
+            ]);
+
+            try {
+                $response = $api->post('users/pic', $validated);
+
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('pengurus-tefa.klien-mitra')
+                        ->with('success', "PIC '{$validated['name']}' berhasil didaftarkan.");
+                }
+
+                $errors = $response->json('errors');
+                if (is_array($errors) && !empty($errors)) {
+                    return back()->withInput()->withErrors($errors);
+                }
+
+                $message = $response->json('message') ?? 'Gagal mendaftarkan PIC. Silakan coba kembali.';
+                return back()->withInput()->with('error', $message);
+            } catch (\Throwable $e) {
+                return back()->withInput()->with('error', 'Terjadi kesalahan saat menghubungi server: ' . $e->getMessage());
+            }
+        })->name('klien-mitra.pic.registrasi.store');
         Route::get('/dosen', function (ApiService $api) use ($readApiList) {
             $dosens = [];
             $error = null;
