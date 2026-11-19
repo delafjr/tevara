@@ -278,6 +278,24 @@
                                     <span class="text-xs text-slate-400">Anggaran</span>
                                     <span class="text-xs font-bold text-[#0B3B82] text-right">{{ $formatRupiah($proposal['estimated_budget'] ?? 0) }}</span>
                                 </div>
+                                <div class="flex items-center justify-between gap-4">
+                                    <span class="text-xs text-slate-400">Skema Penyerahan</span>
+                                    <span class="text-xs font-semibold text-[#1E293B] text-right">
+                                        {{ ($proposal['delivery_type'] ?? '') === 'tefa_managed' ? 'Dikelola Penuh TeFa' : 'Diserahkan ke Klien (Source Code)' }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center justify-between gap-4">
+                                    <span class="text-xs text-slate-400">Garansi Maintenance</span>
+                                    <span class="text-xs font-semibold text-[#1E293B] text-right">
+                                        @if (!empty($proposal['has_warranty']))
+                                            <span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px] font-semibold">
+                                                Ya ({{ $proposal['warranty_months'] ?? 3 }} Bulan)
+                                            </span>
+                                        @else
+                                            <span class="text-slate-500">Tanpa Garansi</span>
+                                        @endif
+                                    </span>
+                                </div>
                             </div>
                         </section>
 
