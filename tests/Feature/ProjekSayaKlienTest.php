@@ -253,6 +253,32 @@ class ProjekSayaKlienTest extends TestCase
 
     public function test_halaman_projek_pengurus_tetap_ke_halaman_semula_dan_bast_punya_menu_sendiri(): void
     {
+        Http::fake([
+            '*tefa/dashboard' => Http::response([
+                'success' => true,
+                'data' => [
+                    'total_projects' => 1,
+                    'running_projects' => 1,
+                    'in_review_projects' => 0,
+                    'submitted_proposals' => 0,
+                    'projects' => [
+                        [
+                            'id' => 1,
+                            'title' => 'Sistem Informasi UMKM',
+                            'client_name' => 'PT. ABC Indonesia',
+                            'pm_name' => 'Dimas Setiawan',
+                            'student_count' => 8,
+                            'category' => 'web',
+                            'status' => 'Active',
+                            'progress' => 75,
+                            'deadline' => '2026-10-12',
+                        ],
+                    ],
+                ],
+            ], 200),
+            '*' => Http::response([], 200),
+        ]);
+
         $session = [
             'api_token' => 'dummy-token',
             'user' => ['id' => 5, 'name' => 'Pengurus', 'roles' => ['pengurus_tefa']],

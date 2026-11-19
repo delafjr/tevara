@@ -277,6 +277,81 @@ Route::middleware('auth.api')->group(function () {
         return redirect()->route('dashboard');
     })->name('switch-role');
 
+    // Halaman Profil Pengguna untuk semua role
+    Route::get('/profile', function (ApiService $api) {
+        $user = session('user') ?? [];
+        try {
+            $response = $api->get('auth/me');
+            if ($response->successful()) {
+                $userData = $response->json('data') ?? $response->json('user');
+                if (is_array($userData)) {
+                    $user = array_merge($user, $userData);
+                    session(['user' => $user]);
+                }
+            }
+        } catch (\Throwable) {
+            // Gunakan session user bila endpoint backend tidak merespons
+        }
+
+        $allRoles = ApiService::getUserRoles($user);
+        $effectiveRoles = ApiService::getEffectiveRoles($user);
+        $activeRole = session('active_role') ?? ($effectiveRoles[0] ?? 'klien');
+
+        return view('profile', [
+            'user'           => $user,
+            'allRoles'       => $allRoles,
+            'effectiveRoles' => $effectiveRoles,
+            'activeRole'     => $activeRole,
+        ]);
+    })->name('profile');
+
+    // Handler update password profil pengguna
+    Route::match(['post', 'put'], '/profile/password', function (Request $request, ApiService $api) {
+        $request->validate([
+            'current_password'      => ['nullable', 'string'],
+            'password'              => ['required', 'string', 'min:8', 'confirmed'],
+            'password_confirmation' => ['required', 'string'],
+        ], [
+            'password.required'              => 'Password baru wajib diisi.',
+            'password.min'                   => 'Password baru minimal 8 karakter.',
+            'password.confirmed'             => 'Konfirmasi password tidak cocok dengan password baru.',
+            'password_confirmation.required' => 'Ulangi password baru wajib diisi.',
+        ]);
+
+        try {
+            $payload = [
+                'password'              => $request->input('password'),
+                'password_confirmation' => $request->input('password_confirmation'),
+            ];
+            if ($request->filled('current_password')) {
+                $payload['current_password'] = $request->input('current_password');
+            }
+
+            $response = $api->put('auth/password', $payload);
+
+            // Fallback bila endpoint auth/password tidak tersedia
+            if ($response->status() === 404) {
+                $userId = session('user.id');
+                if ($userId) {
+                    $response = $api->put("users/{$userId}", [
+                        'password'              => $request->input('password'),
+                        'password_confirmation' => $request->input('password_confirmation'),
+                    ]);
+                }
+            }
+
+            if (!$response->successful()) {
+                $backendErrors = $response->json('errors') ?? [];
+                $message = $response->json('message') ?? 'Gagal mengubah password.';
+                return back()->withErrors($backendErrors)->with('error', $message);
+            }
+
+            return back()->with('success', 'Password akun Anda berhasil diubah.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Terjadi kesalahan sistem saat mengubah password: ' . $e->getMessage());
+        }
+    })->name('profile.password.update');
+
     $storeProposal = function (Request $request, ApiService $api, string $redirectRoute) {
         // Modul dikirim sebagai JSON string dari repeater Alpine, decode dulu agar rule array berlaku.
         $request->merge([
@@ -1301,6 +1376,35 @@ Route::middleware('auth.api')->group(function () {
             ]);
         })->name('projek');
 
+        Route::get('/projek/{proposal}', function (ApiService $api, int $proposal) {
+            $proposalData = [];
+            $uatData = null;
+            $error = null;
+
+            try {
+                $pRes = $api->get("proposals/{$proposal}");
+                if ($pRes->successful()) {
+                    $proposalData = $pRes->json();
+                } else {
+                    $error = $pRes->json('message') ?? 'Data projek tidak dapat dimuat.';
+                }
+
+                $uatRes = $api->getUat($proposal);
+                if ($uatRes->successful()) {
+                    $uatData = $uatRes->json('data');
+                }
+            } catch (\Throwable $e) {
+                $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
+            }
+
+            return view('pengurus-tefa.projek-detail', [
+                'user'     => session('user'),
+                'proposal' => $proposalData,
+                'uat'      => $uatData,
+                'error'    => $error,
+            ]);
+        })->whereNumber('proposal')->name('projek.detail');
+
         Route::get('/bast', function (ApiService $api) use ($readApiList) {
             $projects = [];
             $error = null;
@@ -1477,6 +1581,115 @@ Route::middleware('auth.api')->group(function () {
                 'error'   => $error,
             ]);
         })->name('klien-mitra');
+
+        Route::get('/klien-mitra/registrasi', function () {
+            return view('pengurus-tefa.klien-mitra-create', [
+                'user' => session('user'),
+            ]);
+        })->name('klien-mitra.registrasi');
+
+        Route::post('/klien-mitra/registrasi', function (Request $request, ApiService $api) {
+            $validated = $request->validate([
+                'name'                  => ['required', 'string', 'max:150'],
+                'email'                 => ['required', 'email'],
+                'password'              => ['required', 'string', 'min:8', 'confirmed'],
+                'password_confirmation' => ['required', 'string', 'min:8'],
+                'phone_number'          => ['nullable', 'string', 'max:20'],
+                'address'               => ['nullable', 'string', 'max:500'],
+                'client_type'           => ['nullable', 'string', 'in:EXTERNAL,INTERNAL'],
+                'pic_name'              => ['nullable', 'string', 'max:100'],
+                'pic_email'             => ['nullable', 'email'],
+                'pic_phone'             => ['nullable', 'string', 'max:20'],
+                'pic_position'          => ['nullable', 'string', 'max:100'],
+                'pic_password'          => ['nullable', 'string', 'min:8', 'confirmed'],
+                'pic_password_confirmation' => ['nullable', 'string', 'min:8'],
+            ], [
+                'name.required'         => 'Nama perusahaan wajib diisi.',
+                'email.required'        => 'Email perusahaan wajib diisi.',
+                'email.email'           => 'Format email perusahaan tidak valid.',
+                'password.required'     => 'Password akun wajib diisi.',
+                'password.min'          => 'Password minimal 8 karakter.',
+                'password.confirmed'    => 'Konfirmasi password tidak cocok.',
+                'pic_password.min'       => 'Password PIC minimal 8 karakter.',
+                'pic_password.confirmed' => 'Konfirmasi password PIC tidak cocok.',
+            ]);
+
+            try {
+                $response = $api->post('users/company', $validated);
+
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('pengurus-tefa.klien-mitra')
+                        ->with('success', "Perusahaan '{$validated['name']}' berhasil didaftarkan.");
+                }
+
+                $errors = $response->json('errors');
+                if (is_array($errors) && !empty($errors)) {
+                    return back()->withInput()->withErrors($errors);
+                }
+
+                $message = $response->json('message') ?? 'Gagal mendaftarkan perusahaan. Silakan coba kembali.';
+                return back()->withInput()->with('error', $message);
+            } catch (\Throwable $e) {
+                return back()->withInput()->with('error', 'Terjadi kesalahan saat menghubungi server: ' . $e->getMessage());
+            }
+        })->name('klien-mitra.registrasi.store');
+
+        Route::get('/klien-mitra/registrasi-pic', function (ApiService $api) use ($readApiList) {
+            $companies = [];
+            try {
+                $response = $api->get('companies');
+                $companies = $readApiList($response);
+            } catch (\Throwable) {
+                $companies = [];
+            }
+
+            return view('pengurus-tefa.klien-mitra-pic-create', [
+                'user'      => session('user'),
+                'companies' => $companies,
+            ]);
+        })->name('klien-mitra.pic.registrasi');
+
+        Route::post('/klien-mitra/registrasi-pic', function (Request $request, ApiService $api) {
+            $validated = $request->validate([
+                'client_profile_id'     => ['required', 'integer'],
+                'name'                  => ['required', 'string', 'max:100'],
+                'position'              => ['required', 'string', 'max:100'],
+                'email'                 => ['required', 'email'],
+                'phone_number'          => ['nullable', 'string', 'max:20'],
+                'password'              => ['required', 'string', 'min:8', 'confirmed'],
+                'password_confirmation' => ['required', 'string', 'min:8'],
+            ], [
+                'client_profile_id.required' => 'Perusahaan wajib dipilih.',
+                'name.required'              => 'Nama PIC wajib diisi.',
+                'position.required'          => 'Posisi/jabatan PIC wajib diisi.',
+                'email.required'             => 'Email PIC wajib diisi.',
+                'email.email'                => 'Format email PIC tidak valid.',
+                'password.required'          => 'Password akun wajib diisi.',
+                'password.min'               => 'Password minimal 8 karakter.',
+                'password.confirmed'         => 'Konfirmasi password tidak cocok.',
+            ]);
+
+            try {
+                $response = $api->post('users/pic', $validated);
+
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('pengurus-tefa.klien-mitra')
+                        ->with('success', "PIC '{$validated['name']}' berhasil didaftarkan.");
+                }
+
+                $errors = $response->json('errors');
+                if (is_array($errors) && !empty($errors)) {
+                    return back()->withInput()->withErrors($errors);
+                }
+
+                $message = $response->json('message') ?? 'Gagal mendaftarkan PIC. Silakan coba kembali.';
+                return back()->withInput()->with('error', $message);
+            } catch (\Throwable $e) {
+                return back()->withInput()->with('error', 'Terjadi kesalahan saat menghubungi server: ' . $e->getMessage());
+            }
+        })->name('klien-mitra.pic.registrasi.store');
         Route::get('/dosen', function (ApiService $api) use ($readApiList) {
             $dosens = [];
             $error = null;
