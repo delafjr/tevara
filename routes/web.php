@@ -366,6 +366,9 @@ Route::middleware('auth.api')->group(function () {
             'judul_proyek'      => ['required', 'string', 'max:255'],
             // ID kategori mengikuti master data /categories; validitas akhir dicek backend.
             'kategori_id'       => ['required', 'integer', 'min:1'],
+            'delivery_type'     => ['nullable', 'in:source_code,tefa_managed'],
+            'has_warranty'      => ['nullable', 'in:0,1,true,false'],
+            'warranty_months'   => ['nullable', 'integer', 'min:1', 'required_if:has_warranty,1,true'],
             'ringkasan'         => ['required', 'string', 'max:500'],
             'target_pengguna'   => ['required', 'string', 'max:1000'],
             'deadline'          => ['required', 'date', 'after_or_equal:' . now()->addDays(30)->toDateString()],
@@ -384,6 +387,10 @@ Route::middleware('auth.api')->group(function () {
             ->values()
             ->all();
 
+        $deliveryType = $validated['delivery_type'] ?? 'source_code';
+        $hasWarranty = filter_var($validated['has_warranty'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $warrantyMonths = $hasWarranty ? (int) ($validated['warranty_months'] ?? 3) : null;
+
         $user = session('user', []);
         $response = $api->post('proposals', [
             'client_id'        => (int) ($user['id'] ?? 0),
@@ -391,6 +398,9 @@ Route::middleware('auth.api')->group(function () {
             'background'       => $validated['ringkasan'],
             'target_audience'  => $validated['target_pengguna'],
             'category_id'      => (int) $validated['kategori_id'],
+            'delivery_type'    => $deliveryType,
+            'has_warranty'     => $hasWarranty,
+            'warranty_months'  => $warrantyMonths,
             'desired_deadline' => $validated['deadline'],
             'estimated_budget' => (int) $validated['anggaran'],
             'modules'          => $modules,
@@ -625,6 +635,9 @@ Route::middleware('auth.api')->group(function () {
             $validated = $request->validate([
                 'judul_proyek'      => ['required', 'string', 'max:255'],
                 'kategori_id'       => ['required', 'integer', 'min:1'],
+                'delivery_type'     => ['nullable', 'in:source_code,tefa_managed'],
+                'has_warranty'      => ['nullable', 'in:0,1,true,false'],
+                'warranty_months'   => ['nullable', 'integer', 'min:1', 'required_if:has_warranty,1,true'],
                 'ringkasan'         => ['required', 'string', 'min:100', 'max:500'],
                 'target_pengguna'   => ['required', 'string', 'max:1000'],
                 'deadline'          => ['required', 'date'],
@@ -646,11 +659,18 @@ Route::middleware('auth.api')->group(function () {
                 ->values()
                 ->all();
 
+            $deliveryType = $validated['delivery_type'] ?? 'source_code';
+            $hasWarranty = filter_var($validated['has_warranty'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            $warrantyMonths = $hasWarranty ? (int) ($validated['warranty_months'] ?? 3) : null;
+
             $payload = [
                 'title'            => $validated['judul_proyek'],
                 'background'       => $validated['ringkasan'],
                 'target_audience'  => $validated['target_pengguna'],
                 'category_id'      => (int) $validated['kategori_id'],
+                'delivery_type'    => $deliveryType,
+                'has_warranty'     => $hasWarranty,
+                'warranty_months'  => $warrantyMonths,
                 'desired_deadline' => $validated['deadline'],
                 'estimated_budget' => (float) $validated['anggaran'],
                 'modules'          => $modules,
