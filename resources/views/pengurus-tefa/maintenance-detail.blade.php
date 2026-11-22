@@ -212,7 +212,8 @@
                         @endforelse
                     </div>
 
-                    {{-- Form tambah catatan maintenance inisiatif --}}
+                    {{-- Form tambah catatan maintenance inisiatif — hanya saat garansi masih aktif --}}
+                    @if($isActive)
                     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                         <h2 class="text-sm font-bold text-slate-800 mb-1">Tambah Catatan Maintenance</h2>
                         <p class="text-xs text-slate-500 mb-4">Buat tiket inisiatif dari TEVARA meski klien tidak melaporkan bug. Klien akan mendapat notifikasi.</p>
@@ -245,6 +246,14 @@
                             </div>
                         </form>
                     </div>
+                    @else
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex items-center gap-3 text-slate-500">
+                        <svg class="w-5 h-5 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <p class="text-sm">Masa garansi telah berakhir. Tiket maintenance baru tidak dapat dibuat.</p>
+                    </div>
+                    @endif
                 </div>
 
                 {{-- Right: Info + Ext history --}}
