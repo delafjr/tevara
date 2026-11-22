@@ -77,6 +77,38 @@
                 'bg_icon' => 'bg-blue-100 text-[#0B3B82]',
                 'icon'    => 'user-plus',
             ],
+            'maintenance.ticket_created',
+            'maintenance.ticket_created_by_tefa',
+            'maintenance.ticket_updated' => [
+                'label'   => 'Tiket Maintenance',
+                'pill'    => 'bg-amber-50 text-amber-700 border-amber-200',
+                'bg_icon' => 'bg-amber-100 text-amber-700',
+                'icon'    => 'wrench',
+            ],
+            'maintenance.ticket_resolved' => [
+                'label'   => 'Tiket Selesai',
+                'pill'    => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                'bg_icon' => 'bg-emerald-100 text-emerald-700',
+                'icon'    => 'wrench',
+            ],
+            'maintenance.extension_requested' => [
+                'label'   => 'Ajuan Perpanjangan',
+                'pill'    => 'bg-purple-50 text-purple-700 border-purple-200',
+                'bg_icon' => 'bg-purple-100 text-purple-700',
+                'icon'    => 'wrench',
+            ],
+            'maintenance.extension_approved' => [
+                'label'   => 'Perpanjangan Disetujui',
+                'pill'    => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                'bg_icon' => 'bg-emerald-100 text-emerald-700',
+                'icon'    => 'wrench',
+            ],
+            'maintenance.extension_rejected' => [
+                'label'   => 'Perpanjangan Ditolak',
+                'pill'    => 'bg-red-50 text-red-700 border-red-200',
+                'bg_icon' => 'bg-red-100 text-red-700',
+                'icon'    => 'wrench',
+            ],
             default => [
                 'label'   => 'Pemberitahuan',
                 'pill'    => 'bg-slate-100 text-slate-700 border-slate-200',
@@ -87,17 +119,32 @@
     };
 
     $getTargetUrl = function (array $notification) use ($currentRole): ?string {
-        $type = (string) ($notification['type'] ?? '');
+        $type   = (string) ($notification['type'] ?? '');
         $propId = $notification['proposal_id'] ?? null;
 
         if ($currentRole === 'pengurus_tefa') {
-            if (str_starts_with($type, 'proposal.')) {
+            if (str_starts_with($type, 'maintenance.')) {
                 return $propId
-                    ? route('pengurus-tefa.validasi-proposal.detail', $propId)
-                    : route('pengurus-tefa.validasi-proposal');
+                    ? route('pengurus-tefa.maintenance.detail', $propId)
+                    : route('pengurus-tefa.maintenance');
+            }
+            if (str_starts_with($type, 'uat.')) {
+                return $propId
+                    ? route('pengurus-tefa.uat.detail', $propId)
+                    : route('pengurus-tefa.uat');
+            }
+            if (str_starts_with($type, 'handover.')) {
+                return $propId
+                    ? route('pengurus-tefa.bast.prepare.form', $propId)
+                    : route('pengurus-tefa.bast');
             }
             if (str_starts_with($type, 'payment.')) {
                 return route('pengurus-tefa.keuangan');
+            }
+            if (str_starts_with($type, 'proposal.') || str_starts_with($type, 'project.')) {
+                return $propId
+                    ? route('pengurus-tefa.validasi-proposal.detail', $propId)
+                    : route('pengurus-tefa.validasi-proposal');
             }
             if ($type === 'client.registration_requested') {
                 return route('pengurus-tefa.klien-mitra');
@@ -106,13 +153,30 @@
         }
 
         if ($currentRole === 'klien') {
+            if (str_starts_with($type, 'maintenance.')) {
+                return $propId
+                    ? route('klien.maintenance.detail', $propId)
+                    : route('klien.maintenance');
+            }
+            if (str_starts_with($type, 'uat.')) {
+                return $propId
+                    ? route('klien.projek-saya.uat', $propId)
+                    : route('klien.projek-saya');
+            }
+            if (str_starts_with($type, 'handover.')) {
+                return $propId
+                    ? route('klien.projek-saya.bast.review', $propId)
+                    : route('klien.projek-saya');
+            }
             if (str_starts_with($type, 'payment.')) {
                 return route('klien.tagihan');
             }
-            if ($propId) {
-                return route('klien.projek-saya.detail', $propId);
+            if (str_starts_with($type, 'proposal.')) {
+                return $propId
+                    ? route('klien.projek-saya.detail', $propId)
+                    : route('klien.projek-saya');
             }
-            return route('klien.projek-saya');
+            return $propId ? route('klien.projek-saya.detail', $propId) : route('klien.projek-saya');
         }
 
         if ($currentRole === 'jurusan') {
@@ -123,6 +187,12 @@
         }
 
         if ($currentRole === 'pm' || $currentRole === 'dosen') {
+            if (str_starts_with($type, 'uat.')) {
+                return $propId ? route('pm.uat.detail', $propId) : route('pm.task-timeline');
+            }
+            if (str_starts_with($type, 'task.') || str_starts_with($type, 'project.')) {
+                return route('pm.task-timeline', $propId ? ['proposal_id' => $propId] : []);
+            }
             return route('pm.project');
         }
 
@@ -339,6 +409,9 @@
                                     </template>
                                     <template x-if="item.meta.icon === 'bell' || item.meta.icon === 'user-check' || item.meta.icon === 'user-plus'">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                                    </template>
+                                    <template x-if="item.meta.icon === 'wrench'">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l5.654-4.654m5.886-5.774c.337-.03.676-.03 1.013 0l.072.007c.344.03.682.085 1.013.165M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
                                     </template>
                                 </svg>
                             </div>
