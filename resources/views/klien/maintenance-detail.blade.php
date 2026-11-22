@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#F4F7FB] font-sans text-[#1E293B] antialiased min-h-screen">
+<body class="bg-[#F4F7FB] font-sans text-[#1E293B] antialiased min-h-screen overflow-x-hidden">
 
 @php
     use Carbon\Carbon;
@@ -56,7 +56,7 @@
 }">
     <x-sidebar active="maintenance" />
 
-    <div class="flex-1 ml-64 flex flex-col min-h-screen">
+    <div class="flex-1 ml-64 flex flex-col min-h-screen min-w-0">
         <main class="flex-1 px-8 py-7 space-y-6">
 
             {{-- Back --}}
