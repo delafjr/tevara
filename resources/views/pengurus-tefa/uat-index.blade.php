@@ -70,15 +70,13 @@
 
                 <div class="relative z-10">
                     <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82] animate-ping"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
                         User Acceptance Testing (UAT)
                     </span>
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Manajemen Sesi &amp; <span class="text-[#FFB800]">Pengujian UAT</span>
                     </h1>
-                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
-                        Periksa hasil pengujian yang dikirim Klien, tambahkan checklist tindak lanjut, dan verifikasi perbaikannya.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Periksa hasil pengujian dari klien, kelola checklist tindak lanjut, dan verifikasi perbaikan</p>
                 </div>
 
                 <div class="relative z-10 flex-shrink-0 flex items-center gap-3">

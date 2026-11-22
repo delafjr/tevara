@@ -34,9 +34,7 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Dosen Pembimbing &amp; <span class="text-[#FFB800]">PM</span>
                     </h1>
-                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
-                        Kelola data dosen yang berperan sebagai pembimbing dan project manager di TeFa.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Kelola data dosen yang berperan sebagai pembimbing dan project manager di TeFa</p>
                 </div>
 
             </div>

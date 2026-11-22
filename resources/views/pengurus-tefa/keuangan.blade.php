@@ -80,9 +80,7 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Rekap <span class="text-[#FFB800]">Keuangan & Pembayaran</span>
                     </h1>
-                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
-                        Verifikasi bukti transfer klien (F-09) dan pantau seluruh transaksi penerimaan pendapatan TeFa.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Verifikasi bukti transfer termin klien dan pantau seluruh transaksi penerimaan TeFa</p>
                 </div>
 
                 <div class="relative z-10 flex-shrink-0 flex items-center gap-3">

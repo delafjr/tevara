@@ -40,7 +40,7 @@
             <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                 Selamat Datang kembali, <span class="text-[#FFB800]">{{ $firstName }}!</span>
             </h1>
-            <p class="text-sm text-slate-400 mt-1.5">Terus berkontribusi dan wujudkan solusi nyata bersama Teaching Factory untuk transformasi digital industri.</p>
+            <p class="text-sm text-slate-400 mt-1.5">Pantau tugas aktif, laporkan progres capaian, dan pantau evaluasi dosen pembimbing</p>
         </div>
 
         <div class="relative z-10 flex flex-col items-end gap-2 flex-shrink-0">

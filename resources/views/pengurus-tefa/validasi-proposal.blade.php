@@ -92,9 +92,7 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Validasi <span class="text-[#FFB800]">Proposal Projek</span>
                     </h1>
-                    <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
-                        Tinjau, setujui, atau tolak proposal projek yang masuk dari klien dan tim internal.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Tinjau, setujui, atau tolak proposal projek yang masuk dari klien dan mitra</p>
                 </div>
 
                 <div class="relative z-10 flex-shrink-0">

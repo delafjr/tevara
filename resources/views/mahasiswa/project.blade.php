@@ -25,9 +25,7 @@
             <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                 Project <span class="text-[#FFB800]">Saya</span>
             </h1>
-            <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
-                Daftar seluruh proyek Teaching Factory industri yang sedang dan telah Anda kerjakan bersama tim pengembang TEVARA.
-            </p>
+            <p class="text-sm text-slate-400 mt-1.5">Daftar proyek Teaching Factory industri yang sedang dan telah Anda kerjakan bersama tim</p>
         </div>
     </div>
 

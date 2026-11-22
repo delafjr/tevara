@@ -26,9 +26,7 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Monitoring <span class="text-[#FFB800]">Progress Projek</span>
                     </h1>
-                    <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
-                        Pantau perkembangan real-time semua projek — dari timeline hingga beban tim.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Pantau perkembangan real-time semua projek — dari timeline hingga beban kerja tim</p>
                 </div>
             </div>
 

@@ -162,14 +162,12 @@
             <div class="relative z-10">
                 <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                    Monitoring Penugasan
+                    Workspace Project Manager
                 </span>
                 <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                     Task &amp; <span class="text-[#FFB800]">Timeline</span>
                 </h1>
-                <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
-                    Pantau kemajuan pengerjaan task, review hasil pekerjaan mahasiswa, dan koordinasi deadline proyek.
-                </p>
+                <p class="text-sm text-slate-400 mt-1.5">Pantau kemajuan task, review hasil pekerjaan mahasiswa, dan koordinasikan deadline proyek</p>
             </div>
         </div>
 

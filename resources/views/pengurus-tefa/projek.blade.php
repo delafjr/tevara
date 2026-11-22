@@ -26,9 +26,7 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Kelola Semua <span class="text-[#FFB800]">Projek TeFa</span>
                     </h1>
-                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
-                        Pantau status, progress, dan tim untuk setiap projek yang berjalan.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Pantau status, progres eksekusi, dan alokasi tim untuk setiap projek aktif</p>
                 </div>
 
                 <div class="relative z-10 flex-shrink-0">

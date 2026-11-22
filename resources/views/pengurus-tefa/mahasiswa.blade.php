@@ -20,7 +20,7 @@
     <x-sidebar active="mahasiswa" />
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
         <main class="flex-1 px-8 py-7 space-y-7" x-data="{ searchQuery: '' }">
-            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6">
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
                 <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
                 <div class="relative z-10">
                     <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
@@ -28,7 +28,7 @@
                         Teaching Factory · Polines
                     </span>
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">Mahasiswa <span class="text-[#FFB800]">Peserta TeFa</span></h1>
-                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">Data mahasiswa peserta Teaching Factory yang tersinkron dengan database.</p>
+                    <p class="text-sm text-slate-400 mt-1.5">Data mahasiswa peserta Teaching Factory yang tersinkron langsung dengan database</p>
                 </div>
             </div>
 

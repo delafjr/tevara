@@ -171,9 +171,7 @@
                 <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                     Task &amp; <span class="text-[#FFB800]">Timeline Saya</span>
                 </h1>
-                <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
-                    Kelola tugas proyek Anda, laporkan capaian &amp; hasil kerja (GitHub/Figma/file), serta pantau catatan evaluasi dari Dosen PM secara terstruktur.
-                </p>
+                <p class="text-sm text-slate-400 mt-1.5">Kelola tugas proyek Anda, laporkan progres capaian, dan pantau catatan evaluasi Dosen PM</p>
             </div>
         </div>
 

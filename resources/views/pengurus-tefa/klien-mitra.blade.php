@@ -31,9 +31,7 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Data Klien &amp; <span class="text-[#FFB800]">Mitra TeFa</span>
                     </h1>
-                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
-                        Kelola data klien dan mitra yang telah bekerja sama dengan Teaching Factory.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Kelola data klien, perusahaan mitra, dan akun PIC yang bekerja sama dengan Teaching Factory</p>
                 </div>
 
                 <div class="relative z-10 flex flex-wrap items-center gap-2.5 flex-shrink-0">

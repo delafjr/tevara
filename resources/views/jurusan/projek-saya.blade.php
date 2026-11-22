@@ -23,9 +23,20 @@
     <div class="flex-1 ml-64 flex flex-col min-h-screen p-8 gap-6">
 
         <div class="space-y-6">
-            <div>
-                <h1 class="text-2xl font-bold text-[#1E293B]">Daftar Projek Saya</h1>
-                <p class="text-slate-500 text-sm">Pantau progres eksekusi teknis, evaluasi berkas deliverable, dan spesifikasi pengerjaan proyek Teaching Factory secara terpadu.</p>
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                {{-- gradient dekoratif --}}
+                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                        Workspace Jurusan
+                    </span>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                        Daftar <span class="text-[#FFB800]">Projek Saya</span>
+                    </h1>
+                    <p class="text-sm text-slate-400 mt-1.5">Pantau progres eksekusi teknis, evaluasi deliverable, dan spesifikasi pengerjaan proyek</p>
+                </div>
             </div>
 
             {{-- STATS --}}
