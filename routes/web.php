@@ -114,7 +114,10 @@ Route::prefix('auth')->group(function () use ($googleAuthHandler) {
         return redirect('/dashboard');
     });
 
-    Route::post('/logout', function () {
+    Route::match(['get', 'post'], '/logout', function (Request $request) {
+        if ($request->isMethod('get')) {
+            return redirect()->route('login');
+        }
         session()->forget(['api_token', 'user', 'active_role']);
         session()->invalidate();
         session()->regenerateToken();
