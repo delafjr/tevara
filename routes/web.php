@@ -907,6 +907,8 @@ Route::middleware('auth.api')->group(function () {
             $validated = $request->validate([
                 'client_notes' => ['nullable', 'string'],
                 'items' => ['required', 'array', 'min:1'],
+                'items.*.module_name' => ['nullable', 'string', 'max:255'],
+                'items.*.test_category' => ['nullable', 'string', 'max:100'],
                 'items.*.feature_name' => ['required', 'string', 'max:255'],
                 'items.*.test_scenario' => ['nullable', 'string'],
                 'items.*.result' => ['required', 'in:PASSED,FAILED,BUG_FOUND'],

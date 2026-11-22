@@ -296,7 +296,8 @@
                             <thead>
                                 <tr class="bg-slate-50/70 border-b border-slate-100">
                                     <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-6 py-3 w-12 text-center">No</th>
-                                    <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3">Nama Fitur</th>
+                                    <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3">Modul</th>
+                                    <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3">Kategori</th>
                                     <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3">Skenario Uji</th>
                                     <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3">Hasil Evaluasi</th>
                                     <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3">Catatan Bug / Temuan</th>
@@ -307,7 +308,12 @@
                                 @forelse($items as $idx => $it)
                                     <tr class="hover:bg-slate-50/60 transition-colors">
                                         <td class="px-6 py-3.5 text-center text-xs font-bold text-slate-400">{{ $idx + 1 }}</td>
-                                        <td class="px-4 py-3.5 font-bold text-slate-900 text-xs">{{ $it['feature_name'] }}</td>
+                                        <td class="px-4 py-3.5 font-bold text-slate-900 text-xs">{{ $it['module_name'] ?? $it['feature_name'] }}</td>
+                                        <td class="px-4 py-3.5 text-xs text-slate-600">
+                                            <span class="inline-block px-2 py-0.5 rounded bg-slate-100 font-medium text-slate-700 text-[11px]">
+                                                {{ $it['test_category'] ?? 'Fungsionalitas' }}
+                                            </span>
+                                        </td>
                                         <td class="px-4 py-3.5 text-xs text-slate-600 max-w-xs">{{ $it['test_scenario'] ?: '-' }}</td>
                                         <td class="px-4 py-3.5 whitespace-nowrap">
                                             @if($it['result'] === 'PASSED')
@@ -344,7 +350,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-6 py-8 text-center text-xs text-slate-400">Tidak ada butir pengujian.</td>
+                                        <td colspan="7" class="px-6 py-8 text-center text-xs text-slate-400">Tidak ada butir pengujian.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
