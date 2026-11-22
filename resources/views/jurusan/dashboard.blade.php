@@ -97,13 +97,13 @@
         @php
             $jurusanStats = [
                 ['label' => 'Total Projek',         'value' => $totalProjects,      'sub' => 'Inisiatif Terdaftar', 'color' => '#0B3B82', 'icon' => 'folder'],
-                ['label' => 'Projek Berjalan',      'value' => $runningProjects,    'sub' => 'Dalam Pengerjaan',    'color' => '#0B3B82', 'icon' => 'play'],
+                ['label' => 'Projek Berjalan',      'value' => $runningProjects,    'sub' => 'Dalam Pengerjaan',    'color' => '#16A34A', 'icon' => 'play'],
                 ['label' => 'Dalam Review',         'value' => $inReviewProjects,   'sub' => 'Perlu Review',        'color' => '#F59E0B', 'icon' => 'clock-file'],
-                ['label' => 'Proposal Masuk',       'value' => $submittedProposals, 'sub' => 'Menunggu Validasi',   'color' => '#0B3B82', 'icon' => 'check'],
+                ['label' => 'Proposal Masuk',       'value' => $submittedProposals, 'sub' => 'Menunggu Validasi',   'color' => '#6366F1', 'icon' => 'check'],
             ];
         @endphp
 
-        <div class="grid grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
             @foreach($jurusanStats as $stat)
                 <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
             @endforeach

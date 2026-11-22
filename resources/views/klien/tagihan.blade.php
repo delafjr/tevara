@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#F4F7FB] font-sans text-[#1E293B] antialiased min-h-screen">
+<body class="bg-[#F4F7FB] font-sans text-[#1E293B] antialiased min-h-screen overflow-x-hidden">
 
 @php
     $user = $user ?? session('user', []);
@@ -87,7 +87,7 @@
     <x-sidebar active="tagihan" />
 
     {{-- == ( konten utama ) == --}}
-    <div class="flex-1 ml-64 flex flex-col min-h-screen">
+    <div class="flex-1 ml-64 flex flex-col min-h-screen min-w-0 max-w-[calc(100vw-16rem)] overflow-x-hidden">
 
         {{-- Toast Notification --}}
         <div x-show="showToast"
@@ -105,7 +105,7 @@
             <span x-text="toastMessage"></span>
         </div>
 
-        <main class="flex-1 px-8 py-7 space-y-6">
+        <main class="flex-1 px-8 py-7 space-y-6 min-w-0 w-full overflow-hidden">
 
             {{-- Flash Alert Messages --}}
             @if (session('success'))
@@ -128,59 +128,28 @@
                 </div>
             @endif
 
-            {{-- == ( header card : judul halaman & informasi sinkronisasi ) == --}}
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#EFF6FF] via-[#F4F8FE] to-[#FCF8EC] border border-blue-100/70 px-8 py-7 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div class="relative z-10 max-w-3xl">
-                    <div class="inline-flex items-center gap-2 bg-[#EAF3FF] text-[#0B3B82] text-[10.5px] font-bold tracking-wide uppercase px-3 py-1 rounded-full mb-2.5">
+            {{-- == ( hero card : judul halaman & informasi sinkronisasi ) == --}}
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                {{-- gradient dekoratif --}}
+                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                        TAGIHAN & KEUANGAN • WORKSPACE KLIEN
-                    </div>
-                    <h1 class="text-2xl lg:text-[28px] font-extrabold text-[#1E293B] tracking-tight">
+                        Workspace Klien
+                    </span>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Tagihan & Pembayaran <span class="text-[#FFB800]">Proyek</span>
                     </h1>
-                    <p class="text-xs md:text-sm text-slate-500 mt-2 leading-relaxed font-normal">
-                        Pantau status penagihan termin proyek (SPK), riwayat pembayaran terverifikasi, dan unggah bukti transfer per termin secara terintegrasi dengan akuntansi Politeknik.
-                    </p>
-                </div>
-
-                {{-- Date & Sync Info Right Box --}}
-                <div class="relative z-10 flex flex-col items-start md:items-end gap-1.5 flex-shrink-0 bg-white/70 backdrop-blur-xs p-3.5 rounded-2xl border border-blue-100/50 shadow-xs">
-                    <div class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700">
-                        <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5"/>
-                        </svg>
-                        <span>{{ now()->translatedFormat('l, d F Y') }}</span>
-                    </div>
-                    <div class="inline-flex items-center gap-1 text-[11px] text-slate-500 font-medium">
-                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
-                        </svg>
-                        <span>Data tagihan <strong class="text-slate-700">{{ empty($error) ? 'tersinkron dari database' : 'belum tersinkron' }}</strong></span>
-                    </div>
+                    <p class="text-sm text-slate-400 mt-1.5">Pantau status penagihan termin, riwayat pembayaran, dan unggah bukti transfer per termin</p>
                 </div>
             </div>
 
             <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" aria-label="Ringkasan tagihan">
-                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Total Tagihan</p>
-                    <p class="mt-2 text-xl font-extrabold text-slate-800">Rp {{ number_format($totalBilled, 0, ',', '.') }}</p>
-                    <p class="mt-1 text-xs text-slate-500">{{ $billingTerms->count() }} termin tercatat</p>
-                </div>
-                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Terverifikasi</p>
-                    <p class="mt-2 text-xl font-extrabold text-emerald-700">Rp {{ number_format($totalVerified, 0, ',', '.') }}</p>
-                    <p class="mt-1 text-xs text-slate-500">{{ $verifiedPercent }}% dari total tagihan</p>
-                </div>
-                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Dalam Verifikasi</p>
-                    <p class="mt-2 text-xl font-extrabold text-amber-700">Rp {{ number_format($totalVerifying, 0, ',', '.') }}</p>
-                    <p class="mt-1 text-xs text-slate-500">{{ $statusCounts['Dalam Verifikasi'] }} termin</p>
-                </div>
-                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Menunggu Pembayaran</p>
-                    <p class="mt-2 text-xl font-extrabold text-[#0B3B82]">Rp {{ number_format($totalOpen, 0, ',', '.') }}</p>
-                    <p class="mt-1 text-xs text-slate-500">{{ $statusCounts['Menunggu Bayar'] }} termin</p>
-                </div>
+                <x-stat-card label="Total Tagihan" :value="'Rp ' . number_format($totalBilled, 0, ',', '.')" :sub="$billingTerms->count() . ' Termin tercatat'" color="#0B3B82" icon="folder" />
+                <x-stat-card label="Terverifikasi" :value="'Rp ' . number_format($totalVerified, 0, ',', '.')" :sub="$verifiedPercent . '% dari total tagihan'" color="#16A34A" icon="check" />
+                <x-stat-card label="Dalam Verifikasi" :value="'Rp ' . number_format($totalVerifying, 0, ',', '.')" :sub="$statusCounts['Dalam Verifikasi'] . ' Termin'" color="#F59E0B" icon="clock-file" />
+                <x-stat-card label="Menunggu Pembayaran" :value="'Rp ' . number_format($totalOpen, 0, ',', '.')" :sub="$statusCounts['Menunggu Bayar'] . ' Termin'" color="#6366F1" icon="calendar" />
             </section>
 
             {{-- == ( banner peringatan tindakan : unggah bukti pembayaran termin berjalan ) == --}}
@@ -231,23 +200,10 @@
             @endif
 
             {{-- == ( filter & search bar ) == --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-2.5 flex flex-col md:flex-row items-center justify-between gap-3">
-
-                {{-- Search Box --}}
-                <div class="relative w-full md:w-72">
-                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
-                        </svg>
-                    </span>
-                    <input type="text"
-                           x-model="searchQuery"
-                           placeholder="Cari termin"
-                           class="w-full bg-[#F8FAFC] border border-slate-200/70 rounded-xl pl-10 pr-4 py-2 text-xs md:text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0B3B82] focus:bg-white transition">
-                </div>
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
 
                 {{-- Status Pills --}}
-                <div class="flex items-center gap-1.5 flex-wrap">
+                <div class="flex items-center gap-1.5 flex-nowrap overflow-x-auto">
                     @php
                         $statusTabs = [
                             'Semua'            => 'Semua (' . $billingTerms->count() . ')',
@@ -263,21 +219,25 @@
                                 :class="activeStatusFilter === '{{ $tabKey }}'
                                     ? 'bg-[#0B3B82] text-white shadow-xs font-semibold'
                                     : 'bg-transparent text-slate-600 hover:bg-slate-100 font-medium'"
-                                class="px-4 py-2 rounded-xl text-xs transition cursor-pointer">
+                                class="px-3.5 py-1.5 rounded-xl text-xs transition cursor-pointer shrink-0 whitespace-nowrap">
                             {{ $tabLabel }}
                         </button>
                     @endforeach
                 </div>
 
-                {{-- Project Filter Dropdown --}}
-                <div class="w-full md:w-auto">
-                    <select x-model="selectedProjectFilter"
-                            class="w-full md:w-auto bg-[#F8FAFC] border border-slate-200/80 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:border-[#0B3B82] cursor-pointer">
-                        <option value="all">Semua Proyek ({{ count($projectsBilling) }})</option>
-                        @foreach($projectsBilling as $project)
-                            <option value="{{ $project['id'] }}">{{ $project['id'] }} - {{ $project['title'] }}</option>
-                        @endforeach
-                    </select>
+                <div class="flex items-center gap-2.5 shrink-0">
+                    {{-- Search Box --}}
+                    <div class="relative w-48 sm:w-56">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+                            </svg>
+                        </span>
+                        <input type="text"
+                               x-model="searchQuery"
+                               placeholder="Cari termin..."
+                               class="w-full bg-[#F8FAFC] border border-slate-200/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0B3B82] focus:bg-white transition">
+                    </div>
                 </div>
 
             </div>

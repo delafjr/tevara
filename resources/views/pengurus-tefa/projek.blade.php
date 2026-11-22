@@ -26,9 +26,7 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Kelola Semua <span class="text-[#FFB800]">Projek TeFa</span>
                     </h1>
-                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
-                        Pantau status, progress, dan tim untuk setiap projek yang berjalan.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Pantau status, progres eksekusi, dan alokasi tim untuk setiap projek aktif</p>
                 </div>
 
                 <div class="relative z-10 flex-shrink-0">
@@ -40,7 +38,7 @@
             </div>
 
             {{-- Stats --}}
-            <div class="grid grid-cols-4 gap-4 items-stretch">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
                 @php
                 $dash = $dashboard ?? [];
                 $totalProjects   = (int) ($dash['total_projects'] ?? 0);
@@ -50,9 +48,9 @@
 
                 $projStats = [
                     ['label' => 'Total Projek',     'value' => (string) $totalProjects,   'sub' => 'Seluruh Projek',  'color' => '#0B3B82', 'icon' => 'folder'],
-                    ['label' => 'Sedang Berjalan',  'value' => (string) $runningProjects, 'sub' => 'Dalam Pengerjaan','color' => '#0B3B82', 'icon' => 'play'],
+                    ['label' => 'Sedang Berjalan',  'value' => (string) $runningProjects, 'sub' => 'Dalam Pengerjaan','color' => '#16A34A', 'icon' => 'play'],
                     ['label' => 'Dalam Review',     'value' => (string) $inReview,        'sub' => 'Perlu Review',    'color' => '#F59E0B', 'icon' => 'clock-file'],
-                    ['label' => 'Proposal Masuk',   'value' => (string) $submitted,       'sub' => 'Menunggu Validasi','color' => '#0B3B82', 'icon' => 'check'],
+                    ['label' => 'Proposal Masuk',   'value' => (string) $submitted,       'sub' => 'Menunggu Validasi','color' => '#6366F1', 'icon' => 'check'],
                 ];
                 @endphp
                 @foreach($projStats as $stat)

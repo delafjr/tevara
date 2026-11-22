@@ -130,18 +130,19 @@
             @endif
 
             {{-- Header Card --}}
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#EFF6FF] via-[#F4F8FE] to-[#FCF8EC] border border-blue-100/70 px-8 py-7 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div class="relative z-10 max-w-2xl">
-                    <div class="inline-flex items-center gap-2 bg-[#EAF3FF] text-[#0B3B82] text-[10.5px] font-bold tracking-wide uppercase px-3 py-1 rounded-full mb-2.5">
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                {{-- gradient dekoratif --}}
+                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                        F-09 • PEMBAYARAN PROYEK
-                    </div>
-                    <h1 class="text-2xl lg:text-[28px] font-extrabold text-[#1E293B] tracking-tight">
+                        F-09 • Pembayaran Proyek
+                    </span>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Unggah Bukti <span class="text-[#FFB800]">Pembayaran</span>
                     </h1>
-                    <p class="text-xs md:text-sm text-slate-500 mt-2 leading-relaxed">
-                        Kirimkan berkas struk atau slip bukti transfer termin proyek untuk diverifikasi oleh Bagian Keuangan TEFA Politeknik.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Kirimkan berkas struk atau bukti transfer termin untuk verifikasi tim keuangan TeFa</p>
                 </div>
 
                 <div class="relative z-10 flex flex-col items-start md:items-end gap-1 bg-white/80 backdrop-blur-xs p-4 rounded-2xl border border-blue-100/60 shadow-2xs flex-shrink-0">

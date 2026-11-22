@@ -7,21 +7,20 @@
 ])
 
 @php
-    $isTextValue = !is_numeric($value);
     $valLength = mb_strlen((string)$value);
 
-    // Jika value berupa teks non-angka (seperti 'Aman', 'Terlewat', 'Hari ini') ukurannya dikecilkan agar proporsional
-    if ($isTextValue && $valLength > 4) {
-        $fontSize = 'text-lg';
-    } elseif ($isTextValue || $valLength > 3) {
-        $fontSize = 'text-xl';
+    // Font size scaling agar teks/angka panjang (seperti 'Rp 100.000.000') proporsional dan tidak overflow
+    if ($valLength > 12) {
+        $fontSize = 'text-xl xl:text-2xl';
+    } elseif ($valLength > 6) {
+        $fontSize = 'text-2xl xl:text-3xl';
     } else {
         $fontSize = 'text-3xl';
     }
 @endphp
 
 <div {{ $attributes->merge(['class' => 'bg-white rounded-xl px-5 py-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between h-full min-h-[110px]']) }}>
-    <div class="flex items-center justify-between gap-3 mb-4">
+    <div class="flex items-center justify-between gap-3 mb-3">
         <p class="text-[11.5px] font-bold tracking-wide uppercase text-slate-500 truncate">{{ $label }}</p>
         <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
              style="background-color: {{ $color }}14">
@@ -40,16 +39,24 @@
                     <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84 51.39 51.39 0 0 0-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5"/></svg>
                 @elseif($icon === 'calendar')
                     <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5"/></svg>
+                @elseif($icon === 'alert')
+                    <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+                @elseif($icon === 'x-circle')
+                    <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                @elseif($icon === 'ticket')
+                    <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z"/></svg>
+                @elseif($icon === 'building')
+                    <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/></svg>
                 @else
                     {{ $slot }}
                 @endif
             </span>
         </div>
     </div>
-    <div class="flex items-baseline gap-1.5 flex-wrap">
-        <span class="{{ $fontSize }} font-bold leading-none whitespace-nowrap" style="color: {{ $color }}">{{ $value }}</span>
+    <div>
+        <p class="{{ $fontSize }} font-bold leading-tight" style="color: {{ $color }}">{{ $value }}</p>
         @if($sub)
-            <span class="text-xs text-slate-400 font-medium leading-none">{{ $sub }}</span>
+            <p class="text-xs text-slate-400 font-medium mt-1 leading-snug">{{ $sub }}</p>
         @endif
     </div>
 </div>

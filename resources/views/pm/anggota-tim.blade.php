@@ -172,13 +172,14 @@
             <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
 
             <div class="relative z-10">
-                <h1 class="text-2xl font-bold leading-tight text-[#1E293B]">
-                    Manajemen Anggota<br>
-                    <span class="text-[#FFB800]">Tim Mahasiswa</span>
+                <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                    Workspace Project Manager
+                </span>
+                <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                    Manajemen Anggota <span class="text-[#FFB800]">Tim Mahasiswa</span>
                 </h1>
-                <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
-                    Pantau alokasi mahasiswa pelaksana Teaching Factory, distribusi role/peran, susunan struktur tim, serta status keaktifan anggota per proyek binaan Anda.
-                </p>
+                <p class="text-sm text-slate-400 mt-1.5">Pantau alokasi mahasiswa pelaksana, distribusi peran, dan status keaktifan anggota tim</p>
             </div>
         </div>
 
@@ -189,80 +190,10 @@
             </div>
         @else
         {{-- ── 2. STAT CARDS ── --}}
-        <div class="grid grid-cols-3 gap-5">
-
-            {{-- Card 1: Total Mahasiswa Aktif --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Total Mahasiswa</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">Aktif</p>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-[#EBF3FE] flex items-center justify-center text-[#2563EB]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 14v7M3 9v7a9 9 0 0 0 18 0V9"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-4xl font-extrabold text-[#0B254A] leading-none">{{ $totalStudentCount }}</p>
-                <p class="text-xs font-semibold text-slate-500 mt-2">Mahasiswa</p>
-                <div class="flex items-center gap-1.5 mt-1">
-                    <svg class="w-3.5 h-3.5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0"/>
-                    </svg>
-                    <p class="text-[11px] text-slate-400">Tersebar di {{ $totalTeamCount }} Proyek</p>
-                </div>
-                    <p class="text-[11px] font-semibold text-[#16A34A] mt-0.5">{{ $activeTeamCount }} tim aktif</p>
-            </div>
-
-            {{-- Card 2: Total Tim Proyek --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Total Tim Proyek</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">&nbsp;</p>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-[#DBEAFE] flex items-center justify-center text-[#2563EB]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-4xl font-extrabold text-[#0B254A] leading-none">{{ $totalTeamCount }}</p>
-                <p class="text-xs font-semibold text-slate-500 mt-2">Tim Proyek</p>
-                <div class="flex items-center gap-1.5 mt-1">
-                    <svg class="w-3.5 h-3.5 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                    </svg>
-                    <p class="text-[11px] font-semibold text-[#16A34A]">{{ $activeTeamCount }} tim aktif</p>
-                </div>
-            </div>
-
-            {{-- Card 3: Rata-rata Anggota / Tim --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Rata-rata Anggota /</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">Tim</p>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-[#EDE9FE] flex items-center justify-center text-[#6D28D9]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-4xl font-extrabold text-[#0B254A] leading-none">{{ $averageMembers }}</p>
-                <p class="text-xs font-semibold text-slate-500 mt-2">Mahasiswa</p>
-                <div class="flex items-center gap-1.5 mt-1">
-                    <svg class="w-3.5 h-3.5 text-[#6D28D9]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0"/>
-                    </svg>
-                    <p class="text-[11px] font-semibold text-[#6D28D9]">Distribusi Tim Seimbang</p>
-                </div>
-            </div>
-
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <x-stat-card label="Total Mahasiswa" :value="$totalStudentCount . ' Mahasiswa'" :sub="$activeTeamCount . ' Tim aktif di ' . $totalTeamCount . ' proyek'" color="#0B3B82" icon="academic" />
+            <x-stat-card label="Total Tim Proyek" :value="$totalTeamCount . ' Tim Proyek'" :sub="$activeTeamCount . ' Tim aktif berjalan'" color="#16A34A" icon="users" />
+            <x-stat-card label="Rata-rata Anggota" :value="$averageMembers . ' Mahasiswa/Tim'" sub="Distribusi tim seimbang" color="#6366F1" icon="folder" />
         </div>
 
         {{-- ── 3. SEARCH & FILTER BAR ── --}}

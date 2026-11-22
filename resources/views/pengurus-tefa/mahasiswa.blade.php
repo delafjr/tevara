@@ -20,7 +20,7 @@
     <x-sidebar active="mahasiswa" />
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
         <main class="flex-1 px-8 py-7 space-y-7" x-data="{ searchQuery: '' }">
-            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6">
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
                 <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
                 <div class="relative z-10">
                     <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
@@ -28,21 +28,13 @@
                         Teaching Factory · Polines
                     </span>
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">Mahasiswa <span class="text-[#FFB800]">Peserta TeFa</span></h1>
-                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">Data mahasiswa peserta Teaching Factory yang tersinkron dengan database.</p>
+                    <p class="text-sm text-slate-400 mt-1.5">Data mahasiswa peserta Teaching Factory yang tersinkron langsung dengan database</p>
                 </div>
             </div>
 
             <section class="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="Ringkasan mahasiswa">
-                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Total Mahasiswa</p>
-                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ count($mahasiswas) }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Akun mahasiswa dari database</p>
-                </div>
-                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Prodi Terdaftar</p>
-                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ $studyPrograms->count() }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Program studi pada database</p>
-                </div>
+                <x-stat-card label="Total Mahasiswa" :value="count($mahasiswas)" sub="Akun mahasiswa dari database" color="#0B3B82" icon="academic" />
+                <x-stat-card label="Prodi Terdaftar" :value="$studyPrograms->count()" sub="Program studi pada database" color="#6366F1" icon="folder" />
             </section>
 
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">

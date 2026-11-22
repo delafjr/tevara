@@ -44,9 +44,7 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Registrasi <span class="text-[#FFB800]">PIC Mitra / Klien</span>
                     </h1>
-                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
-                        Tambahkan akun Penanggung Jawab (PIC) baru untuk instansi atau perusahaan mitra yang sudah terdaftar di sistem Tevara.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Tambahkan akun Person in Charge (PIC) baru untuk instansi atau perusahaan mitra</p>
                 </div>
             </div>
 

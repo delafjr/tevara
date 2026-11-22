@@ -23,9 +23,20 @@
     <div class="flex-1 ml-64 flex flex-col min-h-screen p-8 gap-6">
         
         {{-- Banner Header --}}
-        <div class="bg-gradient-to-r from-white to-blue-50/30 rounded-2xl p-8 shadow-sm border border-slate-100">
-            <h1 class="text-2xl font-bold text-[#1E293B]">Ajukan Projek <span class="text-[#F59E0B]">Baru</span></h1>
-            <p class="text-slate-500 text-sm mt-1">Silakan lengkapi spesifikasi proyek Anda di bawah ini. Tim analis dan engineer TEVARA akan meninjau estimasi kebutuhan serta menghubungi Anda dalam waktu 1x24 jam kerja.</p>
+        <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+            {{-- gradient dekoratif --}}
+            <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+            <div class="relative z-10">
+                <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                    Workspace Jurusan
+                </span>
+                <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                    Ajukan Projek <span class="text-[#FFB800]">Baru</span>
+                </h1>
+                <p class="text-sm text-slate-400 mt-1.5">Lengkapi spesifikasi proyek untuk ditinjau oleh tim analis dan pengurus TeFa</p>
+            </div>
         </div>
 
         <form class="space-y-6">

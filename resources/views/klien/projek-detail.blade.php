@@ -539,7 +539,7 @@
                 </div>
 
                 {{-- Hero Detail --}}
-                <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-7">
+                <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6">
                     <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
 
                     <div class="relative z-10 flex flex-col lg:flex-row lg:items-start justify-between gap-6">

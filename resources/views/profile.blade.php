@@ -90,7 +90,7 @@
             </div>
 
             {{-- Hero Identity Card --}}
-            <div class="relative overflow-hidden rounded-3xl bg-white border border-slate-100 shadow-sm p-8">
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6">
                 <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-70 pointer-events-none"></div>
 
                 <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-6">

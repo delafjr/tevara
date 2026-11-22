@@ -18,11 +18,21 @@
     <x-sidebar active="bast" />
     <div class="flex-1 ml-64 flex flex-col min-h-screen">
         <main class="flex-1 px-8 py-7 space-y-7" x-data="{ searchQuery: '' }">
-            <header class="rounded-2xl border border-slate-100 bg-white px-8 py-6 shadow-sm">
-                <span class="mb-2.5 inline-flex items-center gap-1.5 rounded-full bg-[#EAF3FF] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#0B3B82]">Teaching Factory · Polines</span>
-                <h1 class="text-2xl font-bold text-[#1E293B]">Serah Terima &amp; <span class="text-[#FFB800]">BAST</span></h1>
-                <p class="mt-1.5 text-sm text-slate-500">Pengurus TeFa menyiapkan dokumen serah terima setelah UAT lulus. PIC Klien meninjau dan menyetujuinya.</p>
-            </header>
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                {{-- gradient dekoratif --}}
+                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                        Teaching Factory · Polines
+                    </span>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                        Serah Terima &amp; <span class="text-[#FFB800]">BAST</span>
+                    </h1>
+                    <p class="text-sm text-slate-400 mt-1.5">Kelola persiapan dokumen serah terima proyek dan persetujuan BAST bersama klien</p>
+                </div>
+            </div>
 
             @if(session('success'))
                 <div role="status" class="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">{{ session('success') }}</div>
@@ -41,21 +51,9 @@
             @endif
 
             <section class="grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="Ringkasan BAST">
-                <article class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Siap disiapkan</p>
-                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ $eligibleProjects }}</p>
-                    <p class="mt-1 text-xs text-slate-500">UAT terakhir lulus</p>
-                </article>
-                <article class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Menunggu PIC Klien</p>
-                    <p class="mt-2 text-2xl font-bold text-amber-600">{{ $pendingApprovals }}</p>
-                    <p class="mt-1 text-xs text-slate-500">BAST sudah disiapkan</p>
-                </article>
-                <article class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Serah terima selesai</p>
-                    <p class="mt-2 text-2xl font-bold text-emerald-700">{{ $completedHandovers }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Telah disetujui klien</p>
-                </article>
+                <x-stat-card label="Siap Disiapkan" :value="$eligibleProjects" sub="UAT terakhir lulus" color="#0B3B82" icon="play" />
+                <x-stat-card label="Menunggu PIC Klien" :value="$pendingApprovals" sub="BAST sudah disiapkan" color="#F59E0B" icon="clock-file" />
+                <x-stat-card label="Serah Terima Selesai" :value="$completedHandovers" sub="Telah disetujui klien" color="#16A34A" icon="check" />
             </section>
 
             <section class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">

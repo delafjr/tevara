@@ -23,31 +23,27 @@
     <div class="flex-1 ml-64 flex flex-col min-h-screen p-8 gap-6">
 
         <div class="space-y-6">
-            <div>
-                <h1 class="text-2xl font-bold text-[#1E293B]">Daftar Projek Saya</h1>
-                <p class="text-slate-500 text-sm">Pantau progres eksekusi teknis, evaluasi berkas deliverable, dan spesifikasi pengerjaan proyek Teaching Factory secara terpadu.</p>
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                {{-- gradient dekoratif --}}
+                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                        Workspace Jurusan
+                    </span>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                        Daftar <span class="text-[#FFB800]">Projek Saya</span>
+                    </h1>
+                    <p class="text-sm text-slate-400 mt-1.5">Pantau progres eksekusi teknis, evaluasi deliverable, dan spesifikasi pengerjaan proyek</p>
+                </div>
             </div>
 
             {{-- STATS --}}
-            <div class="grid grid-cols-3 gap-4">
-                <div class="bg-white rounded-2xl p-6 border border-slate-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-slate-400">TOTAL PROYEK PORTOFOLIO</p>
-                        <h2 class="text-3xl font-bold text-[#1E293B] mt-1">3 Proyek <span class="text-xs bg-blue-50 text-[#0B3B82] px-2 py-0.5 rounded font-medium">Aktif Berjalan</span></h2>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl p-6 border border-slate-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-slate-400">RATA-RATA PROGRES</p>
-                        <h2 class="text-3xl font-bold text-[#0B3B82] mt-1">68.4%</h2>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl p-6 border border-slate-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-slate-400">DISTRIBUSI FASE PENGERJAAN</p>
-                        <h2 class="text-3xl font-bold text-[#1E293B] mt-1">3 Milestone</h2>
-                    </div>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <x-stat-card label="Total Proyek Portofolio" value="3 Proyek" sub="Aktif berjalan" color="#0B3B82" icon="folder" />
+                <x-stat-card label="Rata-rata Progres" value="68.4%" sub="Target milestone" color="#16A34A" icon="play" />
+                <x-stat-card label="Distribusi Fase Pengerjaan" value="3 Milestone" sub="Tahap deliverable" color="#6366F1" icon="check" />
             </div>
 
             {{-- ITEM DETAIL CARD --}}

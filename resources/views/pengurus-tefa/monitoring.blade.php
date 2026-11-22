@@ -26,9 +26,7 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Monitoring <span class="text-[#FFB800]">Progress Projek</span>
                     </h1>
-                    <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
-                        Pantau perkembangan real-time semua projek — dari timeline hingga beban tim.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Pantau perkembangan real-time semua projek — dari timeline hingga beban kerja tim</p>
                 </div>
             </div>
 
@@ -42,19 +40,15 @@
             $delayed = count(array_filter($projectsList, fn($p) => !empty($p['deadline']) && strtotime($p['deadline']) < time() && ($p['progress'] ?? 0) < 100));
 
             $monitoringStats = [
-                ['value' => (string) $totalActive, 'label' => 'Projek Berjalan', 'color' => '#0B3B82', 'sub' => 'Dari database'],
-                ['value' => (string) $needsAttention, 'label' => 'Perlu Perhatian', 'color' => '#F59E0B', 'sub' => 'Progress < 50%'],
-                ['value' => (string) $delayed, 'label' => 'Terlambat', 'color' => '#EF4444', 'sub' => 'Lewat target deadline'],
-                ['value' => $avgProgress . '%', 'label' => 'Rata-rata Progress', 'color' => '#16A34A', 'sub' => 'Dari ' . $totalActive . ' projek'],
+                ['value' => (string) $totalActive, 'label' => 'Projek Berjalan', 'color' => '#0B3B82', 'sub' => 'Dari database', 'icon' => 'play'],
+                ['value' => (string) $needsAttention, 'label' => 'Perlu Perhatian', 'color' => '#F59E0B', 'sub' => 'Progress < 50%', 'icon' => 'alert'],
+                ['value' => (string) $delayed, 'label' => 'Terlambat', 'color' => '#EF4444', 'sub' => 'Lewat target deadline', 'icon' => 'clock-file'],
+                ['value' => $avgProgress . '%', 'label' => 'Rata-rata Progress', 'color' => '#16A34A', 'sub' => 'Dari ' . $totalActive . ' projek', 'icon' => 'check'],
             ];
             @endphp
-            <div class="grid grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
                 @foreach($monitoringStats as $stat)
-                <div class="bg-white rounded-xl px-5 py-5 border border-slate-100 shadow-sm">
-                    <p class="text-3xl font-bold leading-none" style="color:{{ $stat['color'] }}">{{ $stat['value'] }}</p>
-                    <p class="text-xs text-slate-400 mt-1.5 font-medium">{{ $stat['label'] }}</p>
-                    <p class="text-[11px] mt-1 text-slate-500">{{ $stat['sub'] }}</p>
-                </div>
+                    <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
                 @endforeach
             </div>
 

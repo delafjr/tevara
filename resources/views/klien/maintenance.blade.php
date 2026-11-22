@@ -41,14 +41,19 @@
         <main class="flex-1 px-8 py-7 space-y-6">
 
             {{-- Header --}}
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#EFF6FF] via-[#F3F7FD] to-[#F0FDF4] border border-blue-100/70 px-8 py-7 shadow-xs">
-                <div class="relative z-10 max-w-4xl">
-                    <h1 class="text-2xl lg:text-[28px] font-extrabold text-[#1E293B] tracking-tight">
-                        Garansi & <span class="text-[#0B3B82]">Maintenance</span>
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                {{-- gradient dekoratif --}}
+                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                        Workspace Klien
+                    </span>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                        Garansi & <span class="text-[#FFB800]">Maintenance</span>
                     </h1>
-                    <p class="text-xs md:text-sm text-slate-500 mt-2 leading-relaxed">
-                        Pantau status garansi proyek, laporkan error, dan ajukan perpanjangan masa garansi atau maintenance.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Pantau status garansi proyek, laporkan error, dan ajukan perpanjangan masa pemeliharaan</p>
                 </div>
             </div>
 
@@ -61,19 +66,10 @@
             @endif
 
             {{-- Stats --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-6">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-2">Total Proyek</p>
-                    <p class="text-2xl font-bold text-slate-800">{{ count($mapped) }}</p>
-                </div>
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-6">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-2">Garansi Aktif</p>
-                    <p class="text-2xl font-bold text-emerald-600">{{ $activeCount }}</p>
-                </div>
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-6">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-2">Masa Berakhir</p>
-                    <p class="text-2xl font-bold text-slate-500">{{ $expiredCount }}</p>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <x-stat-card label="Total Proyek" :value="count($mapped)" sub="Proyek terdaftar" color="#0B3B82" icon="folder" />
+                <x-stat-card label="Garansi Aktif" :value="$activeCount" sub="Masa pemeliharaan aktif" color="#16A34A" icon="check" />
+                <x-stat-card label="Masa Berakhir" :value="$expiredCount" sub="Garansi telah usai" color="#EF4444" icon="clock-file" />
             </div>
 
             {{-- Project List --}}

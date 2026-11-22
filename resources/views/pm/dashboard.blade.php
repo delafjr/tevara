@@ -110,7 +110,7 @@
             <div class="relative z-10">
                 <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                    Dashboard Project Manager
+                    {{ $workspaceLabel }}
                 </span>
                 <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                     Selamat Datang, <span class="text-[#FFB800]">{{ $userName }}</span>
@@ -138,13 +138,13 @@
         @php
             $pmStats = [
                 ['label' => 'Total Proyek',    'value' => $totalProjects,     'sub' => 'Inisiatif Terdaftar', 'color' => '#0B3B82', 'icon' => 'folder'],
-                ['label' => 'Proyek Berjalan', 'value' => $activeProjects,    'sub' => 'Dalam Pengerjaan',    'color' => '#0B3B82', 'icon' => 'play'],
-                ['label' => 'Proyek Selesai',  'value' => $completedProjects, 'sub' => 'Siap Produksi',       'color' => '#0B3B82', 'icon' => 'check'],
+                ['label' => 'Proyek Berjalan', 'value' => $activeProjects,    'sub' => 'Dalam Pengerjaan',    'color' => '#6366F1', 'icon' => 'play'],
+                ['label' => 'Proyek Selesai',  'value' => $completedProjects, 'sub' => 'Siap Produksi',       'color' => '#16A34A', 'icon' => 'check'],
                 ['label' => 'Menunggu Review', 'value' => $waitingReview,     'sub' => 'Perlu Review',        'color' => '#F59E0B', 'icon' => 'clock-file'],
             ];
         @endphp
 
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
             @foreach($pmStats as $stat)
                 <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
             @endforeach
