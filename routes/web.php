@@ -176,10 +176,7 @@ Route::middleware('auth.api')->group(function () {
             $notifRes = $api->get('notifications');
             if ($notifRes->successful() && is_array($notifRes->json('data'))) {
                 $notifications = $notifRes->json('data');
-            }
-            $unreadRes = $api->get('notifications/unread-count');
-            if ($unreadRes->successful()) {
-                $unreadCount = (int) ($unreadRes->json('data.unread_count') ?? 0);
+                $unreadCount = collect($notifications)->where('is_read', false)->count();
             }
         } catch (\Throwable) {
             $notifications = [];
