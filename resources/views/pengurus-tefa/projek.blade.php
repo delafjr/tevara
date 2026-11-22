@@ -38,7 +38,7 @@
             </div>
 
             {{-- Stats --}}
-            <div class="grid grid-cols-4 gap-4 items-stretch">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
                 @php
                 $dash = $dashboard ?? [];
                 $totalProjects   = (int) ($dash['total_projects'] ?? 0);
@@ -48,9 +48,9 @@
 
                 $projStats = [
                     ['label' => 'Total Projek',     'value' => (string) $totalProjects,   'sub' => 'Seluruh Projek',  'color' => '#0B3B82', 'icon' => 'folder'],
-                    ['label' => 'Sedang Berjalan',  'value' => (string) $runningProjects, 'sub' => 'Dalam Pengerjaan','color' => '#0B3B82', 'icon' => 'play'],
+                    ['label' => 'Sedang Berjalan',  'value' => (string) $runningProjects, 'sub' => 'Dalam Pengerjaan','color' => '#16A34A', 'icon' => 'play'],
                     ['label' => 'Dalam Review',     'value' => (string) $inReview,        'sub' => 'Perlu Review',    'color' => '#F59E0B', 'icon' => 'clock-file'],
-                    ['label' => 'Proposal Masuk',   'value' => (string) $submitted,       'sub' => 'Menunggu Validasi','color' => '#0B3B82', 'icon' => 'check'],
+                    ['label' => 'Proposal Masuk',   'value' => (string) $submitted,       'sub' => 'Menunggu Validasi','color' => '#6366F1', 'icon' => 'check'],
                 ];
                 @endphp
                 @foreach($projStats as $stat)

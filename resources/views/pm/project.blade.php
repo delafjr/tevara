@@ -132,76 +132,11 @@
             </div>
         @else
         {{-- ── 2. STAT CARDS ── --}}
-        <div class="grid grid-cols-4 gap-5">
-
-            {{-- Card 1: Total Proyek --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Total Proyek</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">Yang dikelola</p>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-[#EBF3FE] flex items-center justify-center text-[#2563EB]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">{{ $totalProjectCount }}</p>
-                <p class="text-[10px] text-slate-400 mt-1">Aktif dimonitor</p>
-            </div>
-
-            {{-- Card 2: Proyek Berjalan --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Proyek Berjalan</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">Sesuai milestones target</p>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-[#DBEAFE] flex items-center justify-center text-[#2563EB]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">{{ $runningProjectCount }}</p>
-                <p class="text-[10px] text-slate-400 mt-1">Sesuai timeline</p>
-            </div>
-
-            {{-- Card 3: Proyek Selesai --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Proyek Selesai</p>
-                        <p class="text-[10px] text-[#16A34A] font-semibold mt-0.5">Tervalidasi 36%</p>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-[#DCFCE7] flex items-center justify-center text-[#16A34A]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">{{ $completedProjectCount }}</p>
-                <p class="text-[10px] text-slate-400 mt-1">Tervalidasi 36%</p>
-            </div>
-
-            {{-- Card 4: Mendekati Deadline --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Mendekati Deadline</p>
-                        <p class="text-[10px] text-[#EF4444] font-semibold mt-0.5">~ 20 hari lagi</p>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-[#FEF3C7] flex items-center justify-center text-[#F59E0B]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">{{ $reviewProjectCount }}</p>
-                <p class="text-[10px] text-[#EF4444] font-semibold mt-1">~ 20 hari lagi</p>
-            </div>
-
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+            <x-stat-card label="Total Proyek" :value="$totalProjectCount" sub="Aktif dimonitor" color="#0B3B82" icon="folder" />
+            <x-stat-card label="Proyek Berjalan" :value="$runningProjectCount" sub="Sesuai timeline" color="#6366F1" icon="play" />
+            <x-stat-card label="Proyek Selesai" :value="$completedProjectCount" sub="Tervalidasi selesai" color="#16A34A" icon="check" />
+            <x-stat-card label="Mendekati Deadline" :value="$reviewProjectCount" sub="Perlu perhatian khusus" color="#EF4444" icon="clock-file" />
         </div>
 
         {{-- ── 3. PROJECT LIST ── --}}

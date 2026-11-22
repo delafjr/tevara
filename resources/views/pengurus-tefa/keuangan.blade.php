@@ -177,7 +177,7 @@
             </div>
 
             {{-- Stats Keuangan --}}
-            <div class="grid grid-cols-4 gap-4 items-stretch">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
                 @php
                 $keuStats = [
                     ['label' => 'Total Pemasukan',   'value' => 'Rp ' . number_format($totalVerifiedAmount, 0, ',', '.'), 'sub' => $verifiedPayments->count() . ' Transaksi Terverifikasi', 'color' => '#16A34A', 'icon' => 'check'],

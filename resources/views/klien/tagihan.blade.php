@@ -162,26 +162,10 @@
             </div>
 
             <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" aria-label="Ringkasan tagihan">
-                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Total Tagihan</p>
-                    <p class="mt-2 text-xl font-extrabold text-slate-800">Rp {{ number_format($totalBilled, 0, ',', '.') }}</p>
-                    <p class="mt-1 text-xs text-slate-500">{{ $billingTerms->count() }} termin tercatat</p>
-                </div>
-                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Terverifikasi</p>
-                    <p class="mt-2 text-xl font-extrabold text-emerald-700">Rp {{ number_format($totalVerified, 0, ',', '.') }}</p>
-                    <p class="mt-1 text-xs text-slate-500">{{ $verifiedPercent }}% dari total tagihan</p>
-                </div>
-                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Dalam Verifikasi</p>
-                    <p class="mt-2 text-xl font-extrabold text-amber-700">Rp {{ number_format($totalVerifying, 0, ',', '.') }}</p>
-                    <p class="mt-1 text-xs text-slate-500">{{ $statusCounts['Dalam Verifikasi'] }} termin</p>
-                </div>
-                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Menunggu Pembayaran</p>
-                    <p class="mt-2 text-xl font-extrabold text-[#0B3B82]">Rp {{ number_format($totalOpen, 0, ',', '.') }}</p>
-                    <p class="mt-1 text-xs text-slate-500">{{ $statusCounts['Menunggu Bayar'] }} termin</p>
-                </div>
+                <x-stat-card label="Total Tagihan" :value="'Rp ' . number_format($totalBilled, 0, ',', '.')" :sub="$billingTerms->count() . ' Termin tercatat'" color="#0B3B82" icon="folder" />
+                <x-stat-card label="Terverifikasi" :value="'Rp ' . number_format($totalVerified, 0, ',', '.')" :sub="$verifiedPercent . '% dari total tagihan'" color="#16A34A" icon="check" />
+                <x-stat-card label="Dalam Verifikasi" :value="'Rp ' . number_format($totalVerifying, 0, ',', '.')" :sub="$statusCounts['Dalam Verifikasi'] . ' Termin'" color="#F59E0B" icon="clock-file" />
+                <x-stat-card label="Menunggu Pembayaran" :value="'Rp ' . number_format($totalOpen, 0, ',', '.')" :sub="$statusCounts['Menunggu Bayar'] . ' Termin'" color="#6366F1" icon="calendar" />
             </section>
 
             {{-- == ( banner peringatan tindakan : unggah bukti pembayaran termin berjalan ) == --}}

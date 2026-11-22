@@ -33,16 +33,8 @@
             </div>
 
             <section class="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="Ringkasan mahasiswa">
-                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Total Mahasiswa</p>
-                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ count($mahasiswas) }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Akun mahasiswa dari database</p>
-                </div>
-                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Prodi Terdaftar</p>
-                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ $studyPrograms->count() }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Program studi pada database</p>
-                </div>
+                <x-stat-card label="Total Mahasiswa" :value="count($mahasiswas)" sub="Akun mahasiswa dari database" color="#0B3B82" icon="academic" />
+                <x-stat-card label="Prodi Terdaftar" :value="$studyPrograms->count()" sub="Program studi pada database" color="#6366F1" icon="folder" />
             </section>
 
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">

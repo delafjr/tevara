@@ -138,13 +138,13 @@
         @php
             $pmStats = [
                 ['label' => 'Total Proyek',    'value' => $totalProjects,     'sub' => 'Inisiatif Terdaftar', 'color' => '#0B3B82', 'icon' => 'folder'],
-                ['label' => 'Proyek Berjalan', 'value' => $activeProjects,    'sub' => 'Dalam Pengerjaan',    'color' => '#0B3B82', 'icon' => 'play'],
-                ['label' => 'Proyek Selesai',  'value' => $completedProjects, 'sub' => 'Siap Produksi',       'color' => '#0B3B82', 'icon' => 'check'],
+                ['label' => 'Proyek Berjalan', 'value' => $activeProjects,    'sub' => 'Dalam Pengerjaan',    'color' => '#6366F1', 'icon' => 'play'],
+                ['label' => 'Proyek Selesai',  'value' => $completedProjects, 'sub' => 'Siap Produksi',       'color' => '#16A34A', 'icon' => 'check'],
                 ['label' => 'Menunggu Review', 'value' => $waitingReview,     'sub' => 'Perlu Review',        'color' => '#F59E0B', 'icon' => 'clock-file'],
             ];
         @endphp
 
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
             @foreach($pmStats as $stat)
                 <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
             @endforeach

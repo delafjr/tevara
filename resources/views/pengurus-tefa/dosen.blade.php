@@ -40,16 +40,8 @@
             </div>
 
             <section class="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="Ringkasan dosen">
-                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Total Dosen</p>
-                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ count($dosens) }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Akun dosen dari database</p>
-                </div>
-                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Email Terdaftar</p>
-                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ $emails->count() }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Email dosen pada database</p>
-                </div>
+                <x-stat-card label="Total Dosen" :value="count($dosens)" sub="Akun dosen dari database" color="#0B3B82" icon="academic" />
+                <x-stat-card label="Email Terdaftar" :value="$emails->count()" sub="Email dosen pada database" color="#16A34A" icon="folder" />
             </section>
 
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">

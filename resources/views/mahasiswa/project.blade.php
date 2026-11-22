@@ -30,70 +30,11 @@
     </div>
 
     {{-- ===== 4 STAT CARDS ===== --}}
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" aria-label="Ringkasan project">
-        {{-- Card 1: Total Proyek --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-400 text-xs font-bold tracking-wider uppercase">
-                <span>Total Proyek</span>
-                <span class="w-9 h-9 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                </span>
-            </div>
-            <div>
-                <strong class="text-3xl font-extrabold text-[#0F172A] tracking-tight block">{{ $totalCount }}</strong>
-                <span class="text-xs text-slate-400 mt-1 block">Proyek Terdaftar</span>
-            </div>
-        </div>
-
-        {{-- Card 2: Sedang Berjalan --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-400 text-xs font-bold tracking-wider uppercase">
-                <span>Sedang Berjalan</span>
-                <span class="w-9 h-9 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                </span>
-            </div>
-            <div>
-                <strong class="text-3xl font-extrabold text-[#0F172A] tracking-tight block">{{ $runningCount }}</strong>
-                <span class="text-xs text-slate-400 mt-1 block">Proyek Aktif Sprint</span>
-            </div>
-        </div>
-
-        {{-- Card 3: Dalam Review --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-400 text-xs font-bold tracking-wider uppercase">
-                <span>Dalam Review</span>
-                <span class="w-9 h-9 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                </span>
-            </div>
-            <div>
-                <strong class="text-3xl font-extrabold text-[#0F172A] tracking-tight block">{{ $reviewCount }}</strong>
-                <span class="text-xs text-slate-400 mt-1 block">Menunggu Verifikasi PM</span>
-            </div>
-        </div>
-
-        {{-- Card 4: Deadline Terdekat --}}
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-400 text-xs font-bold tracking-wider uppercase">
-                <span>Deadline Terdekat</span>
-                <span class="w-9 h-9 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </span>
-            </div>
-            <div>
-                <strong class="text-2xl font-extrabold text-[#0F172A] tracking-tight block">{{ $nearestDlText }}</strong>
-                <span class="text-xs text-slate-400 mt-1 block">Target Milestone</span>
-            </div>
-        </div>
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch" aria-label="Ringkasan project">
+        <x-stat-card label="Total Proyek" :value="$totalCount" sub="Proyek terdaftar" color="#0B3B82" icon="folder" />
+        <x-stat-card label="Sedang Berjalan" :value="$runningCount" sub="Proyek aktif sprint" color="#16A34A" icon="play" />
+        <x-stat-card label="Dalam Review" :value="$reviewCount" sub="Menunggu verifikasi PM" color="#F59E0B" icon="clock-file" />
+        <x-stat-card label="Deadline Terdekat" :value="$nearestDlText" sub="Target milestone" color="#6366F1" icon="calendar" />
     </section>
 
     {{-- ===== FILTER & PROJECT LIST WRAPPER ===== --}}

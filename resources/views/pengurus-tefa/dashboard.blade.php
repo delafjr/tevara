@@ -162,14 +162,14 @@
             <x-dashboard-notifications :notifications="$notifications ?? []" :unread-count="$unreadCount ?? 0" />
 
             {{-- ── 4 STAT CARDS ── --}}
-            <div class="grid grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
                 @php
                 // Urutan kartu mengikuti urutan field pada BE: total_projects, running_projects, total_clients, total_students.
                 $stats = [
                     ['label' => 'Total Project',       'value' => $totalProjects,   'sub' => 'Seluruh project',     'color' => '#0B3B82', 'icon' => 'folder'],
-                    ['label' => 'Project Berjalan',    'value' => $runningProjects, 'sub' => 'Sedang berjalan',     'color' => '#0B3B82', 'icon' => 'play'],
-                    ['label' => 'Total Klien / Mitra', 'value' => $totalClients,    'sub' => 'Terdaftar',           'color' => '#0B3B82', 'icon' => 'users'],
-                    ['label' => 'Mahasiswa Terlibat',  'value' => $totalStudents,   'sub' => 'Aktif berkontribusi', 'color' => '#0B3B82', 'icon' => 'academic'],
+                    ['label' => 'Project Berjalan',    'value' => $runningProjects, 'sub' => 'Sedang berjalan',     'color' => '#16A34A', 'icon' => 'play'],
+                    ['label' => 'Total Klien / Mitra', 'value' => $totalClients,    'sub' => 'Terdaftar',           'color' => '#6366F1', 'icon' => 'users'],
+                    ['label' => 'Mahasiswa Terlibat',  'value' => $totalStudents,   'sub' => 'Aktif berkontribusi', 'color' => '#F59E0B', 'icon' => 'academic'],
                 ];
                 @endphp
 

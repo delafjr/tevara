@@ -59,12 +59,12 @@
         $deadlineText = $daysRemaining === null ? 'Aman' : ($daysRemaining < 0 ? 'Terlewat' : ($daysRemaining === 0 ? 'Hari ini' : $daysRemaining . ' Hari'));
         $deadlineSub = $daysRemaining === null ? 'Sisa Waktu' : ($daysRemaining < 0 ? 'Terlewat' : 'Sisa Waktu');
         $isUrgentDeadline = ($daysRemaining !== null && $daysRemaining <= 3);
-        $deadlineColor = $isUrgentDeadline ? '#DC2626' : '#0B3B82';
+        $deadlineColor = $isUrgentDeadline ? '#DC2626' : '#6366F1';
 
         $studentStats = [
             ['label' => 'Project Aktif',     'value' => $activeProjects,    'sub' => 'Dalam Pengerjaan', 'color' => '#0B3B82', 'icon' => 'play'],
             ['label' => 'Menunggu Review',   'value' => $pendingTasks,      'sub' => 'Perlu Review',     'color' => '#F59E0B', 'icon' => 'clock-file'],
-            ['label' => 'Project Selesai',   'value' => $completedProjects, 'sub' => 'Siap Produksi',    'color' => '#0B3B82', 'icon' => 'check'],
+            ['label' => 'Project Selesai',   'value' => $completedProjects, 'sub' => 'Siap Produksi',    'color' => '#16A34A', 'icon' => 'check'],
             ['label' => 'Deadline Terdekat', 'value' => $deadlineText,      'sub' => $deadlineSub,       'color' => $deadlineColor, 'icon' => 'calendar'],
         ];
     @endphp

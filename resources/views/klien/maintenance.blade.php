@@ -66,19 +66,10 @@
             @endif
 
             {{-- Stats --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-6">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-2">Total Proyek</p>
-                    <p class="text-2xl font-bold text-slate-800">{{ count($mapped) }}</p>
-                </div>
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-6">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-2">Garansi Aktif</p>
-                    <p class="text-2xl font-bold text-emerald-600">{{ $activeCount }}</p>
-                </div>
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-6">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-2">Masa Berakhir</p>
-                    <p class="text-2xl font-bold text-slate-500">{{ $expiredCount }}</p>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <x-stat-card label="Total Proyek" :value="count($mapped)" sub="Proyek terdaftar" color="#0B3B82" icon="folder" />
+                <x-stat-card label="Garansi Aktif" :value="$activeCount" sub="Masa pemeliharaan aktif" color="#16A34A" icon="check" />
+                <x-stat-card label="Masa Berakhir" :value="$expiredCount" sub="Garansi telah usai" color="#EF4444" icon="clock-file" />
             </div>
 
             {{-- Project List --}}

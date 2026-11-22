@@ -106,14 +106,11 @@
             </div>
 
             {{-- Stats --}}
-            <div class="grid grid-cols-4 gap-4">
-                @foreach([[ $pendingCount, 'Menunggu Validasi', '#F59E0B'], [ $approvedCount, 'Disetujui', '#16A34A'], [ $revisionCount, 'Dikembalikan', '#EF4444'], [ $totalProposalCount, 'Total Proposal', '#0B3B82']] as [$v, $l, $c])
-                <div class="bg-white rounded-xl px-5 py-5 border border-slate-100 shadow-sm">
-                    <p class="text-3xl font-bold text-[#1E293B] leading-none">{{ $v }}</p>
-                    <p class="text-xs text-slate-400 mt-1.5 font-medium">{{ $l }}</p>
-                    <div class="h-1 rounded-full mt-3" style="background:{{ $c }}30"><div class="h-full rounded-full w-3/4" style="background:{{ $c }}"></div></div>
-                </div>
-                @endforeach
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+                <x-stat-card label="Menunggu Validasi" :value="$pendingCount" sub="Perlu review tim" color="#F59E0B" icon="clock-file" />
+                <x-stat-card label="Disetujui" :value="$approvedCount" sub="Lolos verifikasi" color="#16A34A" icon="check" />
+                <x-stat-card label="Dikembalikan" :value="$revisionCount" sub="Perlu perbaikan" color="#EF4444" icon="alert" />
+                <x-stat-card label="Total Proposal" :value="$totalProposalCount" sub="Seluruh proposal" color="#0B3B82" icon="folder" />
             </div>
 
             {{-- Proposal Cards - Menunggu Validasi --}}

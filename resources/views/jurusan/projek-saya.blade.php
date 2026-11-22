@@ -40,25 +40,10 @@
             </div>
 
             {{-- STATS --}}
-            <div class="grid grid-cols-3 gap-4">
-                <div class="bg-white rounded-2xl p-6 border border-slate-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-slate-400">TOTAL PROYEK PORTOFOLIO</p>
-                        <h2 class="text-3xl font-bold text-[#1E293B] mt-1">3 Proyek <span class="text-xs bg-blue-50 text-[#0B3B82] px-2 py-0.5 rounded font-medium">Aktif Berjalan</span></h2>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl p-6 border border-slate-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-slate-400">RATA-RATA PROGRES</p>
-                        <h2 class="text-3xl font-bold text-[#0B3B82] mt-1">68.4%</h2>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl p-6 border border-slate-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-slate-400">DISTRIBUSI FASE PENGERJAAN</p>
-                        <h2 class="text-3xl font-bold text-[#1E293B] mt-1">3 Milestone</h2>
-                    </div>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <x-stat-card label="Total Proyek Portofolio" value="3 Proyek" sub="Aktif berjalan" color="#0B3B82" icon="folder" />
+                <x-stat-card label="Rata-rata Progres" value="68.4%" sub="Target milestone" color="#16A34A" icon="play" />
+                <x-stat-card label="Distribusi Fase Pengerjaan" value="3 Milestone" sub="Tahap deliverable" color="#6366F1" icon="check" />
             </div>
 
             {{-- ITEM DETAIL CARD --}}

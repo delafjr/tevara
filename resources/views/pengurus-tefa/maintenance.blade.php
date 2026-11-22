@@ -54,23 +54,11 @@
             @endif
 
             {{-- Stats --}}
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-5">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-2">Total Proyek</p>
-                    <p class="text-2xl font-bold text-slate-800">{{ count($projects) }}</p>
-                </div>
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-5">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-2">Garansi Aktif</p>
-                    <p class="text-2xl font-bold text-emerald-600">{{ $activeCount }}</p>
-                </div>
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-5">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-2">Masa Berakhir</p>
-                    <p class="text-2xl font-bold text-red-500">{{ $expiredCount }}</p>
-                </div>
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-5">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-2">Total Tiket</p>
-                    <p class="text-2xl font-bold text-slate-800">{{ $totalTickets }}</p>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <x-stat-card label="Total Proyek" :value="count($projects)" sub="Pasca serah terima" color="#0B3B82" icon="folder" />
+                <x-stat-card label="Garansi Aktif" :value="$activeCount" sub="Dalam masa garansi" color="#16A34A" icon="check" />
+                <x-stat-card label="Masa Berakhir" :value="$expiredCount" sub="Garansi selesai" color="#EF4444" icon="clock-file" />
+                <x-stat-card label="Total Tiket" :value="$totalTickets" sub="Tiket kendala" color="#F59E0B" icon="ticket" />
             </div>
 
             {{-- Table --}}

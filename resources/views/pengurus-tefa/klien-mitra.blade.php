@@ -66,21 +66,9 @@
             @endif
 
             <section class="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Ringkasan klien dan mitra">
-                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Total Instansi</p>
-                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ count($clients) }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Klien/mitra tersinkron</p>
-                </div>
-                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Total Projek</p>
-                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ $totalProjects }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Projek dari email instansi</p>
-                </div>
-                <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Kontak PIC</p>
-                    <p class="mt-2 text-2xl font-bold text-[#0B3B82]">{{ $totalContacts }}</p>
-                    <p class="mt-1 text-xs text-slate-500">PIC yang tercatat di database</p>
-                </div>
+                <x-stat-card label="Total Instansi" :value="count($clients)" sub="Klien/mitra tersinkron" color="#0B3B82" icon="building" />
+                <x-stat-card label="Total Projek" :value="$totalProjects" sub="Projek dari email instansi" color="#6366F1" icon="folder" />
+                <x-stat-card label="Kontak PIC" :value="$totalContacts" sub="PIC tercatat di database" color="#16A34A" icon="users" />
             </section>
 
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
