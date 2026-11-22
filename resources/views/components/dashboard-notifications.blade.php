@@ -262,13 +262,13 @@
                 <div class="flex items-center gap-2.5 flex-wrap">
                     <h2 class="text-sm font-bold text-[#1E293B] tracking-tight">Notifikasi & Aktivitas Terkini</h2>
                     <template x-if="unreadCount > 0">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-[#FEF3C7] text-amber-800 border border-amber-300 shadow-2xs">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-amber-800 border border-amber-300 shadow-2xs" style="font-size: 11px; line-height: 1.2;">
                             <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                             <span x-text="unreadCount + ' Belum Dibaca'"></span>
                         </span>
                     </template>
                     <template x-if="unreadCount === 0 && notifications.length > 0">
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200" style="font-size: 11px; line-height: 1.2;">
                             <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
                             Semua sudah dibaca
                         </span>
@@ -358,7 +358,7 @@
                          :class="!item.is_read ? 'bg-gradient-to-r from-blue-50/50 via-white to-amber-50/20 border-l-4 border-l-[#0B3B82]' : 'bg-white hover:bg-slate-50/60'">
                         
                         <div class="flex items-start gap-3.5 min-w-0 flex-1">
-                            {{-- Icon per Jenis Notifikasi — path di-inject server-side via icon_svg --}}
+                            {{-- Icon per Jenis Notifikasi ï¿½ path di-inject server-side via icon_svg --}}
                             <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ring-1 ring-black/5 mt-0.5"
                                  :class="item.meta.bg_icon">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"

@@ -137,6 +137,7 @@
                             <tr class="border-b border-slate-100 bg-slate-50/70">
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-6 py-3.5">Proyek &amp; Kode</th>
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Klien / Mitra</th>
+                                <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Progres</th>
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Status Proyek</th>
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Hasil UAT</th>
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Pemeriksaan</th>
@@ -150,6 +151,8 @@
                                     $code = $p['proposal_code'] ?? ('PRJ-' . $pId);
                                     $title = $p['title'] ?? 'Proyek Tanpa Judul';
                                     $companyName = $p['client_company_name'] ?? $p['client']['company_name'] ?? $p['client_name'] ?? $p['client']['name'] ?? '—';
+                                    $taskProgress = round((float) ($p['task_progress'] ?? 0), 1);
+                                    $canSetTesting = !empty($p['can_set_testing']) || $taskProgress >= 100.0;
                                     $statusId = (int) ($p['status_id'] ?? 0);
                                     $statusName = $p['status']['name'] ?? $p['status'] ?? 'Active';
                                     $isTesting = ($statusId === 8 || strtolower($statusName) === 'testing');
@@ -199,6 +202,16 @@
                                     {{-- Klien / Mitra (Hanya Nama Perusahaan) --}}
                                     <td class="px-4 py-4">
                                         <p class="text-xs font-bold text-slate-800">{{ $companyName }}</p>
+                                    </td>
+
+                                    {{-- Progres Pengerjaan Task --}}
+                                    <td class="px-4 py-4">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-16 bg-slate-200 rounded-full h-2 overflow-hidden">
+                                                <div class="h-full rounded-full {{ $taskProgress >= 100 ? 'bg-emerald-500' : ($taskProgress >= 50 ? 'bg-amber-500' : 'bg-slate-400') }}" style="width: {{ min(100, $taskProgress) }}%"></div>
+                                            </div>
+                                            <span class="text-xs font-bold {{ $taskProgress >= 100 ? 'text-emerald-700' : 'text-slate-600' }}">{{ $taskProgress }}%</span>
+                                        </div>
                                     </td>
 
                                     {{-- Status Proyek --}}
@@ -311,16 +324,27 @@
                                                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-2xs">
                                                     <span>Lihat Status UAT</span>
                                                 </a>
-                                            @else
-                                                {{-- Belum fase Testing --}}
+                                            @elseif($canSetTesting)
+                                                {{-- Belum fase Testing & Progress 100% --}}
                                                 <button type="button"
                                                         @click="openTestingConfirm({{ $pId }}, '{{ addslashes($title) }}')"
-                                                        title="Tandai proyek masuk fase Testing terlebih dahulu agar formulir UAT dapat dibuat"
+                                                        title="Tandai proyek masuk fase Testing agar formulir UAT dapat diisi klien"
                                                         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition shadow-2xs cursor-pointer">
                                                     <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
                                                     </svg>
                                                     <span>Tandai Testing</span>
+                                                </button>
+                                            @else
+                                                {{-- Progress di bawah 100% - Tombol dinonaktifkan sesuai aturan Poin 1 --}}
+                                                <button type="button"
+                                                        disabled
+                                                        title="Proyek belum dapat ditandai Testing karena progres pengerjaan belum 100% (saat ini {{ $taskProgress }}%)"
+                                                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-75">
+                                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+                                                    </svg>
+                                                    <span>Tandai Testing ({{ $taskProgress }}%)</span>
                                                 </button>
                                             @endif
                                         </div>
@@ -328,7 +352,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
                                         <p class="text-sm font-semibold">Tidak ada proyek yang ditemukan.</p>
                                         <p class="text-xs mt-1">Proyek akan muncul di sini saat terdaftar pada sistem.</p>
                                     </td>
