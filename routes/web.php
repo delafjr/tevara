@@ -974,10 +974,18 @@ Route::middleware('auth.api')->group(function () {
                     $projects = collect($payload)
                         ->filter(fn ($p) => is_array($p) && !empty($p['client_approved']))
                         ->map(function ($p) {
-                            $warrantyEnd  = !empty($p['warranty_end_date']) ? \Carbon\Carbon::parse($p['warranty_end_date']) : null;
-                            $isActive     = ($p['has_warranty'] ?? false) && $warrantyEnd && $warrantyEnd->gte(\Carbon\Carbon::today());
-                            $daysLeft     = $warrantyEnd ? (int) \Carbon\Carbon::today()->diffInDays($warrantyEnd, false) : null;
+                            // warranty_end_date ada di nested $p['warranty']['warranty_end_date']
+                            $warranty    = is_array($p['warranty'] ?? null) ? $p['warranty'] : [];
+                            $endDateStr  = $warranty['warranty_end_date'] ?? $p['warranty_end_date'] ?? null;
+                            $hasWarranty = $warranty['has_warranty'] ?? $p['has_warranty'] ?? false;
+                            $warrantyEnd = !empty($endDateStr) ? \Carbon\Carbon::parse($endDateStr) : null;
+                            $isActive    = $hasWarranty && $warrantyEnd && $warrantyEnd->gte(\Carbon\Carbon::today());
+                            $daysLeft    = $warrantyEnd ? (int) \Carbon\Carbon::today()->diffInDays($warrantyEnd, false) : null;
                             return array_merge($p, [
+                                'has_warranty'       => $hasWarranty,
+                                'warranty_end_date'  => $endDateStr,
+                                'warranty_start_date'=> $warranty['warranty_start_date'] ?? $p['warranty_start_date'] ?? null,
+                                'warranty_months'    => $warranty['warranty_months'] ?? $p['warranty_months'] ?? null,
                                 'warranty_active'    => $isActive,
                                 'warranty_days_left' => $daysLeft,
                             ]);
