@@ -96,7 +96,6 @@
                 <x-stat-card label="Menunggu Pemeriksaan" :value="$stats['waiting_review']" sub="Hasil yang dikirim klien" color="#6366F1" icon="clock-file" />
                 <x-stat-card label="Perlu Perbaikan" :value="$stats['needs_improvement']" sub="Checklist ditindaklanjuti" color="#EF4444" icon="alert" />
             </div>
-            </div>
 
             {{-- Table & List Card --}}
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
