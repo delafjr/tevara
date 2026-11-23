@@ -34,6 +34,8 @@
     $defaultDeadline = !empty($proposal['desired_deadline']) 
         ? date('Y-m-d', strtotime((string)$proposal['desired_deadline'])) 
         : date('Y-m-d', strtotime('+3 months'));
+    $midTimestamp = (strtotime($defaultTerm1DueDate) + strtotime($defaultDeadline)) / 2;
+    $defaultTerm2DueDate = date('Y-m-d', (int) $midTimestamp);
     $proposalId = (int) ($proposal['id'] ?? 0);
     $defaultSpkNumber = !empty($proposal['spk_number'])
         ? $proposal['spk_number']
@@ -51,6 +53,7 @@
                   defaultStart: '{{ $defaultStartDate }}',
                   defaultEnd: '{{ $defaultDeadline }}',
                   defaultTerm1Due: '{{ $defaultTerm1DueDate }}',
+                  defaultTerm2Due: '{{ $defaultTerm2DueDate }}',
                   dosens: {{ json_encode($dosens ?? []) }},
                   mahasiswas: {{ json_encode($mahasiswas ?? []) }},
                   roles: {{ json_encode($projectRoles ?? []) }},
@@ -79,7 +82,19 @@
                 </div>
             </div>
 
-            {{-- Flash Alert Errors if any --}}
+            {{-- Flash Messages --}}
+            @if(session('success'))
+                <div role="status" class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800">
+                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    <p class="text-xs font-semibold leading-relaxed">{{ session('success') }}</p>
+                </div>
+            @endif
+            @if(session('error'))
+                <div role="alert" class="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-700">
+                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
+                    <p class="text-xs font-semibold leading-relaxed">{{ session('error') }}</p>
+                </div>
+            @endif
             @if ($errors->any())
                 <div class="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-600 space-y-1">
                     <p class="font-bold">Mohon periksa kembali isian formulir:</p>
@@ -803,6 +818,10 @@ function approvalForm(config) {
         selectedPmId: '',
         isSubmitting: false,
 
+        init() {
+            this.fillDefaultDueDates();
+        },
+
         // Skema Termin Default: 3 Termin (30%, 40%, 30%)
         // Jatuh tempo Termin 1 default H+1 minggu (7 hari dari sekarang)
         terms: [
@@ -821,7 +840,7 @@ function approvalForm(config) {
                 name: 'Termin 2 - Progress Sprint Utama (40%)',
                 percentage: 40,
                 amount: Math.round((config.initialAmount || 0) * 0.4),
-                payment_date: '',
+                payment_date: config.defaultTerm2Due || '',
                 notes: 'Dibayarkan setelah demonstrasi modul utama & progress 50%',
                 locked: false,
                 customName: false
@@ -1057,16 +1076,17 @@ function approvalForm(config) {
             if (n > 2) {
                 const startStr = this.terms[0].payment_date || config.defaultTerm1Due;
                 const endStr = this.terms[n - 1].payment_date || this.targetCompletionDate || config.defaultEnd;
-                const start = new Date(startStr).getTime();
-                const end = new Date(endStr).getTime();
+                let start = new Date(startStr).getTime();
+                let end = new Date(endStr).getTime();
 
-                if (!isNaN(start) && !isNaN(end) && end > start) {
-                    const step = (end - start) / (n - 1);
-                    for (let i = 1; i < n - 1; i++) {
-                        if (!this.terms[i].payment_date) {
-                            const d = new Date(start + step * i);
-                            this.terms[i].payment_date = d.toISOString().split('T')[0];
-                        }
+                if (isNaN(start)) start = Date.now() + 7 * 86400000;
+                if (isNaN(end) || end <= start) end = start + (n - 1) * 30 * 86400000;
+
+                const step = (end - start) / (n - 1);
+                for (let i = 1; i < n - 1; i++) {
+                    if (!this.terms[i].payment_date) {
+                        const d = new Date(start + step * i);
+                        this.terms[i].payment_date = d.toISOString().split('T')[0];
                     }
                 }
             }

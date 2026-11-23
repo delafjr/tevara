@@ -1606,6 +1606,8 @@ Route::middleware('auth.api')->group(function () {
             }
         })->whereNumber('proposal')->name('bast.prepare.form');
 
+        Route::get('/proposals/{proposal}/bast', fn (int $proposal) => redirect()->route('pengurus-tefa.bast.prepare.form', $proposal))->whereNumber('proposal');
+
         Route::post('/proposals/{proposal}/bast', function (Request $request, ApiService $api, int $proposal) {
             if ($request->hasAny(['nomor_bast', 'bast_number', 'tanggal_serah_terima', 'handover_date'])) {
                 return back()->withInput()->withErrors([
