@@ -90,7 +90,7 @@ class PMTaskTimelineTest extends TestCase
             '*/api/v1/proposals/1/tasks/overview' => Http::response($this->overviewPayload(), 200),
         ]);
 
-        $response = $this->withSession($this->sessionData())->get('/pm/task-timeline');
+        $response = $this->withSession($this->sessionData())->get('/pm/task-timeline?proposal_id=1');
 
         $response->assertOk();
         $response->assertSee('PRSL-2025-001');
@@ -210,7 +210,7 @@ class PMTaskTimelineTest extends TestCase
         });
     }
 
-    public function test_halaman_task_timeline_menampilkan_data_demo_saat_api_tidak_memiliki_proyek(): void
+    public function test_halaman_task_timeline_menampilkan_empty_state_saat_api_tidak_memiliki_proyek(): void
     {
         Http::fake([
             '*/api/v1/dosen/dashboard' => Http::response([
@@ -222,13 +222,7 @@ class PMTaskTimelineTest extends TestCase
         $response = $this->withSession($this->sessionData())->get('/pm/task-timeline');
 
         $response->assertOk();
-        $response->assertSee('Preview data demo')
-            ->assertSee('Sistem Informasi Pengelolaan UMKM')
-            ->assertSee('Integrasi Payment Gateway QRIS Midtrans')
-            ->assertSee('Total Task')
-            ->assertSee('Task Selesai')
-            ->assertSee('18')
-            ->assertSee('disabled', false);
+        $response->assertSee('Belum Ada Proyek yang Dikelola');
         Http::assertNotSent(function ($request) {
             return str_contains($request->url(), '/tasks/overview');
         });

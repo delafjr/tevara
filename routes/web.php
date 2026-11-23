@@ -1164,6 +1164,15 @@ Route::middleware('auth.api')->group(function () {
             }
         }
 
+        // Jika user belum memilih proyek (tidak ada param proposal_id / proposal / project),
+        // tampilkan halaman daftar proyek overview terlebih dahulu
+        if ($requestedId === null) {
+            return view('mahasiswa.task-projects', [
+                'user'     => session('user'),
+                'projects' => $projects,
+            ]);
+        }
+
         if ($proposalId === null && !empty($projects)) {
             $proposalId = $projects[0]['id'] ?? null;
             $selectedProject = $projects[0] ?? null;
@@ -1311,6 +1320,15 @@ Route::middleware('auth.api')->group(function () {
                     $proposalId = $project['id'];
                     break;
                 }
+            }
+
+            // Jika user belum memilih proyek (tidak ada param proposal_id / proposal / project),
+            // tampilkan halaman daftar proyek overview terlebih dahulu
+            if ($requestedId === null) {
+                return view('pm.task-timeline-projects', [
+                    'user'     => session('user'),
+                    'projects' => $projects,
+                ]);
             }
 
             if ($proposalId === null && !empty($projects)) {

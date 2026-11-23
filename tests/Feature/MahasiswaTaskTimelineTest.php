@@ -149,7 +149,7 @@ class MahasiswaTaskTimelineTest extends TestCase
             '*/api/v1/proposals/10/tasks/summary' => Http::response(['success' => true, 'data' => []], 200),
         ]);
 
-        $response = $this->withSession($this->studentSession())->get('/mahasiswa/task');
+        $response = $this->withSession($this->studentSession())->get('/mahasiswa/task?proposal_id=10');
 
         $response->assertOk();
         $response->assertSee('Timeline Saya');
