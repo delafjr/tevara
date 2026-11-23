@@ -70,15 +70,13 @@
 
                 <div class="relative z-10">
                     <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82] animate-ping"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
                         User Acceptance Testing (UAT)
                     </span>
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Manajemen Sesi &amp; <span class="text-[#FFB800]">Pengujian UAT</span>
                     </h1>
-                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
-                        Periksa hasil pengujian yang dikirim Klien, tambahkan checklist tindak lanjut, dan verifikasi perbaikannya.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Periksa hasil pengujian dari klien, kelola checklist tindak lanjut, dan verifikasi perbaikan</p>
                 </div>
 
                 <div class="relative z-10 flex-shrink-0 flex items-center gap-3">
@@ -93,61 +91,10 @@
 
             {{-- Stat Cards --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
-                {{-- Total --}}
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5 flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Terdaftar</p>
-                        <p class="text-2xl font-bold text-[#0B254A] mt-1">{{ $stats['total'] }}</p>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Proyek dalam radar pengujian</p>
-                    </div>
-                    <div class="w-11 h-11 rounded-xl bg-blue-50 text-[#0B3B82] flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 1-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
-                        </svg>
-                    </div>
-                </div>
-
-                {{-- Sedang Fase Testing --}}
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5 flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Fase Testing</p>
-                        <p class="text-2xl font-bold text-amber-600 mt-1">{{ $stats['testing'] }}</p>
-                        <p class="text-[11px] text-amber-600/80 mt-0.5">Status id 8 (Siap UAT)</p>
-                    </div>
-                    <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                        </svg>
-                    </div>
-                </div>
-
-                {{-- Menunggu Sign-off --}}
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5 flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Menunggu Pemeriksaan</p>
-                        <p class="text-2xl font-bold text-indigo-600 mt-1">{{ $stats['waiting_review'] }}</p>
-                        <p class="text-[11px] text-indigo-600/80 mt-0.5">Hasil yang dikirim Klien</p>
-                    </div>
-                    <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/>
-                        </svg>
-                    </div>
-                </div>
-
-                {{-- Checklist tindak lanjut --}}
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5 flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Perlu Perbaikan</p>
-                        <p class="text-2xl font-bold text-amber-600 mt-1">{{ $stats['needs_improvement'] }}</p>
-                        <p class="text-[11px] text-amber-600/80 mt-0.5">Checklist sedang ditindaklanjuti</p>
-                    </div>
-                    <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z"/>
-                        </svg>
-                    </div>
-                </div>
+                <x-stat-card label="Total Terdaftar" :value="$stats['total']" sub="Proyek radar pengujian" color="#0B3B82" icon="folder" />
+                <x-stat-card label="Fase Testing" :value="$stats['testing']" sub="Status siap UAT" color="#F59E0B" icon="play" />
+                <x-stat-card label="Menunggu Pemeriksaan" :value="$stats['waiting_review']" sub="Hasil yang dikirim klien" color="#6366F1" icon="clock-file" />
+                <x-stat-card label="Perlu Perbaikan" :value="$stats['needs_improvement']" sub="Checklist ditindaklanjuti" color="#EF4444" icon="alert" />
             </div>
 
             {{-- Table & List Card --}}
@@ -190,6 +137,7 @@
                             <tr class="border-b border-slate-100 bg-slate-50/70">
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-6 py-3.5">Proyek &amp; Kode</th>
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Klien / Mitra</th>
+                                <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Progres</th>
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Status Proyek</th>
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Hasil UAT</th>
                                 <th class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3.5">Pemeriksaan</th>
@@ -203,6 +151,8 @@
                                     $code = $p['proposal_code'] ?? ('PRJ-' . $pId);
                                     $title = $p['title'] ?? 'Proyek Tanpa Judul';
                                     $companyName = $p['client_company_name'] ?? $p['client']['company_name'] ?? $p['client_name'] ?? $p['client']['name'] ?? '—';
+                                    $taskProgress = round((float) ($p['task_progress'] ?? 0), 1);
+                                    $canSetTesting = !empty($p['can_set_testing']) || $taskProgress >= 100.0;
                                     $statusId = (int) ($p['status_id'] ?? 0);
                                     $statusName = $p['status']['name'] ?? $p['status'] ?? 'Active';
                                     $isTesting = ($statusId === 8 || strtolower($statusName) === 'testing');
@@ -252,6 +202,16 @@
                                     {{-- Klien / Mitra (Hanya Nama Perusahaan) --}}
                                     <td class="px-4 py-4">
                                         <p class="text-xs font-bold text-slate-800">{{ $companyName }}</p>
+                                    </td>
+
+                                    {{-- Progres Pengerjaan Task --}}
+                                    <td class="px-4 py-4">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-16 bg-slate-200 rounded-full h-2 overflow-hidden">
+                                                <div class="h-full rounded-full {{ $taskProgress >= 100 ? 'bg-emerald-500' : ($taskProgress >= 50 ? 'bg-amber-500' : 'bg-slate-400') }}" style="width: {{ min(100, $taskProgress) }}%"></div>
+                                            </div>
+                                            <span class="text-xs font-bold {{ $taskProgress >= 100 ? 'text-emerald-700' : 'text-slate-600' }}">{{ $taskProgress }}%</span>
+                                        </div>
                                     </td>
 
                                     {{-- Status Proyek --}}
@@ -364,16 +324,27 @@
                                                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-2xs">
                                                     <span>Lihat Status UAT</span>
                                                 </a>
-                                            @else
-                                                {{-- Belum fase Testing --}}
+                                            @elseif($canSetTesting)
+                                                {{-- Belum fase Testing & Progress 100% --}}
                                                 <button type="button"
                                                         @click="openTestingConfirm({{ $pId }}, '{{ addslashes($title) }}')"
-                                                        title="Tandai proyek masuk fase Testing terlebih dahulu agar formulir UAT dapat dibuat"
+                                                        title="Tandai proyek masuk fase Testing agar formulir UAT dapat diisi klien"
                                                         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition shadow-2xs cursor-pointer">
                                                     <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
                                                     </svg>
                                                     <span>Tandai Testing</span>
+                                                </button>
+                                            @else
+                                                {{-- Progress di bawah 100% - Tombol dinonaktifkan sesuai aturan Poin 1 --}}
+                                                <button type="button"
+                                                        disabled
+                                                        title="Proyek belum dapat ditandai Testing karena progres pengerjaan belum 100% (saat ini {{ $taskProgress }}%)"
+                                                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-75">
+                                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+                                                    </svg>
+                                                    <span>Tandai Testing ({{ $taskProgress }}%)</span>
                                                 </button>
                                             @endif
                                         </div>
@@ -381,7 +352,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
                                         <p class="text-sm font-semibold">Tidak ada proyek yang ditemukan.</p>
                                         <p class="text-xs mt-1">Proyek akan muncul di sini saat terdaftar pada sistem.</p>
                                     </td>

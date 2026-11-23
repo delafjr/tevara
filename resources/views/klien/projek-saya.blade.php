@@ -131,15 +131,20 @@
 
         <main class="flex-1 px-8 py-7 space-y-6">
 
-            {{-- == ( header card : judul halaman & deskripsi ) == --}}
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#EFF6FF] via-[#F3F7FD] to-[#FCF8EC] border border-blue-100/70 px-8 py-7 shadow-xs">
-                <div class="relative z-10 max-w-4xl">
-                    <h1 class="text-2xl lg:text-[28px] font-extrabold text-[#1E293B] tracking-tight">
+            {{-- == ( hero card : judul halaman & deskripsi ) == --}}
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                {{-- gradient dekoratif --}}
+                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                        Workspace Klien
+                    </span>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Daftar <span class="text-[#FFB800]">Projek Saya</span>
                     </h1>
-                    <p class="text-xs md:text-sm text-slate-500 mt-2 leading-relaxed font-normal">
-                        Pantau progres eksekusi teknis, evaluasi berkas deliverable, dan spesifikasi pengerjaan proyek Teaching Factory secara terpadu.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Pantau progres eksekusi teknis, evaluasi deliverable, dan spesifikasi pengerjaan proyek</p>
                 </div>
             </div>
 
@@ -194,66 +199,10 @@
             @endif
 
             {{-- == ( 3 kartu ringkasan metrik statistik ) == --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-
-                {{-- Kartu 1: Total Proyek Portofolio --}}
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 flex flex-col justify-between hover:shadow-md transition">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-3">TOTAL PROYEK PORTOFOLIO</p>
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-2.5">
-                            <span class="text-2xl font-bold text-slate-800">{{ $totalProjectCount }} Proyek</span>
-                            <span class="text-[11px] font-semibold text-[#0B3B82] bg-[#EAF3FF] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                                {{ $activeProjectCount }} Aktif
-                            </span>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0">
-                            {{-- Bento Grid Icon --}}
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
-                                <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                                <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                                <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-                                <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Kartu 2: Rata - Rata Progres --}}
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 flex flex-col justify-between hover:shadow-md transition">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-3">RATA - RATA PROGRES</p>
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="space-y-1.5">
-                            <span class="text-2xl font-bold text-slate-800">{{ number_format($averageProjectProgress, 1) }}%</span>
-                            <div class="w-28 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-[#0B3B82] rounded-full" style="width: {{ $averageProjectProgress }}%"></div>
-                            </div>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0">
-                            {{-- Trending Up Icon --}}
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Kartu 3: Distribusi Fase Pengerjaan --}}
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 flex flex-col justify-between hover:shadow-md transition">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-3">DISTRIBUSI FASE PENGERJAAN</p>
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <span class="text-2xl font-bold text-slate-800">{{ $totalModuleCount }} Modul</span>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0">
-                            {{-- Clipboard / Checklist Icon --}}
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <x-stat-card label="Total Proyek Portofolio" :value="$totalProjectCount . ' Proyek'" :sub="$activeProjectCount . ' Proyek aktif'" color="#0B3B82" icon="folder" />
+                <x-stat-card label="Rata-rata Progres" :value="number_format($averageProjectProgress, 1) . '%'" sub="Target performa pengerjaan" color="#16A34A" icon="play" />
+                <x-stat-card label="Distribusi Fase Pengerjaan" :value="$totalModuleCount . ' Modul'" sub="Total deliverable proyek" color="#6366F1" icon="check" />
             </div>
 
             {{-- Flash Messages --}}

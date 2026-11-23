@@ -156,27 +156,20 @@
                     </h1>
                     <p class="text-sm text-slate-400 mt-1.5">Kelola seluruh operasional TeFa, validasi proposal, dan pantau progress tim secara terpadu</p>
                 </div>
-
-                <div class="relative z-10 flex flex-col items-end gap-2 flex-shrink-0">
-                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[11.5px] font-semibold px-3 py-1.5 rounded-lg">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
-                        Data terbaru
-                    </span>
-                </div>
             </div>
 
             {{-- ── NOTIFIKASI & AKTIVITAS HIGHLIGHT ── --}}
             <x-dashboard-notifications :notifications="$notifications ?? []" :unread-count="$unreadCount ?? 0" />
 
             {{-- ── 4 STAT CARDS ── --}}
-            <div class="grid grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
                 @php
                 // Urutan kartu mengikuti urutan field pada BE: total_projects, running_projects, total_clients, total_students.
                 $stats = [
                     ['label' => 'Total Project',       'value' => $totalProjects,   'sub' => 'Seluruh project',     'color' => '#0B3B82', 'icon' => 'folder'],
-                    ['label' => 'Project Berjalan',    'value' => $runningProjects, 'sub' => 'Sedang berjalan',     'color' => '#0B3B82', 'icon' => 'play'],
-                    ['label' => 'Total Klien / Mitra', 'value' => $totalClients,    'sub' => 'Terdaftar',           'color' => '#0B3B82', 'icon' => 'users'],
-                    ['label' => 'Mahasiswa Terlibat',  'value' => $totalStudents,   'sub' => 'Aktif berkontribusi', 'color' => '#0B3B82', 'icon' => 'academic'],
+                    ['label' => 'Project Berjalan',    'value' => $runningProjects, 'sub' => 'Sedang berjalan',     'color' => '#16A34A', 'icon' => 'play'],
+                    ['label' => 'Total Klien / Mitra', 'value' => $totalClients,    'sub' => 'Terdaftar',           'color' => '#6366F1', 'icon' => 'users'],
+                    ['label' => 'Mahasiswa Terlibat',  'value' => $totalStudents,   'sub' => 'Aktif berkontribusi', 'color' => '#F59E0B', 'icon' => 'academic'],
                 ];
                 @endphp
 

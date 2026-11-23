@@ -43,9 +43,7 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Registrasi <span class="text-[#FFB800]">Perusahaan / Mitra</span>
                     </h1>
-                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
-                        Daftarkan akun perusahaan klien baru ke dalam sistem Tevara. Kolom nama akun langsung merepresentasikan nama resmi perusahaan / instansi.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Daftarkan akun perusahaan klien baru ke dalam sistem database Tevara</p>
                 </div>
             </div>
 

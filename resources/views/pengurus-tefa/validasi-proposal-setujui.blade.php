@@ -53,7 +53,8 @@
                   defaultTerm1Due: '{{ $defaultTerm1DueDate }}',
                   dosens: {{ json_encode($dosens ?? []) }},
                   mahasiswas: {{ json_encode($mahasiswas ?? []) }},
-                  roles: {{ json_encode($projectRoles ?? []) }}
+                  roles: {{ json_encode($projectRoles ?? []) }},
+                  defaultWarranty: {{ (int) ($proposal['warranty_months'] ?? 3) }}
               })">
 
             {{-- Breadcrumb & Code --}}
@@ -793,7 +794,7 @@ function approvalForm(config) {
         scopeOfWork: config.defaultScope || '',
         startDate: config.defaultStart || '',
         targetCompletionDate: config.defaultEnd || '',
-        maintenanceWarrantyMonths: 3,
+        maintenanceWarrantyMonths: config.defaultWarranty || 3,
 
         dosens: config.dosens || [],
         mahasiswas: config.mahasiswas || [],

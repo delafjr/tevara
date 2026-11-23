@@ -114,7 +114,10 @@ Route::prefix('auth')->group(function () use ($googleAuthHandler) {
         return redirect('/dashboard');
     });
 
-    Route::post('/logout', function () {
+    Route::match(['get', 'post'], '/logout', function (Request $request) {
+        if ($request->isMethod('get')) {
+            return redirect()->route('login');
+        }
         session()->forget(['api_token', 'user', 'active_role']);
         session()->invalidate();
         session()->regenerateToken();
@@ -173,10 +176,7 @@ Route::middleware('auth.api')->group(function () {
             $notifRes = $api->get('notifications');
             if ($notifRes->successful() && is_array($notifRes->json('data'))) {
                 $notifications = $notifRes->json('data');
-            }
-            $unreadRes = $api->get('notifications/unread-count');
-            if ($unreadRes->successful()) {
-                $unreadCount = (int) ($unreadRes->json('data.unread_count') ?? 0);
+                $unreadCount = collect($notifications)->where('is_read', false)->count();
             }
         } catch (\Throwable) {
             $notifications = [];
@@ -366,6 +366,9 @@ Route::middleware('auth.api')->group(function () {
             'judul_proyek'      => ['required', 'string', 'max:255'],
             // ID kategori mengikuti master data /categories; validitas akhir dicek backend.
             'kategori_id'       => ['required', 'integer', 'min:1'],
+            'delivery_type'     => ['nullable', 'in:source_code,tefa_managed'],
+            'has_warranty'      => ['nullable', 'in:0,1,true,false'],
+            'warranty_months'   => ['nullable', 'integer', 'min:1', 'required_if:has_warranty,1,true'],
             'ringkasan'         => ['required', 'string', 'max:500'],
             'target_pengguna'   => ['required', 'string', 'max:1000'],
             'deadline'          => ['required', 'date', 'after_or_equal:' . now()->addDays(30)->toDateString()],
@@ -384,6 +387,10 @@ Route::middleware('auth.api')->group(function () {
             ->values()
             ->all();
 
+        $deliveryType = $validated['delivery_type'] ?? 'source_code';
+        $hasWarranty = filter_var($validated['has_warranty'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $warrantyMonths = $hasWarranty ? (int) ($validated['warranty_months'] ?? 3) : null;
+
         $user = session('user', []);
         $response = $api->post('proposals', [
             'client_id'        => (int) ($user['id'] ?? 0),
@@ -391,6 +398,9 @@ Route::middleware('auth.api')->group(function () {
             'background'       => $validated['ringkasan'],
             'target_audience'  => $validated['target_pengguna'],
             'category_id'      => (int) $validated['kategori_id'],
+            'delivery_type'    => $deliveryType,
+            'has_warranty'     => $hasWarranty,
+            'warranty_months'  => $warrantyMonths,
             'desired_deadline' => $validated['deadline'],
             'estimated_budget' => (int) $validated['anggaran'],
             'modules'          => $modules,
@@ -625,6 +635,9 @@ Route::middleware('auth.api')->group(function () {
             $validated = $request->validate([
                 'judul_proyek'      => ['required', 'string', 'max:255'],
                 'kategori_id'       => ['required', 'integer', 'min:1'],
+                'delivery_type'     => ['nullable', 'in:source_code,tefa_managed'],
+                'has_warranty'      => ['nullable', 'in:0,1,true,false'],
+                'warranty_months'   => ['nullable', 'integer', 'min:1', 'required_if:has_warranty,1,true'],
                 'ringkasan'         => ['required', 'string', 'min:100', 'max:500'],
                 'target_pengguna'   => ['required', 'string', 'max:1000'],
                 'deadline'          => ['required', 'date'],
@@ -646,11 +659,18 @@ Route::middleware('auth.api')->group(function () {
                 ->values()
                 ->all();
 
+            $deliveryType = $validated['delivery_type'] ?? 'source_code';
+            $hasWarranty = filter_var($validated['has_warranty'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            $warrantyMonths = $hasWarranty ? (int) ($validated['warranty_months'] ?? 3) : null;
+
             $payload = [
                 'title'            => $validated['judul_proyek'],
                 'background'       => $validated['ringkasan'],
                 'target_audience'  => $validated['target_pengguna'],
                 'category_id'      => (int) $validated['kategori_id'],
+                'delivery_type'    => $deliveryType,
+                'has_warranty'     => $hasWarranty,
+                'warranty_months'  => $warrantyMonths,
                 'desired_deadline' => $validated['deadline'],
                 'estimated_budget' => (float) $validated['anggaran'],
                 'modules'          => $modules,
@@ -887,6 +907,8 @@ Route::middleware('auth.api')->group(function () {
             $validated = $request->validate([
                 'client_notes' => ['nullable', 'string'],
                 'items' => ['required', 'array', 'min:1'],
+                'items.*.module_name' => ['nullable', 'string', 'max:255'],
+                'items.*.test_category' => ['nullable', 'string', 'max:100'],
                 'items.*.feature_name' => ['required', 'string', 'max:255'],
                 'items.*.test_scenario' => ['nullable', 'string'],
                 'items.*.result' => ['required', 'in:PASSED,FAILED,BUG_FOUND'],
@@ -934,6 +956,138 @@ Route::middleware('auth.api')->group(function () {
                     ->with('error', 'Tidak dapat terhubung ke server backend: ' . $e->getMessage());
             }
         })->whereNumber('proposal')->name('projek-saya.uat.signoff');
+
+        // ── Maintenance & Garansi (Klien) ─────────────────────────
+        Route::get('/maintenance', function (ApiService $api) {
+            $projects = [];
+            $error    = null;
+
+            try {
+                $response = $api->get('proposals/mine');
+                $payload  = $response->successful()
+                    ? (is_array($response->json('data')) ? $response->json('data') : $response->json())
+                    : null;
+
+                if (is_array($payload)) {
+                    // Filter only handed-over (client_approved) proposals
+                    $projects = collect($payload)
+                        ->filter(fn ($p) => is_array($p) && !empty($p['client_approved']))
+                        ->map(function ($p) {
+                            // warranty_end_date ada di nested $p['warranty']['warranty_end_date']
+                            $warranty    = is_array($p['warranty'] ?? null) ? $p['warranty'] : [];
+                            $endDateStr  = $warranty['warranty_end_date'] ?? $p['warranty_end_date'] ?? null;
+                            $hasWarranty = $warranty['has_warranty'] ?? $p['has_warranty'] ?? false;
+                            $warrantyEnd = !empty($endDateStr) ? \Carbon\Carbon::parse($endDateStr) : null;
+                            $isActive    = $hasWarranty && $warrantyEnd && $warrantyEnd->gte(\Carbon\Carbon::today());
+                            $daysLeft    = $warrantyEnd ? (int) \Carbon\Carbon::today()->diffInDays($warrantyEnd, false) : null;
+                            return array_merge($p, [
+                                'has_warranty'       => $hasWarranty,
+                                'warranty_end_date'  => $endDateStr,
+                                'warranty_start_date'=> $warranty['warranty_start_date'] ?? $p['warranty_start_date'] ?? null,
+                                'warranty_months'    => $warranty['warranty_months'] ?? $p['warranty_months'] ?? null,
+                                'warranty_active'    => $isActive,
+                                'warranty_days_left' => $daysLeft,
+                            ]);
+                        })
+                        ->values()
+                        ->all();
+                } else {
+                    $error = $response->json('message') ?? 'Data tidak dapat dimuat.';
+                }
+            } catch (\Throwable $e) {
+                $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
+            }
+
+            return view('klien.maintenance', [
+                'user'     => session('user'),
+                'projects' => $projects,
+                'error'    => $error,
+            ]);
+        })->name('maintenance');
+
+        Route::get('/maintenance/{proposal}', function (ApiService $api, int $proposal) {
+            $proposalData = [];
+            $tickets      = [];
+            $extReqs      = [];
+            $error        = null;
+
+            try {
+                $pRes = $api->get("proposals/{$proposal}");
+                if ($pRes->successful() && is_array($pRes->json())) {
+                    $proposalData = $pRes->json();
+                } else {
+                    $error = $pRes->json('message') ?? 'Data proyek tidak ditemukan.';
+                }
+
+                if (!$error) {
+                    $tRes = $api->get("proposals/{$proposal}/maintenance-tickets");
+                    if ($tRes->successful()) {
+                        $raw = $tRes->json('data') ?? $tRes->json();
+                        $tickets = is_array($raw) ? array_values(array_filter($raw, 'is_array')) : [];
+                    }
+
+                    $eRes = $api->get("proposals/{$proposal}/warranty-extensions");
+                    if ($eRes->successful()) {
+                        $raw = $eRes->json('data') ?? $eRes->json();
+                        $extReqs = is_array($raw) ? array_values(array_filter($raw, 'is_array')) : [];
+                    }
+                }
+            } catch (\Throwable $e) {
+                $error = 'Tidak dapat terhubung ke server backend: ' . $e->getMessage();
+            }
+
+            return view('klien.maintenance-detail', [
+                'user'     => session('user'),
+                'proposal' => $proposalData,
+                'tickets'  => $tickets,
+                'extReqs'  => $extReqs,
+                'error'    => $error,
+            ]);
+        })->whereNumber('proposal')->name('maintenance.detail');
+
+        Route::post('/maintenance/{proposal}/report', function (Request $request, ApiService $api, int $proposal) {
+            $validated = $request->validate([
+                'title'       => ['required', 'string', 'max:255'],
+                'description' => ['nullable', 'string'],
+                'priority'    => ['nullable', 'in:low,medium,high'],
+            ]);
+
+            try {
+                $response = $api->post("proposals/{$proposal}/maintenance-tickets", $validated);
+
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('klien.maintenance.detail', $proposal)
+                        ->with('success', 'Laporan error berhasil dikirim. Tim TEVARA akan segera menangani.');
+                }
+
+                return back()->withInput()->with('error', $response->json('message') ?? 'Gagal mengirim laporan.');
+            } catch (\Throwable $e) {
+                return back()->withInput()->with('error', 'Tidak dapat terhubung ke server: ' . $e->getMessage());
+            }
+        })->whereNumber('proposal')->name('maintenance.report');
+
+        Route::post('/maintenance/{proposal}/extend', function (Request $request, ApiService $api, int $proposal) {
+            $validated = $request->validate([
+                'type'   => ['required', 'in:warranty,maintenance'],
+                'months' => ['required', 'integer', 'in:1,3,6,12'],
+                'notes'  => ['nullable', 'string', 'max:1000'],
+            ]);
+
+            try {
+                $response = $api->post("proposals/{$proposal}/warranty-extensions", $validated);
+
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('klien.maintenance.detail', $proposal)
+                        ->with('success', 'Permintaan perpanjangan berhasil diajukan. Menunggu persetujuan Pengurus TeFa.');
+                }
+
+                return back()->withInput()->with('error', $response->json('message') ?? 'Gagal mengajukan perpanjangan.');
+            } catch (\Throwable $e) {
+                return back()->withInput()->with('error', 'Tidak dapat terhubung ke server: ' . $e->getMessage());
+            }
+        })->whereNumber('proposal')->name('maintenance.extend');
     });
 
     // Role-specific dashboard direct URLs
@@ -2480,5 +2634,141 @@ Route::middleware('auth.api')->group(function () {
                 'error'     => $error,
             ]);
         })->name('monitoring');
+
+        // ── Maintenance & Garansi (Pengurus TeFa) ─────────────────
+        Route::get('/maintenance', function (ApiService $api) {
+            $projects = [];
+            $error    = null;
+
+            try {
+                $response = $api->get('maintenance/proposals');
+                $raw      = $response->json('data') ?? $response->json();
+                if ($response->successful() && is_array($raw)) {
+                    $projects = array_values(array_filter($raw, 'is_array'));
+                } else {
+                    $error = $response->json('message') ?? 'Data maintenance tidak dapat dimuat.';
+                }
+            } catch (\Throwable $e) {
+                $error = 'Tidak dapat terhubung ke backend: ' . $e->getMessage();
+            }
+
+            return view('pengurus-tefa.maintenance', [
+                'user'     => session('user'),
+                'projects' => $projects,
+                'error'    => $error,
+            ]);
+        })->name('maintenance');
+
+        Route::get('/maintenance/{proposal}', function (ApiService $api, int $proposal) {
+            $proposalData = [];
+            $tickets      = [];
+            $extReqs      = [];
+            $error        = null;
+
+            try {
+                $pRes = $api->get("proposals/{$proposal}");
+                if ($pRes->successful() && is_array($pRes->json())) {
+                    $proposalData = $pRes->json();
+                } else {
+                    $error = $pRes->json('message') ?? 'Data proyek tidak ditemukan.';
+                }
+
+                if (!$error) {
+                    $tRes = $api->get("proposals/{$proposal}/maintenance-tickets");
+                    if ($tRes->successful()) {
+                        $raw = $tRes->json('data') ?? $tRes->json();
+                        $tickets = is_array($raw) ? array_values(array_filter($raw, 'is_array')) : [];
+                    }
+
+                    $eRes = $api->get("proposals/{$proposal}/warranty-extensions");
+                    if ($eRes->successful()) {
+                        $raw = $eRes->json('data') ?? $eRes->json();
+                        $extReqs = is_array($raw) ? array_values(array_filter($raw, 'is_array')) : [];
+                    }
+                }
+            } catch (\Throwable $e) {
+                $error = 'Tidak dapat terhubung ke backend: ' . $e->getMessage();
+            }
+
+            return view('pengurus-tefa.maintenance-detail', [
+                'user'     => session('user'),
+                'proposal' => $proposalData,
+                'tickets'  => $tickets,
+                'extReqs'  => $extReqs,
+                'error'    => $error,
+            ]);
+        })->whereNumber('proposal')->name('maintenance.detail');
+
+        // Tiket inisiatif dari tefa (store)
+        Route::post('/maintenance/{proposal}/tickets', function (Request $request, ApiService $api, int $proposal) {
+            $validated = $request->validate([
+                'title'       => ['required', 'string', 'max:255'],
+                'description' => ['nullable', 'string'],
+                'priority'    => ['nullable', 'in:low,medium,high'],
+            ]);
+
+            try {
+                $response = $api->post("proposals/{$proposal}/maintenance-tickets", $validated);
+
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('pengurus-tefa.maintenance.detail', $proposal)
+                        ->with('success', 'Catatan maintenance berhasil ditambahkan. Klien telah dinotifikasi.');
+                }
+
+                return back()->withInput()->with('error', $response->json('message') ?? 'Gagal menambahkan catatan.');
+            } catch (\Throwable $e) {
+                return back()->withInput()->with('error', 'Tidak dapat terhubung ke server: ' . $e->getMessage());
+            }
+        })->whereNumber('proposal')->name('maintenance.ticket.store');
+
+        // Update tiket (balas + status)
+        Route::patch('/maintenance/{proposal}/tickets/{ticket}', function (Request $request, ApiService $api, int $proposal, int $ticket) {
+            $validated = $request->validate([
+                'status'           => ['nullable', 'in:open,in_progress,resolved'],
+                'resolution_notes' => ['nullable', 'string'],
+                'priority'         => ['nullable', 'in:low,medium,high'],
+            ]);
+
+            try {
+                $response = $api->patch("proposals/{$proposal}/maintenance-tickets/{$ticket}", $validated);
+
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('pengurus-tefa.maintenance.detail', $proposal)
+                        ->with('success', 'Tiket berhasil diperbarui dan klien telah dinotifikasi.');
+                }
+
+                return back()->with('error', $response->json('message') ?? 'Gagal memperbarui tiket.');
+            } catch (\Throwable $e) {
+                return back()->with('error', 'Tidak dapat terhubung ke server: ' . $e->getMessage());
+            }
+        })->whereNumber('proposal')->whereNumber('ticket')->name('maintenance.ticket.update');
+
+        // Review extension request
+        Route::patch('/maintenance/{proposal}/extensions/{extReq}/review', function (Request $request, ApiService $api, int $proposal, int $extReq) {
+            $validated = $request->validate([
+                'decision'       => ['required', 'in:approved,rejected'],
+                'reviewer_notes' => ['nullable', 'string', 'max:1000'],
+            ]);
+
+            try {
+                $response = $api->patch("proposals/{$proposal}/warranty-extensions/{$extReq}/review", $validated);
+
+                if ($response->successful()) {
+                    $msg = $validated['decision'] === 'approved'
+                        ? 'Perpanjangan disetujui. Masa garansi proyek telah diperbarui dan klien telah dinotifikasi.'
+                        : 'Permintaan perpanjangan ditolak. Klien telah dinotifikasi.';
+                    return redirect()
+                        ->route('pengurus-tefa.maintenance.detail', $proposal)
+                        ->with('success', $msg);
+                }
+
+                return back()->with('error', $response->json('message') ?? 'Gagal memproses review.');
+            } catch (\Throwable $e) {
+                return back()->with('error', 'Tidak dapat terhubung ke server: ' . $e->getMessage());
+            }
+        })->whereNumber('proposal')->whereNumber('extReq')->name('maintenance.ext.review');
+
     });
 });

@@ -67,6 +67,9 @@
               enctype="multipart/form-data"
               x-data="{
                   ringkasan: @js(old('ringkasan') ?: ''),
+                  deliveryType: @js(old('delivery_type', 'source_code')),
+                  hasWarranty: @js((string) old('has_warranty', '0')),
+                  warrantyMonths: @js((string) old('warranty_months', '3')),
                   modules: @js($modulesDefault),
                   addModule() { this.modules.push({ judul: '', deskripsi: '' }) },
                   removeModule(i) { if (this.modules.length > 1) this.modules.splice(i, 1) }
@@ -77,15 +80,17 @@
             <main class="flex-1 px-8 py-7 flex flex-col">
 
                 {{-- == ( header halaman ) == --}}
-                <header class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6">
-                    <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-70 pointer-events-none"></div>
+                <header class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                    <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
                     <div class="relative z-10">
+                        <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                            Workspace Klien
+                        </span>
                         <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                             Ajukan Proyek <span class="text-[#FFB800]">Baru</span>
                         </h1>
-                        <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
-                            Isi data klien, rincian kebutuhan, dan estimasi deadline proyek. Pengajuan akan diteruskan ke administrators TEVARA untuk ditinjau sebelum SPK diterbitkan.
-                        </p>
+                        <p class="text-sm text-slate-400 mt-1.5">Isi data kebutuhan dan estimasi proyek untuk ditinjau oleh tim pengurus TeFa</p>
                     </div>
                 </header>
 
@@ -224,10 +229,115 @@
                         </div>
                     </section>
 
-                    {{-- == ( STEP 3 : estimasi & dokumen pendukung ) == --}}
+                    {{-- == ( STEP 3 : skema pengelolaan & garansi pemeliharaan ) == --}}
                     <section class="bg-white rounded-2xl border border-slate-100 shadow-sm px-7 py-6">
                         <div class="flex items-start gap-3.5 mb-6">
                             <span class="w-8 h-8 rounded-xl bg-[#0B3B82] text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm">3</span>
+                            <div>
+                                <h2 class="text-[15px] font-bold text-[#1E293B] leading-tight">Skema Pengelolaan &amp; Garansi Pemeliharaan</h2>
+                                <p class="text-xs text-slate-400 mt-0.5">Tentukan kepemilikan operasional dan layanan pemeliharaan (maintenance) pasca serah terima</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            {{-- Pertanyaan 3: Skema Pengelolaan (Delivery Type) --}}
+                            <div>
+                                <label class="{{ $label }}">Skema Penyerahan &amp; Pengelolaan Produk <span class="text-red-500">*</span></label>
+                                <p class="text-[11px] text-slate-400 mb-3">Pilih apakah sistem akan diserahkan mandiri ke klien atau dikelola penuh oleh infrastruktur TEVARA.</p>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {{-- Opsi 1: source_code --}}
+                                    <label class="relative flex items-start gap-3.5 p-4 rounded-xl border cursor-pointer transition"
+                                           :class="deliveryType === 'source_code' ? 'border-[#0B3B82] bg-[#EAF3FF]/40 shadow-xs' : 'border-slate-200 hover:border-slate-300 bg-white'">
+                                        <input type="radio" name="delivery_type" value="source_code" x-model="deliveryType" class="mt-1 text-[#0B3B82] focus:ring-[#0B3B82]">
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-bold text-[#1E293B]">Diserahkan ke Klien (Source Code)</p>
+                                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                                Seluruh source code, aset, dan hak operasional diserahkan mandiri kepada pihak klien/instansi Anda.
+                                            </p>
+                                        </div>
+                                    </label>
+
+                                    {{-- Opsi 2: tefa_managed --}}
+                                    <label class="relative flex items-start gap-3.5 p-4 rounded-xl border cursor-pointer transition"
+                                           :class="deliveryType === 'tefa_managed' ? 'border-[#0B3B82] bg-[#EAF3FF]/40 shadow-xs' : 'border-slate-200 hover:border-slate-300 bg-white'">
+                                        <input type="radio" name="delivery_type" value="tefa_managed" x-model="deliveryType" class="mt-1 text-[#0B3B82] focus:ring-[#0B3B82]">
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-bold text-[#1E293B]">Dikelola Penuh oleh TEVARA</p>
+                                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                                Infrastruktur server, deployment, pemantauan performa, dan pengelolaan hosting tetap dipegang tim TEVARA Polines.
+                                            </p>
+                                        </div>
+                                    </label>
+                                </div>
+                                @error('delivery_type') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
+                            </div>
+
+                            {{-- Pertanyaan 1 & 2: Warranty / Maintenance --}}
+                            <div class="pt-5 border-t border-slate-100 space-y-4">
+                                <div>
+                                    <label class="{{ $label }}">Garansi Pemeliharaan (Maintenance) <span class="text-red-500">*</span></label>
+                                    <p class="text-[11px] text-slate-400 mb-3">Dukungan perbaikan bug, asistensi teknis, dan pemeliharaan berkala setelah serah terima proyek.</p>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {{-- Opsi 1: Ya --}}
+                                        <label class="relative flex items-start gap-3.5 p-4 rounded-xl border cursor-pointer transition"
+                                               :class="hasWarranty === '1' ? 'border-[#0B3B82] bg-[#EAF3FF]/40 shadow-xs' : 'border-slate-200 hover:border-slate-300 bg-white'">
+                                            <input type="radio" name="has_warranty" value="1" x-model="hasWarranty" class="mt-1 text-[#0B3B82] focus:ring-[#0B3B82]">
+                                            <div class="min-w-0">
+                                                <p class="text-sm font-bold text-[#1E293B]">Ya, Butuh Garansi Pemeliharaan</p>
+                                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                                    Mendapatkan garansi perbaikan bug dan tiket pemeliharaan sesuai durasi yang dipilih (tetap berlaku walau sistem diserahkan ke klien).
+                                                </p>
+                                            </div>
+                                        </label>
+
+                                        {{-- Opsi 2: Tidak --}}
+                                        <label class="relative flex items-start gap-3.5 p-4 rounded-xl border cursor-pointer transition"
+                                               :class="hasWarranty === '0' ? 'border-[#0B3B82] bg-[#EAF3FF]/40 shadow-xs' : 'border-slate-200 hover:border-slate-300 bg-white'">
+                                            <input type="radio" name="has_warranty" value="0" x-model="hasWarranty" class="mt-1 text-[#0B3B82] focus:ring-[#0B3B82]">
+                                            <div class="min-w-0">
+                                                <p class="text-sm font-bold text-[#1E293B]">Tanpa Garansi Pemeliharaan</p>
+                                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                                    Proyek berakhir tuntas saat serah terima BAST selesai tanpa kontrak pemeliharaan berkala.
+                                                </p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    @error('has_warranty') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
+                                </div>
+
+                                {{-- Durasi Garansi (Kondisional jika hasWarranty == '1') --}}
+                                <div x-show="hasWarranty === '1'" x-transition class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                                    <label for="warranty_months" class="{{ $label }}">Durasi Garansi Pemeliharaan <span class="text-red-500">*</span></label>
+                                    <div class="relative max-w-md">
+                                        <select id="warranty_months" name="warranty_months"
+                                                x-model="warrantyMonths"
+                                                :required="hasWarranty === '1'"
+                                                class="{{ $errors->has('warranty_months') ? $inputErr : $inputOk }} appearance-none pr-10 cursor-pointer">
+                                            <option value="1">1 Bulan</option>
+                                            <option value="3">3 Bulan (Standar Rekomendasi)</option>
+                                            <option value="6">6 Bulan</option>
+                                            <option value="12">12 Bulan (1 Tahun)</option>
+                                        </select>
+                                        <svg class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                                             fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                                        </svg>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500 mt-1">
+                                        Masa garansi pemeliharaan akan aktif otomatis setelah Berita Acara Serah Terima (BAST) disetujui bersama.
+                                    </p>
+                                    @error('warranty_months') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {{-- == ( STEP 4 : estimasi & dokumen pendukung ) == --}}
+                    <section class="bg-white rounded-2xl border border-slate-100 shadow-sm px-7 py-6">
+                        <div class="flex items-start gap-3.5 mb-6">
+                            <span class="w-8 h-8 rounded-xl bg-[#0B3B82] text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm">4</span>
                             <div>
                                 <h2 class="text-[15px] font-bold text-[#1E293B] leading-tight">Estimasi &amp; Dokumen Pendukung</h2>
                                 <p class="text-xs text-slate-400 mt-0.5">Tentukan target waktu, anggaran, dan rincian modul yang dibutuhkan</p>
