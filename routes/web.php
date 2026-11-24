@@ -187,7 +187,7 @@ Route::middleware('auth.api')->group(function () {
             'klien'         => 'klien.dashboard',
             'pengurus_tefa' => 'pengurus-tefa.dashboard',
             'pm'            => 'pm.dashboard',
-            'dosen'         => 'pm.dashboard',
+            'dosen'          => 'pm.dashboard',
             'mahasiswa'     => 'mahasiswa.dashboard',
             'jurusan'       => 'jurusan.dashboard',
         ];
