@@ -67,7 +67,13 @@
         }
     };
 
-    $overallProgress = (int) round((float) ($selectedProject['progress'] ?? (collect($tasks)->avg('progress_percentage') ?? 0)));
+    $overallProgress = isset($summary['overall_progress'])
+        ? (int) round((float) $summary['overall_progress'])
+        : (isset($selectedProject['progress'])
+            ? (int) round((float) $selectedProject['progress'])
+            : (int) round((float) (collect($tasks)->avg('progress_percentage') ?? 0)));
+    $totalProjectTasks = (int) ($summary['project_total'] ?? ($summary['total'] ?? count($tasks)));
+    $taskWeight = $totalProjectTasks > 0 ? round(100 / $totalProjectTasks, 1) : 0;
     $initialTask     = $tasks[0] ?? null;
 
     $currentProposalId = $selectedProject['id'] ?? ($proposalId ?? null);
@@ -79,7 +85,7 @@
     <x-sidebar active="task-saya" />
 
     {{-- ===== MAIN CONTENT ===== --}}
-    <main class="flex-1 ml-64 p-8 min-h-screen flex flex-col gap-5"
+    <main class="flex-1 ml-64 p-8 min-h-screen min-w-0 flex flex-col gap-5 overflow-x-hidden"
           x-data="{
             selectedTask: @js($initialTask),
             progressPercentage: @js((float) ($initialTask['progress_percentage'] ?? 0)),
@@ -100,11 +106,34 @@
                 this.detailOpen = true;
             },
             setProgress(val) {
-                this.progressPercentage = Number(val);
-                if (this.progressPercentage >= 100) {
+                this.progressPercentage = Math.max(0, Math.min(100, Number(val)));
+                this.syncStatusFromProgress();
+            },
+            onProgressInput() {
+                this.progressPercentage = Math.max(0, Math.min(100, Number(this.progressPercentage || 0)));
+                this.syncStatusFromProgress();
+            },
+            syncStatusFromProgress() {
+                if (this.progressPercentage <= 0) {
+                    this.status = 'TODO';
+                } else if (this.progressPercentage >= 100) {
                     this.status = 'TESTING';
-                } else if (this.progressPercentage > 0 && this.status === 'TODO') {
+                } else {
                     this.status = 'IN_PROGRESS';
+                }
+            },
+            onStatusChange(newStatus) {
+                this.status = newStatus;
+                if (newStatus === 'TODO') {
+                    this.progressPercentage = 0;
+                } else if (newStatus === 'TESTING') {
+                    this.progressPercentage = 100;
+                } else if (newStatus === 'IN_PROGRESS') {
+                    if (this.progressPercentage <= 0) {
+                        this.progressPercentage = 25;
+                    } else if (this.progressPercentage >= 100) {
+                        this.progressPercentage = 75;
+                    }
                 }
             },
             formatDate(value) {
@@ -204,7 +233,7 @@
                         <span class="inline-block px-2 py-0.5 rounded-full bg-white/10 text-white text-[9px] font-medium">Peran: {{ $selectedProject['role'] }}</span>
                     @endif
                 </div>
-                <p class="text-white font-extrabold text-sm leading-tight truncate">{{ $selectedProject['title'] ?? '—' }}</p>
+                <p class="text-white font-extrabold text-sm leading-snug line-clamp-2 break-words" title="{{ $selectedProject['title'] ?? '—' }}">{{ $selectedProject['title'] ?? '—' }}</p>
                 <div class="flex items-center gap-4 mt-2 text-[11px] text-blue-200 flex-wrap">
                     @if(!empty($selectedProject['category']))
                         <span class="flex items-center gap-1">
@@ -474,7 +503,10 @@
                             <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Progress Saat Ini</p>
                             <p class="text-xl font-extrabold text-[#0B254A]" x-text="(selectedTask?.progress_percentage ?? 0) + '%'"></p>
                         </div>
-                        <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#0B3B82]" x-text="selectedTask?.status ?? '—'"></span>
+                        <div class="text-right">
+                            <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#0B3B82] inline-block mb-1" x-text="selectedTask?.status ?? '—'"></span>
+                            <p class="text-[10px] text-slate-400 font-medium">Bobot: <strong class="text-[#0B3B82] font-bold">{{ $taskWeight }}%</strong> dari proyek</p>
+                        </div>
                     </div>
 
                     <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -596,7 +628,7 @@
                                 max="100"
                                 step="5"
                                 x-model.number="progressPercentage"
-                                @input="if (progressPercentage >= 100) status = 'TESTING'"
+                                @input="onProgressInput()"
                                 class="w-full accent-[#2563EB] cursor-pointer"
                             />
 
@@ -604,37 +636,38 @@
 
                             {{-- Preset tombol cepat persentase --}}
                             <div class="flex items-center gap-1.5 flex-wrap">
+                                <button type="button" @click="setProgress(0)" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer" :class="progressPercentage === 0 ? 'bg-slate-600 text-white border-slate-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'">0% (Todo)</button>
                                 <button type="button" @click="setProgress(25)" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer" :class="progressPercentage === 25 ? 'bg-[#2563EB] text-white border-[#2563EB]' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'">25%</button>
                                 <button type="button" @click="setProgress(50)" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer" :class="progressPercentage === 50 ? 'bg-[#2563EB] text-white border-[#2563EB]' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'">50%</button>
                                 <button type="button" @click="setProgress(75)" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer" :class="progressPercentage === 75 ? 'bg-[#2563EB] text-white border-[#2563EB]' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'">75%</button>
-                                <button type="button" @click="setProgress(100)" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer" :class="progressPercentage >= 100 ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'">100% (Selesai)</button>
+                                <button type="button" @click="setProgress(100)" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer" :class="progressPercentage >= 100 ? 'bg-amber-600 text-white border-amber-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'">100% (Siap Review)</button>
                             </div>
 
                             <p class="text-[10px] text-slate-400 italic">
-                                *Progres 100% otomatis mengalihkan status ke <strong class="text-amber-600">TESTING</strong> agar ditinjau oleh PM. Keputusan DONE ditentukan oleh PM.
+                                *Proyek memiliki {{ $totalProjectTasks }} task (bobot 100:{{ $totalProjectTasks }} = {{ $taskWeight }}% per task). Progres task 0-100% langsung disinkronkan ke progres overall proyek.
                             </p>
                         </div>
 
                         {{-- Input 2: Pilihan Status --}}
                         <div>
-                            <label class="block text-xs font-bold text-[#0B254A] mb-1.5">Status Pengerjaan:</label>
+                            <label class="block text-xs font-bold text-[#0B254A] mb-1.5">Status Pengerjaan (Kategori Task):</label>
                             <div class="grid grid-cols-3 gap-2">
                                 <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all"
                                        :class="status === 'TODO' ? 'border-slate-400 bg-slate-100 text-slate-800 ring-1 ring-slate-400' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'">
-                                    <input type="radio" name="status" value="TODO" x-model="status" class="sr-only">
-                                    <span>Todo</span>
+                                    <input type="radio" name="status" value="TODO" x-model="status" @change="onStatusChange('TODO')" class="sr-only">
+                                    <span>Todo (0%)</span>
                                 </label>
 
                                 <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all"
                                        :class="status === 'IN_PROGRESS' ? 'border-[#0B3B82] bg-[#EFF6FF] text-[#0B3B82] ring-1 ring-[#0B3B82]' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'">
-                                    <input type="radio" name="status" value="IN_PROGRESS" x-model="status" class="sr-only">
-                                    <span>In Progress</span>
+                                    <input type="radio" name="status" value="IN_PROGRESS" x-model="status" @change="onStatusChange('IN_PROGRESS')" class="sr-only">
+                                    <span>In Progress (1-99%)</span>
                                 </label>
 
                                 <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all"
                                        :class="status === 'TESTING' ? 'border-[#F59E0B] bg-[#FEF3C7] text-[#B45309] ring-1 ring-[#F59E0B]' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'">
-                                    <input type="radio" name="status" value="TESTING" x-model="status" class="sr-only">
-                                    <span>Testing / Review</span>
+                                    <input type="radio" name="status" value="TESTING" x-model="status" @change="onStatusChange('TESTING')" class="sr-only">
+                                    <span>Testing / Review (100%)</span>
                                 </label>
                             </div>
                         </div>

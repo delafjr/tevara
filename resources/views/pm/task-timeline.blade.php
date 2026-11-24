@@ -78,7 +78,11 @@
         }
     };
 
-    $overallProgress = (int) round((float) ($summary['overall_progress'] ?? 0));
+    $overallProgress = isset($summary['overall_progress'])
+        ? (int) round((float) $summary['overall_progress'])
+        : (count($tasks) > 0 ? (int) round((float) collect($tasks)->avg('progress_percentage')) : 0);
+    $totalProjectTasks = (int) ($summary['total'] ?? count($tasks));
+    $taskWeight = $totalProjectTasks > 0 ? round(100 / $totalProjectTasks, 1) : 0;
     $initialTask     = $tasks[0] ?? null;
 
     $currentProposalId = $proposal['id'] ?? ($proposalId ?? null);
@@ -90,7 +94,7 @@
     <x-sidebar active="task-timeline" />
 
     {{-- ===== MAIN CONTENT ===== --}}
-    <main class="flex-1 ml-64 p-8 min-h-screen flex flex-col gap-5"
+    <main class="flex-1 ml-64 p-8 min-h-screen min-w-0 flex flex-col gap-5 overflow-x-hidden"
           x-data="{
             selectedTask: @js($initialTask),
             note: @js($initialTask['pm_notes'] ?? ''),
@@ -200,7 +204,7 @@
                         <span class="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-200">Demo</span>
                     @endif
                 </div>
-                <p class="text-white font-extrabold text-sm leading-tight">{{ $proposal['title'] ?? '—' }}</p>
+                <p class="text-white font-extrabold text-sm leading-snug line-clamp-2 break-words" title="{{ $proposal['title'] ?? '—' }}">{{ $proposal['title'] ?? '—' }}</p>
                 <div class="flex items-center gap-4 mt-2 text-[11px] text-blue-200 flex-wrap">
                     @if(!empty($proposal['client_name']))
                         <span>Klien: {{ $proposal['client_name'] }}</span>
@@ -440,7 +444,10 @@
                             <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Progress</p>
                             <p class="text-xl font-extrabold text-[#0B254A]" x-text="(selectedTask?.progress_percentage ?? 0) + '%'"></p>
                         </div>
-                        <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#0B3B82]" x-text="selectedTask?.status ?? '—'"></span>
+                        <div class="text-right">
+                            <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#0B3B82] inline-block mb-1" x-text="selectedTask?.status ?? '—'"></span>
+                            <p class="text-[10px] text-slate-400 font-medium">Bobot: <strong class="text-[#0B3B82] font-bold">{{ $taskWeight }}%</strong> dari proyek</p>
+                        </div>
                     </div>
 
                     <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
