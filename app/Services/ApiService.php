@@ -32,12 +32,22 @@ class ApiService
     }
 
     /**
+     * Authenticate user with Google id_token via backend API.
+     */
+    public function loginWithGoogle(string $idToken): Response
+    {
+        return Http::timeout(10)->post($this->baseUrl . '/auth/google', [
+            'id_token' => $idToken,
+        ]);
+    }
+
+    /**
      * Create an HTTP client pending request with Bearer token.
      */
     public function withToken(?string $token = null): PendingRequest
     {
         $token = $token ?? session('api_token');
-        return Http::withToken($token)->timeout(15);
+        return Http::withToken($token)->baseUrl($this->baseUrl)->timeout(15);
     }
 
     /**
@@ -134,6 +144,124 @@ class ApiService
     {
         $url = $this->baseUrl . '/' . ltrim($endpoint, '/');
         return $this->withToken()->delete($url, $data);
+    }
+
+    /**
+     * Send multipart request with file attachment.
+     */
+    public function sendWithFile(string $endpoint, string $fileParam, $file, array $data = [], string $method = 'POST'): Response
+    {
+        $url = $this->baseUrl . '/' . ltrim($endpoint, '/');
+        $fileName = is_object($file) && method_exists($file, 'getClientOriginalName')
+            ? $file->getClientOriginalName()
+            : basename((string) $file);
+        $fileContents = is_object($file) && method_exists($file, 'getRealPath')
+            ? file_get_contents($file->getRealPath())
+            : (string) $file;
+
+        $client = $this->withToken()->attach($fileParam, $fileContents, $fileName);
+
+        if (strtoupper($method) === 'PATCH') {
+            return $client->post($url, array_merge($data, ['_method' => 'PATCH']));
+        }
+
+        return $client->post($url, $data);
+    }
+
+    // ==========================================
+    // F-06 : UAT (User Acceptance Testing)
+    // ==========================================
+
+    /**
+     * Ambil semua proyek yang layak UAT beserta data UAT terbarunya (1 endpoint efisien).
+     */
+    public function getUatProposals(): Response
+    {
+        return $this->get('proposals/uats');
+    }
+
+    /**
+     * Detail UAT proyek + semua item (klien, pengurus_tefa, dosen).
+     */
+    public function getUat(int $proposalId): Response
+    {
+        return $this->get("proposals/{$proposalId}/uat");
+    }
+
+    /**
+     * Kirim hasil UAT beserta daftar fitur yang diuji oleh Klien.
+     */
+    public function createUat(int $proposalId, array $data): Response
+    {
+        return $this->post("proposals/{$proposalId}/uat", $data);
+    }
+
+    /**
+     * Perbarui hasil UAT selama sesi terbaru belum diperiksa Pengurus.
+     */
+    public function updateUat(int $proposalId, array $data): Response
+    {
+        return $this->put("proposals/{$proposalId}/uat", $data);
+    }
+
+    /**
+     * Simpan pemeriksaan Pengurus dan checklist tindak lanjut UAT.
+     */
+    public function reviewUat(int $proposalId, int $uatId, array $data): Response
+    {
+        return $this->patch("proposals/{$proposalId}/uat/{$uatId}/review", $data);
+    }
+
+    /**
+     * Sign-off UAT oleh klien (klien).
+     */
+    public function signoffUat(int $proposalId, array $data): Response
+    {
+        return $this->patch("proposals/{$proposalId}/uat/signoff", $data);
+    }
+
+    /**
+     * Tandai proyek masuk fase Testing (pengurus_tefa, dosen).
+     */
+    public function setProposalTesting(int $proposalId): Response
+    {
+        return $this->patch("proposals/{$proposalId}/status/testing");
+    }
+
+    // ==========================================
+    // F-09 : Pembayaran
+    // ==========================================
+
+    /**
+     * Buat termin pembayaran baru (pengurus_tefa / dosen).
+     */
+    public function createPaymentTerm(int $proposalId, array $data): Response
+    {
+        return $this->post("proposals/{$proposalId}/payments", $data);
+    }
+
+    /**
+     * Upload bukti transfer klien (klien).
+     */
+    public function uploadPaymentProof(int $proposalId, int $paymentId, array $data, $file): Response
+    {
+        return $this->sendWithFile("proposals/{$proposalId}/payments/{$paymentId}/proof", 'proof', $file, $data, 'PATCH');
+    }
+
+    /**
+     * Verifikasi bukti transfer (pengurus_tefa / dosen).
+     */
+    public function verifyPayment(int $proposalId, int $paymentId, array $data): Response
+    {
+        return $this->patch("proposals/{$proposalId}/payments/{$paymentId}/verify", $data);
+    }
+
+    /**
+     * List semua pembayaran yang butuh verifikasi (pengurus_tefa / dosen).
+     */
+    public function getPendingPayments(): Response
+    {
+        return $this->get('payments/pending');
     }
 
     /**

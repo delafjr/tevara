@@ -23,9 +23,20 @@
     <div class="flex-1 ml-64 flex flex-col min-h-screen p-8 gap-6">
 
         <div class="space-y-6">
-            <div>
-                <h1 class="text-2xl font-bold text-[#1E293B]">Tagihan & Pembayaran Proyek</h1>
-                <p class="text-slate-500 text-sm">Pantau status penagihan termin proyek (SPK), riwayat pembayaran terverifikasi, dan unggah bukti transfer termin secara terintegrasi dengan akuntansi Politeknik.</p>
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                {{-- gradient dekoratif --}}
+                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                        Workspace Jurusan
+                    </span>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
+                        Tagihan &amp; Pembayaran <span class="text-[#FFB800]">Proyek</span>
+                    </h1>
+                    <p class="text-sm text-slate-400 mt-1.5">Pantau status penagihan termin, riwayat pembayaran, dan verifikasi bukti transfer termin</p>
+                </div>
             </div>
 
             {{-- Alert Banner --}}
@@ -41,16 +52,11 @@
             </div>
 
             {{-- Section Rekening --}}
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 max-w-md gap-4">
                 <div class="bg-white rounded-2xl p-5 border border-slate-100 space-y-2">
                     <span class="text-xs font-semibold text-slate-400">BANK MANDIRI (GIRO)</span>
                     <p class="text-lg font-bold text-[#1E293B]">142-00-9928172-1</p>
                     <p class="text-xs text-slate-500">a.n. Teaching Factory Politeknik</p>
-                </div>
-                <div class="bg-white rounded-2xl p-5 border border-slate-100 space-y-2">
-                    <span class="text-xs font-semibold text-slate-400">BCA VIRTUAL ACCOUNT</span>
-                    <p class="text-lg font-bold text-[#1E293B]">88720-08123456789</p>
-                    <p class="text-xs text-slate-500">a.n. TEVARA - {{ $userName }}</p>
                 </div>
             </div>
         </div>

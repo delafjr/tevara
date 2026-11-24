@@ -11,6 +11,13 @@
 @php
     $user = $user ?? session('user');
     $userName = $user['name'] ?? 'Dosen';
+
+    $dash = $dashboard ?? [];
+    $totalProjects     = (int) ($dash['total_projects'] ?? 0);
+    $activeProjects    = (int) ($dash['active_projects'] ?? 0);
+    $completedProjects = (int) ($dash['completed_projects'] ?? 0);
+    $waitingReview     = (int) ($dash['waiting_review'] ?? 0);
+    $projectsList      = is_array($dash['projects'] ?? null) ? $dash['projects'] : [];
 @endphp
 
 <div class="flex min-h-screen">
@@ -45,77 +52,23 @@
             </div>
         </div>
 
+        {{-- ── NOTIFIKASI & AKTIVITAS HIGHLIGHT ── --}}
+        <x-dashboard-notifications :notifications="$notifications ?? []" :unread-count="$unreadCount ?? 0" />
+
         {{-- ── 2. 4 STAT CARDS ── --}}
-        <div class="grid grid-cols-4 gap-5">
+        @php
+            $dosenStats = [
+                ['label' => 'Total Proyek',    'value' => $totalProjects,     'sub' => 'Inisiatif Terdaftar', 'color' => '#0B3B82', 'icon' => 'folder'],
+                ['label' => 'Proyek Berjalan', 'value' => $activeProjects,    'sub' => 'Dalam Pengerjaan',    'color' => '#6366F1', 'icon' => 'play'],
+                ['label' => 'Proyek Selesai',  'value' => $completedProjects, 'sub' => 'Siap Produksi',       'color' => '#16A34A', 'icon' => 'check'],
+                ['label' => 'Menunggu Review', 'value' => $waitingReview,     'sub' => 'Perlu Review',        'color' => '#F59E0B', 'icon' => 'clock-file'],
+            ];
+        @endphp
 
-            <!-- Card 1: Total Project -->
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between">
-                    <div class="w-9 h-9 rounded-xl bg-[#EBF3FE] flex items-center justify-center text-[#2563EB]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
-                        </svg>
-                    </div>
-                    <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#16A34A] text-xs font-semibold">
-                        <span>↑</span> +3
-                    </span>
-                </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">15</p>
-                <p class="text-xs font-bold text-[#1E293B] mt-2">Total Project</p>
-                <p class="text-[11px] text-slate-400 mt-1">+3 dari bulan lalu</p>
-            </div>
-
-            <!-- Card 2: Project Berjalan -->
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between">
-                    <div class="w-9 h-9 rounded-xl bg-[#FEF3C7] flex items-center justify-center text-[#F59E0B]">
-                        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                            <path d="M8 5.14v14l11-7-11-7z"/>
-                        </svg>
-                    </div>
-                    <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#16A34A] text-xs font-semibold">
-                        <span>↑</span> +2
-                    </span>
-                </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">9</p>
-                <p class="text-xs font-bold text-[#1E293B] mt-2">Project Berjalan</p>
-                <p class="text-[11px] text-slate-400 mt-1">+2 dari bulan lalu</p>
-            </div>
-
-            <!-- Card 3: Project Selesai -->
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between">
-                    <div class="w-9 h-9 rounded-xl bg-[#DCFCE7] flex items-center justify-center text-[#16A34A]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
-                        </svg>
-                    </div>
-                    <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#16A34A] text-xs font-semibold">
-                        <span>↑</span> +1
-                    </span>
-                </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">4</p>
-                <p class="text-xs font-bold text-[#1E293B] mt-2">Project Selesai</p>
-                <p class="text-[11px] text-slate-400 mt-1">+1 dari bulan lalu</p>
-            </div>
-
-            <!-- Card 4: Menunggu Review -->
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between">
-                    <div class="w-9 h-9 rounded-xl bg-[#FEE2E2] flex items-center justify-center text-[#EF4444]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/>
-                        </svg>
-                    </div>
-                    <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[#FEE2E2] text-[#EF4444] text-xs font-semibold">
-                        <span>↓</span> -1
-                    </span>
-                </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">3</p>
-                <p class="text-xs font-bold text-[#1E293B] mt-2">Menunggu Review</p>
-                <p class="text-[11px] text-slate-400 mt-1">-1 dari bulan lalu</p>
-            </div>
-
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+            @foreach($dosenStats as $stat)
+                <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
+            @endforeach
         </div>
 
         {{-- ── 3. BOTTOM SECTION: Table + Right Column ── --}}
@@ -128,7 +81,7 @@
                         <h2 class="font-bold text-[#1E293B] text-[15px]">Project yang Saya Kelola</h2>
                         <p class="text-xs text-slate-400 mt-0.5">Semua project yang ditugaskan ke Anda</p>
                     </div>
-                    <a href="{{ route('pm.project') }}" class="text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] inline-flex items-center gap-1 transition-colors">
+                    <a href="{{ route('pm.project') }}" class="text-xs font-semibold text-[#0B3B82] hover:text-[#082a5c] inline-flex items-center gap-1 transition-colors">
                         Lihat Semua
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/>
@@ -147,117 +100,44 @@
 
                     {{-- Table Rows --}}
                     <div class="divide-y divide-slate-100/80">
-
-                        <!-- Row 1 -->
+                        @forelse($projectsList as $p)
+                        @php
+                            $statusKey = strtolower($p['status'] ?? 'other');
+                            $prog = (int) ($p['progress'] ?? 0);
+                            $badgeClass = match($statusKey) {
+                                'active', 'berjalan' => 'bg-[#EFF6FF] text-[#2563EB]',
+                                'testing'            => 'bg-purple-50 text-purple-700',
+                                'review'             => 'bg-[#FEF3C7] text-[#D97706]',
+                                'handover', 'completed', 'selesai' => 'bg-[#DCFCE7] text-[#16A34A]',
+                                default              => 'bg-slate-100 text-slate-600',
+                            };
+                            $barColor = $prog >= 100 ? '#16A34A' : ($prog >= 60 ? '#0B3B82' : ($prog >= 30 ? '#D97706' : '#DC2626'));
+                        @endphp
                         <div class="px-5 py-4 grid grid-cols-12 items-center hover:bg-slate-50/50 transition-colors">
                             <div class="col-span-5 pr-4">
-                                <p class="font-bold text-[#1E293B] text-[13px] leading-tight">Sistem Informasi UMKM</p>
-                                <p class="text-[11px] text-slate-400 mt-1 truncate">Pengembangan sistem informasi...</p>
+                                <p class="font-bold text-[#1E293B] text-[13px] leading-tight">{{ $p['title'] }}</p>
+                                <p class="text-[11px] text-slate-400 mt-1 capitalize">{{ $p['category'] ?? 'Lainnya' }}</p>
                             </div>
                             <div class="col-span-3">
-                                <span class="text-[12px] font-medium text-slate-600">PT. ABC Indonesia</span>
+                                <span class="text-[12px] font-medium text-slate-600">{{ $p['client_name'] ?? '—' }}</span>
                             </div>
                             <div class="col-span-2">
-                                <span class="bg-[#EFF6FF] text-[#2563EB] text-[11px] font-semibold px-3 py-1 rounded-full inline-block">
-                                    Berjalan
+                                <span class="{{ $badgeClass }} text-[11px] font-semibold px-3 py-1 rounded-full inline-block">
+                                    {{ $p['status'] }}
                                 </span>
                             </div>
                             <div class="col-span-2 flex items-center gap-3">
                                 <div class="w-20 h-2 bg-[#EFF6FF] rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#0B3B82] rounded-full" style="width: 75%"></div>
+                                    <div class="h-full rounded-full" style="width: {{ $prog }}%; background-color: {{ $barColor }}"></div>
                                 </div>
-                                <span class="text-xs font-medium text-slate-500">75%</span>
+                                <span class="text-xs font-medium text-slate-500">{{ $prog }}%</span>
                             </div>
                         </div>
-
-                        <!-- Row 2 -->
-                        <div class="px-5 py-4 grid grid-cols-12 items-center hover:bg-slate-50/50 transition-colors">
-                            <div class="col-span-5 pr-4">
-                                <p class="font-bold text-[#1E293B] text-[13px] leading-tight">Smart Farming IoT</p>
-                                <p class="text-[11px] text-slate-400 mt-1 truncate">Implementasi IoT untuk pertanian...</p>
-                            </div>
-                            <div class="col-span-3">
-                                <span class="text-[12px] font-medium text-slate-600">CV. Tani Maju</span>
-                            </div>
-                            <div class="col-span-2">
-                                <span class="bg-[#FEF3C7] text-[#D97706] text-[11px] font-semibold px-3 py-1 rounded-full inline-block">
-                                    Review
-                                </span>
-                            </div>
-                            <div class="col-span-2 flex items-center gap-3">
-                                <div class="w-20 h-2 bg-[#EFF6FF] rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#D97706] rounded-full" style="width: 60%"></div>
-                                </div>
-                                <span class="text-xs font-medium text-slate-500">60%</span>
-                            </div>
+                        @empty
+                        <div class="px-5 py-8 text-center text-xs text-slate-400">
+                            Belum ada projek yang ditugaskan ke Anda di database.
                         </div>
-
-                        <!-- Row 3 -->
-                        <div class="px-5 py-4 grid grid-cols-12 items-center hover:bg-slate-50/50 transition-colors">
-                            <div class="col-span-5 pr-4">
-                                <p class="font-bold text-[#1E293B] text-[13px] leading-tight">Website Company Profile</p>
-                                <p class="text-[11px] text-slate-400 mt-1 truncate">Pembuatan website profil...</p>
-                            </div>
-                            <div class="col-span-3">
-                                <span class="text-[12px] font-medium text-slate-600">PT. DEF Solusi</span>
-                            </div>
-                            <div class="col-span-2">
-                                <span class="bg-[#DCFCE7] text-[#16A34A] text-[11px] font-semibold px-3 py-1 rounded-full inline-block">
-                                    Selesai
-                                </span>
-                            </div>
-                            <div class="col-span-2 flex items-center gap-3">
-                                <div class="w-20 h-2 bg-[#EFF6FF] rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#16A34A] rounded-full" style="width: 100%"></div>
-                                </div>
-                                <span class="text-xs font-medium text-slate-500">100%</span>
-                            </div>
-                        </div>
-
-                        <!-- Row 4 -->
-                        <div class="px-5 py-4 grid grid-cols-12 items-center hover:bg-slate-50/50 transition-colors">
-                            <div class="col-span-5 pr-4">
-                                <p class="font-bold text-[#1E293B] text-[13px] leading-tight">Aplikasi Manajemen Inventori</p>
-                                <p class="text-[11px] text-slate-400 mt-1 truncate">Sistem inventori berbasis web...</p>
-                            </div>
-                            <div class="col-span-3">
-                                <span class="text-[12px] font-medium text-slate-600">Dinas Pendidikan</span>
-                            </div>
-                            <div class="col-span-2">
-                                <span class="bg-[#EFF6FF] text-[#2563EB] text-[11px] font-semibold px-3 py-1 rounded-full inline-block">
-                                    Berjalan
-                                </span>
-                            </div>
-                            <div class="col-span-2 flex items-center gap-3">
-                                <div class="w-20 h-2 bg-[#EFF6FF] rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#0B3B82] rounded-full" style="width: 40%"></div>
-                                </div>
-                                <span class="text-xs font-medium text-slate-500">40%</span>
-                            </div>
-                        </div>
-
-                        <!-- Row 5 -->
-                        <div class="px-5 py-4 grid grid-cols-12 items-center hover:bg-slate-50/50 transition-colors">
-                            <div class="col-span-5 pr-4">
-                                <p class="font-bold text-[#1E293B] text-[13px] leading-tight">IoT Monitoring Pertanian</p>
-                                <p class="text-[11px] text-slate-400 mt-1 truncate">Monitoring lingkungan pertanian...</p>
-                            </div>
-                            <div class="col-span-3">
-                                <span class="text-[12px] font-medium text-slate-600">CV. Tani Maju</span>
-                            </div>
-                            <div class="col-span-2">
-                                <span class="bg-[#FFE4E6] text-[#E11D48] text-[11px] font-semibold px-3 py-1 rounded-full inline-block">
-                                    Proposal
-                                </span>
-                            </div>
-                            <div class="col-span-2 flex items-center gap-3">
-                                <div class="w-20 h-2 bg-[#EFF6FF] rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#E11D48] rounded-full" style="width: 20%"></div>
-                                </div>
-                                <span class="text-xs font-medium text-slate-500">20%</span>
-                            </div>
-                        </div>
-
+                        @endforelse
                     </div>
                 </div>
             </div>

@@ -10,39 +10,51 @@
     --font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* Brand / Utama */
+    /* Brand Colors (TEVARA Design System) */
+    --color-navy: #0B3B82;
     --color-primary: #0B3B82;
 
-    /* Accent & Secondary */
+    --color-yellow: #FFB800;
     --color-accent: #FFB800;
     --color-secondary: #FFB800;
 
-    /* Backgrounds & Containers */
+    --color-white: #FFFFFF;
+    --color-light-blue: #EAF3FF;
     --color-section: #EAF3FF;
-    --color-surface-soft: #EAF3FF;
+    --color-surface-soft: #F8FAFC;
 
-    /* Typography / Text Colors */
+    /* Typography */
+    --color-dark-text: #1E293B;
     --color-text-primary: #1E293B;
+    --color-gray: #64748B;
     --color-text-secondary: #64748B;
     --color-text-placeholder: #64748B;
 
-    /* State / Feedback */
+    /* Status Colors */
     --color-success: #16A34A;
+    --color-warning: #F59E0B;
     --color-error: #DC2626;
     --color-danger: #DC2626;
 }
 
 /* Standalone CSS Custom Properties (Native CSS var(--*)) */
 :root {
+    --navy: #0B3B82;
     --primary: #0B3B82;
+    --yellow: #FFB800;
     --accent: #FFB800;
     --secondary: #FFB800;
     --white: #FFFFFF;
+    --light-blue: #EAF3FF;
     --section: #EAF3FF;
+    --surface-soft: #F8FAFC;
+    --dark-text: #1E293B;
     --text-primary: #1E293B;
+    --gray: #64748B;
     --text-secondary: #64748B;
     --text-placeholder: #64748B;
     --success: #16A34A;
+    --warning: #F59E0B;
     --error: #DC2626;
     --danger: #DC2626;
 }

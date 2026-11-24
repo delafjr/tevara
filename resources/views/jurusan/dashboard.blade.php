@@ -11,7 +11,51 @@
 
 @php
     $user = $user ?? session('user');
-    $userName = $user['name'];
+    $userName = $user['name'] ?? 'Jurusan';
+
+    $dash = $dashboard ?? [];
+    $totalProjects     = (int) ($dash['total_projects'] ?? 0);
+    $runningProjects   = (int) ($dash['running_projects'] ?? 0);
+    $inReviewProjects  = (int) ($dash['in_review_projects'] ?? 0);
+    $submittedProposals= (int) ($dash['submitted_proposals'] ?? 0);
+    $projectsList      = is_array($dash['projects'] ?? null) ? $dash['projects'] : [];
+    $projectCount      = count($projectsList);
+
+    // Label & warna kategori
+    $categoryLabels = [
+        'web' => 'Website', 'website' => 'Website',
+        'iot' => 'IoT & Emb.', 'embedded' => 'IoT & Emb.',
+        'app' => 'Aplikasi', 'apps' => 'Aplikasi', 'aplikasi' => 'Aplikasi', 'mobile' => 'Aplikasi',
+        'sis' => 'Sistem Informasi', 'sistem' => 'Sistem Informasi', 'software' => 'Sistem Informasi', 'system' => 'Sistem Informasi',
+        'other' => 'Lainnya', 'lainnya' => 'Lainnya',
+    ];
+    $categoryColors = [
+        'web' => '#0B3B82', 'website' => '#0B3B82',
+        'iot' => '#F59E0B', 'embedded' => '#F59E0B',
+        'app' => '#3B82F6', 'apps' => '#3B82F6', 'aplikasi' => '#3B82F6', 'mobile' => '#3B82F6',
+        'sis' => '#CBD5E1', 'sistem' => '#CBD5E1', 'software' => '#CBD5E1', 'system' => '#CBD5E1',
+        'other' => '#94A3B8', 'lainnya' => '#94A3B8',
+    ];
+
+    $categoryCounts = [];
+    foreach (($dash['category_distribution'] ?? []) as $entry) {
+        if (is_array($entry)) {
+            foreach ($entry as $key => $count) {
+                $key = strtolower((string) $key);
+                $categoryCounts[$key] = ($categoryCounts[$key] ?? 0) + (int) $count;
+            }
+        }
+    }
+
+    $categoryChart = [];
+    foreach ($categoryCounts as $key => $count) {
+        $categoryChart[] = [
+            'label' => $categoryLabels[$key] ?? ucfirst($key),
+            'color' => $categoryColors[$key] ?? '#94A3B8',
+            'count' => (int) $count,
+        ];
+    }
+    $categoryTotal = array_sum(array_column($categoryChart, 'count'));
 @endphp
 
 <div class="flex min-h-screen">
@@ -46,82 +90,36 @@
             </div>
         </div>
 
+        {{-- NOTIFIKASI & AKTIVITAS HIGHLIGHT --}}
+        <x-dashboard-notifications :notifications="$notifications ?? []" :unread-count="$unreadCount ?? 0" />
+
         {{-- STAT CARDS --}}
-        <div class="grid grid-cols-4 gap-4">
-            {{-- Card 1 --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
-                <div class="flex items-start justify-between mb-4">
-                    <p class="text-xs font-semibold text-slate-500 tracking-wide">TOTAL PROJEK</p>
-                    <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-[#0B3B82]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <h2 class="text-4xl font-bold text-[#1E293B]">28</h2>
-                    <p class="text-xs text-slate-500 font-medium">Inisiatif Terdaftar</p>
-                </div>
-            </div>
+        @php
+            $jurusanStats = [
+                ['label' => 'Total Projek',         'value' => $totalProjects,      'sub' => 'Inisiatif Terdaftar', 'color' => '#0B3B82', 'icon' => 'folder'],
+                ['label' => 'Projek Berjalan',      'value' => $runningProjects,    'sub' => 'Dalam Pengerjaan',    'color' => '#16A34A', 'icon' => 'play'],
+                ['label' => 'Dalam Review',         'value' => $inReviewProjects,   'sub' => 'Perlu Review',        'color' => '#F59E0B', 'icon' => 'clock-file'],
+                ['label' => 'Proposal Masuk',       'value' => $submittedProposals, 'sub' => 'Menunggu Validasi',   'color' => '#6366F1', 'icon' => 'check'],
+            ];
+        @endphp
 
-            {{-- Card 2 --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
-                <div class="flex items-start justify-between mb-4">
-                    <p class="text-xs font-semibold text-slate-500 tracking-wide">PROJEK BERJALAN</p>
-                    <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-[#0B3B82]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <h2 class="text-4xl font-bold text-[#0B3B82]">142</h2>
-                    <p class="text-xs text-slate-500 font-medium">Dalam Pengerjaan</p>
-                </div>
-            </div>
-
-            {{-- Card 3 --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
-                <div class="flex items-start justify-between mb-4">
-                    <p class="text-xs font-semibold text-slate-500 tracking-wide">PROJEK SELESAI</p>
-                    <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <h2 class="text-4xl font-bold text-[#1E293B]">16</h2>
-                    <p class="text-xs text-slate-500 font-medium">Siap Produksi</p>
-                </div>
-            </div>
-
-            {{-- Card 4 --}}
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
-                <div class="flex items-start justify-between mb-4">
-                    <p class="text-xs font-semibold text-slate-500 tracking-wide">MENUNGGU PERSETUJUAN</p>
-                    <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                    </div>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <h2 class="text-4xl font-bold text-[#F59E0B]">7</h2>
-                    <p class="text-xs text-amber-600 font-medium">Perlu Review</p>
-                </div>
-            </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+            @foreach($jurusanStats as $stat)
+                <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
+            @endforeach
         </div>
 
         {{-- ACTIONS BAR --}}
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between" x-data="{ search: '' }">
             <div class="flex items-center gap-4">
-                <button class="bg-[#0B3B82] hover:bg-[#082a5c] text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
+                <a href="{{ route('jurusan.ajukan-proyek') }}" class="bg-[#0B3B82] hover:bg-[#082a5c] text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Ajukan Projek Baru
-                </button>
-                <button class="bg-white hover:bg-slate-50 text-[#1E293B] border border-slate-200 px-5 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
+                </a>
+                <a href="{{ route('jurusan.projek-saya') }}" class="bg-white hover:bg-slate-50 text-[#1E293B] border border-slate-200 px-5 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                     Lihat Semua Projek
-                </button>
-            </div>
-            <div class="relative w-72">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </div>
-                <input type="text" class="w-full bg-white border border-slate-200 text-sm rounded-xl focus:ring-[#0B3B82] focus:border-[#0B3B82] block pl-10 p-2.5 py-2 shadow-sm" placeholder="Cari nama projek">
+                </a>
             </div>
         </div>
 
@@ -132,10 +130,10 @@
             <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col">
                 <div class="p-6 border-b border-slate-100 flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-bold text-[#1E293B]">Projek Saya</h3>
-                        <p class="text-sm text-slate-500 mt-1">Semua project yang ditugaskan ke Anda</p>
+                        <h3 class="text-lg font-bold text-[#1E293B]">Daftar Projek</h3>
+                        <p class="text-sm text-slate-500 mt-1">Seluruh projek Teaching Factory aktif di database</p>
                     </div>
-                    <a href="#" class="text-[#0B3B82] text-sm font-semibold hover:underline flex items-center gap-1">
+                    <a href="{{ route('jurusan.projek-saya') }}" class="text-[#0B3B82] text-sm font-semibold hover:underline flex items-center gap-1">
                         Lihat Semua 
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </a>
@@ -151,82 +149,49 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            {{-- Row 1 --}}
+                            @forelse($projectsList as $p)
+                            @php
+                                $statusKey = strtolower($p['status'] ?? 'other');
+                                $prog = (int) ($p['progress'] ?? 0);
+                                $badgeClass = match($statusKey) {
+                                    'active', 'berjalan' => 'bg-blue-50 text-[#0B3B82]',
+                                    'testing'            => 'bg-purple-50 text-purple-700',
+                                    'review'             => 'bg-amber-50 text-amber-700',
+                                    'handover', 'completed', 'selesai' => 'bg-green-50 text-green-700',
+                                    default              => 'bg-slate-100 text-slate-600',
+                                };
+                                $barColor = $prog >= 100 ? '#16A34A' : ($prog >= 60 ? '#0B3B82' : ($prog >= 30 ? '#F59E0B' : '#DC2626'));
+                            @endphp
                             <tr class="hover:bg-slate-50/50">
-                                <td class="px-6 py-4 font-semibold text-[#1E293B]">Sistem Informasi UMKM</td>
-                                <td class="px-6 py-4 text-slate-500">PT. ABC Indonesia</td>
+                                <td class="px-6 py-4 font-semibold text-[#1E293B]">
+                                    <p class="leading-tight">{{ $p['title'] }}</p>
+                                    <p class="text-xs text-slate-400 capitalize mt-0.5">{{ $p['category'] ?? 'Lainnya' }}</p>
+                                </td>
+                                <td class="px-6 py-4 text-slate-500">{{ $p['client_name'] ?? '—' }}</td>
                                 <td class="px-6 py-4">
-                                    <span class="bg-blue-50 text-[#0B3B82] text-xs font-semibold px-3 py-1 rounded-full">Berjalan</span>
+                                    <span class="{{ $badgeClass }} text-xs font-semibold px-3 py-1 rounded-full">{{ $p['status'] }}</span>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         <div class="w-full bg-slate-100 rounded-full h-1.5 flex-1">
-                                            <div class="bg-[#0B3B82] h-1.5 rounded-full" style="width: 75%"></div>
+                                            <div class="h-1.5 rounded-full" style="width: {{ $prog }}%; background-color: {{ $barColor }}"></div>
                                         </div>
-                                        <span class="text-sm font-medium text-slate-600 w-8">75%</span>
+                                        <span class="text-sm font-medium text-slate-600 w-8">{{ $prog }}%</span>
                                     </div>
                                 </td>
                             </tr>
-                            {{-- Row 2 --}}
-                            <tr class="hover:bg-slate-50/50">
-                                <td class="px-6 py-4 font-semibold text-[#1E293B]">Smart Farming IoT</td>
-                                <td class="px-6 py-4 text-slate-500">CV. Tani Maju</td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-amber-50 text-amber-600 text-xs font-semibold px-3 py-1 rounded-full">Review</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-full bg-slate-100 rounded-full h-1.5 flex-1">
-                                            <div class="bg-amber-500 h-1.5 rounded-full" style="width: 45%"></div>
-                                        </div>
-                                        <span class="text-sm font-medium text-slate-600 w-8">45%</span>
-                                    </div>
+                            @empty
+                            <tr>
+                                <td colspan="4" class="px-6 py-10 text-center text-slate-400 text-xs">
+                                    Belum ada projek aktif yang berjalan di database.
                                 </td>
                             </tr>
-                            {{-- Row 3 --}}
-                            <tr class="hover:bg-slate-50/50">
-                                <td class="px-6 py-4 font-semibold text-[#1E293B]">Website Company Profile</td>
-                                <td class="px-6 py-4 text-slate-500">PT. DEF Solusi</td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-green-50 text-green-600 text-xs font-semibold px-3 py-1 rounded-full">Selesai</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-full bg-slate-100 rounded-full h-1.5 flex-1">
-                                            <div class="bg-green-500 h-1.5 rounded-full" style="width: 100%"></div>
-                                        </div>
-                                        <span class="text-sm font-medium text-slate-600 w-8">100%</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            {{-- Row 4 --}}
-                            <tr class="hover:bg-slate-50/50">
-                                <td class="px-6 py-4 font-semibold text-[#1E293B]">Aplikasi Manajemen Inventori</td>
-                                <td class="px-6 py-4 text-slate-500">PT. Logistik Nusantara</td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-blue-50 text-[#0B3B82] text-xs font-semibold px-3 py-1 rounded-full">Berjalan</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-full bg-slate-100 rounded-full h-1.5 flex-1">
-                                            <div class="bg-[#0B3B82] h-1.5 rounded-full" style="width: 30%"></div>
-                                        </div>
-                                        <span class="text-sm font-medium text-slate-600 w-8">30%</span>
-                                    </div>
-                                </td>
-                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
                 <div class="p-4 border-t border-slate-100 flex items-center justify-between text-sm text-slate-500">
-                    <p>Menampilkan 1-4 dari 10 proyek</p>
-                    <div class="flex items-center gap-1">
-                        <button class="p-1 hover:bg-slate-100 rounded text-slate-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
-                        <button class="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-50 text-[#0B3B82] font-semibold">1</button>
-                        <button class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-50 text-slate-600">2</button>
-                        <button class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-50 text-slate-600">3</button>
-                        <button class="p-1 hover:bg-slate-100 rounded text-slate-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
-                    </div>
+                    <p>Menampilkan {{ count($projectsList) }} projek</p>
                 </div>
             </div>
 
@@ -237,38 +202,26 @@
                         <h3 class="text-lg font-bold text-[#1E293B]">Distribusi Kategori</h3>
                         <p class="text-sm text-slate-500 mt-1">Klasifikasi seluruh portofolio</p>
                     </div>
-                    <button class="text-slate-400 hover:text-slate-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
-                    </button>
                 </div>
                 
                 <div class="flex-1 flex flex-col items-center justify-center">
-                    {{-- CSS Donut Chart representation --}}
-                    <div class="relative w-48 h-48 rounded-full flex items-center justify-center" style="background: conic-gradient(#0B3B82 0% 40%, #F59E0B 40% 66%, #cbd5e1 66% 80%, #3b82f6 80% 100%);">
-                        <div class="absolute w-32 h-32 bg-white rounded-full flex flex-col items-center justify-center">
-                            <span class="text-3xl font-bold text-[#1E293B]">15</span>
+                    <div class="relative w-48 h-48 rounded-full flex items-center justify-center bg-slate-100">
+                        <div class="absolute w-32 h-32 bg-white rounded-full flex flex-col items-center justify-center shadow-xs">
+                            <span class="text-3xl font-bold text-[#1E293B]">{{ $categoryTotal }}</span>
                             <span class="text-[10px] font-semibold tracking-widest text-slate-500 uppercase mt-1">Project</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-y-4 gap-x-2 mt-8 text-sm">
+                    @forelse($categoryChart as $cat)
                     <div class="flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-[#0B3B82]"></span>
-                        <span class="text-slate-600">Website <span class="font-semibold text-[#1E293B]">(6)</span></span>
+                        <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {{ $cat['color'] }}"></span>
+                        <span class="text-slate-600 truncate">{{ $cat['label'] }} <span class="font-semibold text-[#1E293B]">({{ $cat['count'] }})</span></span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-[#F59E0B]"></span>
-                        <span class="text-slate-600">IoT & Emb. <span class="font-semibold text-[#1E293B]">(4)</span></span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                        <span class="text-slate-600">Aplikasi <span class="font-semibold text-[#1E293B]">(3)</span></span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-slate-300"></span>
-                        <span class="text-slate-600">Sistem <span class="font-semibold text-[#1E293B]">(2)</span></span>
-                    </div>
+                    @empty
+                    <div class="col-span-2 text-center text-xs text-slate-400">Belum ada kategori terdaftar</div>
+                    @endforelse
                 </div>
             </div>
 

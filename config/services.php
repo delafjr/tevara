@@ -25,4 +25,8 @@ return [
     'backend_api' => [
         'url' => env('BACKEND_API_URL', 'http://127.0.0.1:8000/api/v1'),
     ],
+
+    'google' => [
+        'client_id' => env('VITE_GOOGLE_CLIENT_ID', env('GOOGLE_CLIENT_ID')),
+    ],
 ];

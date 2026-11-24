@@ -11,7 +11,7 @@ class DashboardAccessTest extends TestCase
     {
         $response = $this->get('/');
         $response->assertStatus(200);
-        $response->assertSee('Tevara');
+        $response->assertSee('TEVARA');
     }
 
     public function test_authenticated_user_can_access_main_page(): void
@@ -54,6 +54,48 @@ class DashboardAccessTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Wiktasari');
+    }
+
+    public function test_jurusan_menu_opens_database_synchronized_pages(): void
+    {
+        Http::fake([
+            '*' => Http::response(['success' => true, 'data' => []], 200),
+        ]);
+        $session = [
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 15,
+                'name' => 'Budi Santoso',
+                'roles' => ['jurusan'],
+            ],
+            'active_role' => 'jurusan',
+        ];
+
+        $this->withSession($session)
+            ->get('/switch-role/jurusan')
+            ->assertRedirect(route('dashboard'));
+
+        $dashboard = $this->withSession($session)->get('/dashboard');
+        $dashboard->assertOk()
+            ->assertSee('href="'.route('jurusan.ajukan-proyek').'"', false)
+            ->assertSee('href="'.route('jurusan.projek-saya').'"', false)
+            ->assertSee('href="'.route('jurusan.tagihan').'"', false);
+
+        $this->withSession($session)->get(route('jurusan.ajukan-proyek'))
+            ->assertOk()
+            ->assertSee('Ajukan Proyek Sekarang');
+
+        $this->withSession($session)->get(route('jurusan.projek-saya'))
+            ->assertOk()
+            ->assertSee('Daftar Projek Saya')
+            ->assertSee('Belum ada proyek aktif.')
+            ->assertDontSee('Sistem Monitoring Rantai Pasok Terpadu');
+
+        $this->withSession($session)->get(route('jurusan.tagihan'))
+            ->assertOk()
+            ->assertSee('Tagihan &amp; Pembayaran', false)
+            ->assertSee('Belum ada tagihan proyek.')
+            ->assertDontSee('SPK/TEFA/2026/008');
     }
 
     public function test_wiktasari_cannot_access_pm_dashboard(): void
@@ -120,8 +162,40 @@ class DashboardAccessTest extends TestCase
         $dashResponse->assertSee('Dosen PM');
     }
 
+    public function test_pm_dashboard_shows_mockup_preview_when_backend_has_no_projects(): void
+    {
+        Http::fake([
+            '*' => Http::response(['success' => true, 'data' => []], 200),
+        ]);
+
+        $response = $this->withSession([
+            'api_token' => 'dummy-token',
+            'user' => [
+                'id' => 6,
+                'name' => 'Dosen PM',
+                'roles' => ['dosen'],
+                'is_pm' => true,
+            ],
+            'active_role' => 'pm',
+        ])->get('/dashboard');
+
+        $response->assertOk()
+            ->assertSee('Preview data demo')
+            ->assertSee('Sistem Informasi UMKM')
+            ->assertSee('Smart Farming IoT')
+            ->assertSee('Website Company Profile')
+            ->assertSee('IoT &amp; Embedded', false)
+            ->assertSee('15')
+            ->assertSee('75%')
+            ->assertSee('100%');
+    }
+
     public function test_pm_can_access_project_and_task_timeline_pages(): void
     {
+        Http::fake([
+            '*' => Http::response(['success' => true, 'data' => []], 200),
+        ]);
+
         $session = [
             'api_token' => 'dummy-token',
             'user' => [
@@ -135,17 +209,21 @@ class DashboardAccessTest extends TestCase
 
         $projectResponse = $this->withSession($session)->get('/pm/project');
         $projectResponse->assertOk();
-        $projectResponse->assertSee('href="' . route('pm.project') . '"', false);
-        $projectResponse->assertSee('href="' . route('pm.task-timeline') . '"', false);
+        $projectResponse->assertSee('href="'.route('pm.project').'"', false);
+        $projectResponse->assertSee('href="'.route('pm.task-timeline').'"', false);
 
         $taskTimelineResponse = $this->withSession($session)->get('/pm/task-timeline');
         $taskTimelineResponse->assertOk();
-        $taskTimelineResponse->assertSee('href="' . route('pm.project') . '"', false);
-        $taskTimelineResponse->assertSee('href="' . route('pm.task-timeline') . '"', false);
+        $taskTimelineResponse->assertSee('href="'.route('pm.project').'"', false);
+        $taskTimelineResponse->assertSee('href="'.route('pm.task-timeline').'"', false);
     }
 
     public function test_dosen_pm_sidebar_links_open_pm_pages(): void
     {
+        Http::fake([
+            '*' => Http::response(['success' => true, 'data' => []], 200),
+        ]);
+
         $session = [
             'api_token' => 'dummy-token',
             'user' => [
@@ -160,9 +238,9 @@ class DashboardAccessTest extends TestCase
         $response = $this->withSession($session)->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('href="' . route('pm.project') . '"', false);
-        $response->assertSee('href="' . route('pm.anggota-tim') . '"', false);
-        $response->assertSee('href="' . route('pm.task-timeline') . '"', false);
+        $response->assertSee('href="'.route('pm.project').'"', false);
+        $response->assertSee('href="'.route('pm.anggota-tim').'"', false);
+        $response->assertSee('href="'.route('pm.task-timeline').'"', false);
 
         $this->withSession($session)->get(route('pm.project'))->assertOk();
         $this->withSession($session)->get(route('pm.task-timeline'))->assertOk();
@@ -170,6 +248,10 @@ class DashboardAccessTest extends TestCase
 
     public function test_dosen_can_open_project_and_task_pages_when_no_project_is_assigned(): void
     {
+        Http::fake([
+            '*' => Http::response(['success' => true, 'data' => []], 200),
+        ]);
+
         $response = $this->withSession([
             'api_token' => 'dummy-token',
             'user' => [
@@ -182,9 +264,9 @@ class DashboardAccessTest extends TestCase
         ])->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('href="' . route('pm.project') . '"', false);
-        $response->assertSee('href="' . route('pm.anggota-tim') . '"', false);
-        $response->assertSee('href="' . route('pm.task-timeline') . '"', false);
+        $response->assertSee('href="'.route('pm.project').'"', false);
+        $response->assertSee('href="'.route('pm.anggota-tim').'"', false);
+        $response->assertSee('href="'.route('pm.task-timeline').'"', false);
 
         $projectResponse = $this->withSession([
             'api_token' => 'dummy-token',
@@ -212,7 +294,7 @@ class DashboardAccessTest extends TestCase
         ])->get(route('pm.anggota-tim'));
 
         $teamResponse->assertOk();
-        $teamResponse->assertSee('PRJ-2026/014');
+        $teamResponse->assertSee('PRJ-DEMO-001');
 
         $taskResponse = $this->withSession([
             'api_token' => 'dummy-token',
@@ -226,6 +308,7 @@ class DashboardAccessTest extends TestCase
         ])->get(route('pm.task-timeline'));
 
         $taskResponse->assertOk();
-        $taskResponse->assertSee('PRJ-2026/001');
+        $taskResponse->assertSee('Preview data demo')
+            ->assertSee('Sistem Informasi Pengelolaan UMKM');
     }
 }

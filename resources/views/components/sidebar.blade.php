@@ -69,6 +69,7 @@
             ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => route('klien.projek-saya')],
             ['id' => 'bast',         'label' => 'BAST & Serah Terima',   'icon' => 'proposal',       'href' => route('klien.bast')],
             ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => route('klien.tagihan')],
+            ['id' => 'maintenance',  'label' => 'Garansi & Maintenance', 'icon' => 'maintenance',    'href' => route('klien.maintenance')],
         ],
         'mahasiswa' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
@@ -90,42 +91,46 @@
         'pengurus_tefa' => [
             ['id' => 'dashboard',         'label' => 'Dashboard',         'icon' => 'dashboard',      'href' => route('dashboard')],
             ['id' => 'projek',            'label' => 'Projek',            'icon' => 'project',        'href' => route('pengurus-tefa.projek')],
+            ['id' => 'bast',              'label' => 'BAST',              'icon' => 'proposal',       'href' => route('pengurus-tefa.bast')],
+            ['id' => 'maintenance',       'label' => 'Maintenance',       'icon' => 'maintenance',    'href' => route('pengurus-tefa.maintenance')],
             ['id' => 'klien-mitra',       'label' => 'Klien & Mitra',     'icon' => 'team',           'href' => route('pengurus-tefa.klien-mitra')],
             ['id' => 'dosen',             'label' => 'Dosen',             'icon' => 'team',           'href' => route('pengurus-tefa.dosen')],
             ['id' => 'mahasiswa',         'label' => 'Mahasiswa',         'icon' => 'team',           'href' => route('pengurus-tefa.mahasiswa')],
             ['id' => 'validasi-proposal', 'label' => 'Validasi Proposal', 'icon' => 'proposal',       'href' => route('pengurus-tefa.validasi-proposal')],
+            ['id' => 'uat',               'label' => 'UAT & Pengujian',   'icon' => 'uat',            'href' => route('pengurus-tefa.uat')],
             ['id' => 'keuangan',          'label' => 'Keuangan',          'icon' => 'tagihan',        'href' => route('pengurus-tefa.keuangan')],
             ['id' => 'monitoring',        'label' => 'Monitoring',        'icon' => 'monitoring',     'href' => route('pengurus-tefa.monitoring')],
         ],
         'jurusan' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'ajukan',       'label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => url()->current() . '?page=ajukan'],
-            ['id' => 'projek',       'label' => 'Projek Saya',           'icon' => 'project',        'href' => url()->current() . '?page=projek'],
-            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => url()->current() . '?page=tagihan'],
+            ['id' => 'ajukan-projek','label' => 'Ajukan Projek',        'icon' => 'ajukan-projek',  'href' => route('jurusan.ajukan-proyek')],
+            ['id' => 'projek-saya',  'label' => 'Projek Saya',          'icon' => 'project',        'href' => route('jurusan.projek-saya')],
+            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran', 'icon' => 'tagihan',        'href' => route('jurusan.tagihan')],
         ],
     ];
 
     $currentMenu = $menus[$currentRole] ?? $menus['klien'];
+    $isCompact = count($currentMenu) > 5;
 @endphp
 
-<aside data-role="{{ $currentRole }}" class="w-64 min-h-screen bg-[#F8FAFC] border-r border-slate-200/70 flex flex-col fixed top-0 left-0 z-30 select-none">
+<aside data-role="{{ $currentRole }}" class="w-64 min-h-screen bg-surface-soft border-r border-slate-200/70 flex flex-col fixed top-0 left-0 z-30 select-none">
 
     {{-- ===== LOGO TEVARA ===== --}}
-    <div class="px-6 py-6 border-b border-slate-200/50 flex items-center">
-        <a href="{{ route('dashboard') }}" class="block">
-            <img src="{{ asset('images/tevara-logo.png') }}" alt="TEVARA Knowledge into Action" class="h-8 w-auto max-w-[185px] object-contain">
+    <div class="px-6 py-5.5 border-b border-slate-200/50 flex items-center">
+        <a href="{{ route('dashboard') }}" class="block transition-opacity hover:opacity-95">
+            <img src="{{ asset('images/tevara-logo.png') }}" alt="TEVARA Knowledge into Action" class="h-9 w-auto max-w-[190px] object-contain">
         </a>
     </div>
 
     {{-- ===== NAV MENU ===== --}}
-    <nav class="flex-1 px-3.5 py-4 space-y-1.5 overflow-y-auto">
+    <nav class="flex-1 px-4 {{ $isCompact ? 'py-4 space-y-1.5' : 'py-5 space-y-2.5' }} overflow-y-auto">
         @foreach($currentMenu as $item)
             @php
                 $isActive = ($active === $item['id']);
             @endphp
             <a href="{{ $item['href'] }}"
-               class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-[13.5px] transition-all duration-150 {{ $isActive ? 'bg-[#DDE9FA] text-[#2563EB] font-semibold' : 'text-slate-500 hover:text-slate-900 hover:bg-white/70 font-medium' }}">
-                <span class="w-5 h-5 flex-shrink-0 {{ $isActive ? 'text-[#2563EB]' : 'text-slate-400' }}">
+               class="flex items-center gap-3.5 {{ $isCompact ? 'px-3.5 py-2.5 text-[13.5px]' : 'px-4 py-3 text-[14px]' }} rounded-xl transition-all duration-150 {{ $isActive ? 'bg-[#EAF3FF] text-[#0B3B82] font-semibold shadow-2xs' : 'text-[#64748B] hover:text-[#1E293B] hover:bg-white/70 font-medium' }}">
+                <span class="w-5 h-5 flex-shrink-0 {{ $isActive ? 'text-[#0B3B82]' : 'text-[#64748B]' }}">
                     @if($item['icon'] === 'dashboard')
                         {{-- Bento / Grid 4-square icon --}}
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
@@ -190,6 +195,18 @@
                             <path d="M3 3v18h18"/>
                             <path d="m19 9-5 5-4-4-3 3"/>
                         </svg>
+                    @elseif($item['icon'] === 'maintenance')
+                        {{-- Wrench / maintenance icon --}}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                        </svg>
+                    @elseif($item['icon'] === 'uat')
+                        {{-- UAT / Test Tube / Beaker icon --}}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                            <path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>
+                            <path d="M8.5 2h7"/>
+                            <path d="M7 16h10"/>
+                        </svg>
                     @endif
                 </span>
                 <span class="flex-1 truncate">                <span class="sidebar-label">{{ $item['label'] }}</span></span>
@@ -216,7 +233,7 @@
             >
                 <div class="px-2.5 py-1.5 flex items-center justify-between border-b border-slate-100 mb-1">
                     <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Switch Role</span>
-                    <span class="text-[10px] font-semibold text-[#0B3B82] bg-[#EAF3FF] px-2 py-0.5 rounded-full">{{ count($availableRoles) }} Role</span>
+                    <span class="text-[10px] font-semibold text-primary bg-section px-2 py-0.5 rounded-full">{{ count($availableRoles) }} Role</span>
                 </div>
 
                 {{-- Role Choices --}}
@@ -245,6 +262,20 @@
                 {{-- Divider --}}
                 <div class="h-px bg-slate-100 my-1"></div>
 
+                {{-- Profile Link --}}
+                <a
+                    href="{{ route('profile') }}"
+                    class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors {{ $active === 'profile' ? 'bg-[#EAF3FF] text-[#0B3B82]' : 'text-slate-700 hover:bg-[#EAF3FF] hover:text-[#0B3B82]' }}"
+                >
+                    <svg class="w-4 h-4 {{ $active === 'profile' ? 'text-[#0B3B82]' : 'text-slate-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                    </svg>
+                    <span>Profil Saya</span>
+                </a>
+
+                {{-- Divider --}}
+                <div class="h-px bg-slate-100 my-1"></div>
+
                 {{-- Logout Action --}}
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
@@ -269,7 +300,7 @@
             >
                 <div class="flex items-center gap-3 min-w-0 flex-1">
                     {{-- Avatar with user icon --}}
-                    <div class="w-9 h-9 rounded-full bg-[#0E1F40] flex items-center justify-center text-white flex-shrink-0 shadow-xs">
+                    <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white flex-shrink-0 shadow-xs">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                             <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
                         </svg>

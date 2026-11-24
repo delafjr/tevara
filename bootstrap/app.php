@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -11,10 +12,27 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->encryptCookies(except: [
+            'api_token',
+        ]);
+        $middleware->validateCsrfTokens(except: [
+            'api/v1/*',
+            'auth/google',
+        ]);
         $middleware->alias([
             'auth.api' => \App\Http\Middleware\AuthApi::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (ThrottleRequestsException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terlalu banyak permintaan. Mohon tunggu beberapa saat.',
+                ], 429);
+            }
+            return back()
+                ->withErrors(['error' => 'Terlalu banyak permintaan. Mohon tunggu beberapa saat sebelum mencoba lagi.'])
+                ->withInput();
+        });
     })->create();
