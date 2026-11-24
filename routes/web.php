@@ -187,7 +187,7 @@ Route::middleware('auth.api')->group(function () {
             'klien'         => 'klien.dashboard',
             'pengurus_tefa' => 'pengurus-tefa.dashboard',
             'pm'            => 'pm.dashboard',
-            'dosen'         => 'pm.dashboard',
+            'dosen'          => 'pm.dashboard',
             'mahasiswa'     => 'mahasiswa.dashboard',
             'jurusan'       => 'jurusan.dashboard',
         ];
@@ -1164,6 +1164,15 @@ Route::middleware('auth.api')->group(function () {
             }
         }
 
+        // Jika user belum memilih proyek (tidak ada param proposal_id / proposal / project),
+        // tampilkan halaman daftar proyek overview terlebih dahulu
+        if ($requestedId === null) {
+            return view('mahasiswa.task-projects', [
+                'user'     => session('user'),
+                'projects' => $projects,
+            ]);
+        }
+
         if ($proposalId === null && !empty($projects)) {
             $proposalId = $projects[0]['id'] ?? null;
             $selectedProject = $projects[0] ?? null;
@@ -1215,8 +1224,15 @@ Route::middleware('auth.api')->group(function () {
         $progress = (float) $validated['progress_percentage'];
         $status = $validated['status'];
 
-        if ($progress >= 100) {
+        if ($status === 'TODO' || $progress <= 0) {
+            $status = 'TODO';
+            $progress = 0;
+        } elseif ($progress >= 100 || $status === 'TESTING') {
             $status = 'TESTING';
+            $progress = 100;
+        } else {
+            $status = 'IN_PROGRESS';
+            $progress = max(1, min(99, $progress));
         }
 
         $payload = [
@@ -1311,6 +1327,15 @@ Route::middleware('auth.api')->group(function () {
                     $proposalId = $project['id'];
                     break;
                 }
+            }
+
+            // Jika user belum memilih proyek (tidak ada param proposal_id / proposal / project),
+            // tampilkan halaman daftar proyek overview terlebih dahulu
+            if ($requestedId === null) {
+                return view('pm.task-timeline-projects', [
+                    'user'     => session('user'),
+                    'projects' => $projects,
+                ]);
             }
 
             if ($proposalId === null && !empty($projects)) {
@@ -1615,15 +1640,33 @@ Route::middleware('auth.api')->group(function () {
                 ]);
             }
 
-            $validated = $request->validate([
-                'repository_url' => ['required', 'url', 'max:255'],
+            $deliveryType = $request->input('delivery_type', 'source_code');
+            $isSourceCode = $deliveryType === 'source_code';
+
+            $rules = [
                 'documentation_file' => ['nullable', 'file', 'mimes:pdf,docx,zip,doc', 'max:10240'],
                 'user_manual_url' => ['nullable', 'url', 'max:255'],
                 'handover_notes' => ['nullable', 'string'],
                 'handover_deliverables' => ['required', 'json'],
                 'maintenance_warranty_months' => ['required', 'integer', 'min:0'],
                 'maintenance_notes' => ['nullable', 'string'],
-            ], [
+            ];
+
+            if ($isSourceCode) {
+                $rules['repository_url'] = ['required', 'url', 'max:255'];
+                $rules['app_url'] = ['nullable', 'url', 'max:255'];
+                $rules['access_email'] = ['nullable', 'string', 'max:255'];
+                $rules['access_password'] = ['nullable', 'string', 'max:255'];
+            } else {
+                $rules['repository_url'] = ['nullable', 'url', 'max:255'];
+                $rules['app_url'] = ['required', 'url', 'max:255'];
+                $rules['access_email'] = ['nullable', 'string', 'max:255'];
+                $rules['access_password'] = ['nullable', 'string', 'max:255'];
+            }
+
+            $validated = $request->validate($rules, [
+                'repository_url.required' => 'URL Repository source code wajib diisi untuk penyerahan source code.',
+                'app_url.required' => 'URL Akses Aplikasi Sistem wajib diisi karena klien memilih kelola penuh oleh TeFa.',
                 'documentation_file.mimes' => 'Berkas lampiran dokumentasi API harus berformat aman: .pdf, .docx, atau .zip.',
                 'documentation_file.max' => 'Ukuran berkas lampiran dokumentasi API maksimal 10 MB.',
             ]);

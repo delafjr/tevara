@@ -167,6 +167,9 @@
         }
 
         if ($currentRole === 'mahasiswa') {
+            if (str_starts_with($type, 'project.')) {
+                return route('mahasiswa.project');
+            }
             return route('mahasiswa.task');
         }
 

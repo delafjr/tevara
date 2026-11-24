@@ -84,16 +84,64 @@
                     </section>
                 @endif
 
+                @php
+                    $deliveryType = $project['delivery_type'] ?? 'source_code';
+                    $isSourceCode = $deliveryType === 'source_code';
+                @endphp
+
                 <section class="mt-5 grid gap-4 sm:grid-cols-2">
-                    <div class="rounded-xl border border-slate-200 p-4">
-                        <h3 class="text-xs font-bold text-slate-700">Source code &amp; dokumentasi</h3>
-                        @if(!empty($project['repository_url']))<a href="{{ $project['repository_url'] }}" target="_blank" rel="noopener noreferrer" class="mt-2 block break-all text-xs font-semibold text-blue-700 underline">Buka repository source code</a>@endif
-                        @if(!empty($project['id']) && !empty($project['documentation_url']))<a href="{{ route('klien.projek-saya.bast.documentation', $project['id']) }}" class="mt-2 block text-xs font-semibold text-blue-700 underline">Unduh dokumentasi API</a>@endif
-                        @if(!empty($project['user_manual_url']))<a href="{{ $project['user_manual_url'] }}" target="_blank" rel="noopener noreferrer" class="mt-2 block break-all text-xs font-semibold text-blue-700 underline">Buka panduan pengguna</a>@endif
-                    </div>
+                    @if($isSourceCode)
+                        <div class="rounded-xl border border-slate-200 p-4">
+                            <h3 class="text-xs font-bold text-slate-700">Source code &amp; dokumentasi</h3>
+                            @if(!empty($project['repository_url']))<a href="{{ $project['repository_url'] }}" target="_blank" rel="noopener noreferrer" class="mt-2 block break-all text-xs font-semibold text-blue-700 underline">Buka repository source code</a>@endif
+                            @if(!empty($project['id']) && !empty($project['documentation_url']))<a href="{{ route('klien.projek-saya.bast.documentation', $project['id']) }}" class="mt-2 block text-xs font-semibold text-blue-700 underline">Unduh dokumentasi API</a>@endif
+                            @if(!empty($project['user_manual_url']))<a href="{{ $project['user_manual_url'] }}" target="_blank" rel="noopener noreferrer" class="mt-2 block break-all text-xs font-semibold text-blue-700 underline">Buka panduan pengguna</a>@endif
+                        </div>
+                    @else
+                        <div class="rounded-xl border border-blue-100 bg-blue-50/40 p-4">
+                            <h3 class="text-xs font-bold text-[#0B3B82] flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                                Akses Login &amp; Aplikasi Sistem
+                            </h3>
+                            <p class="mt-1 text-[11px] text-slate-500">Proyek ini dikelola penuh oleh TeFa (tanpa penyerahan source code).</p>
+                            @if(!empty($project['app_url']))
+                                <div class="mt-3">
+                                    <span class="text-[11px] font-semibold text-slate-500 block">URL Aplikasi:</span>
+                                    <a href="{{ $project['app_url'] }}" target="_blank" rel="noopener noreferrer" class="text-xs font-bold text-[#0B3B82] underline break-all inline-flex items-center gap-1 mt-0.5">
+                                        {{ $project['app_url'] }}
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                    </a>
+                                </div>
+                            @endif
+                            @if(!empty($project['access_email']))
+                                <div class="mt-2 text-xs">
+                                    <span class="text-[11px] font-semibold text-slate-500">Email Login:</span>
+                                    <span class="font-mono font-medium text-slate-800 ml-1">{{ $project['access_email'] }}</span>
+                                </div>
+                            @endif
+                            @if(!empty($project['access_password']))
+                                <div class="mt-1 text-xs">
+                                    <span class="text-[11px] font-semibold text-slate-500">Password / Akses:</span>
+                                    <span class="font-mono font-medium text-slate-800 ml-1">{{ $project['access_password'] }}</span>
+                                </div>
+                            @endif
+                            <div class="mt-3 pt-2 border-t border-blue-100 flex flex-wrap gap-3">
+                                @if(!empty($project['id']) && !empty($project['documentation_url']))<a href="{{ route('klien.projek-saya.bast.documentation', $project['id']) }}" class="text-xs font-semibold text-blue-700 underline">Unduh dokumentasi API</a>@endif
+                                @if(!empty($project['user_manual_url']))<a href="{{ $project['user_manual_url'] }}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-blue-700 underline">Buka panduan pengguna</a>@endif
+                            </div>
+                        </div>
+                    @endif
+                    @php
+                        $warrantyMonths = $maintenance['maintenance_warranty_months']
+                            ?? $project['warranty_months']
+                            ?? $project['warranty']['warranty_months']
+                            ?? 0;
+                    @endphp
                     <div class="rounded-xl border border-slate-200 p-4">
                         <h3 class="text-xs font-bold text-slate-700">Masa garansi</h3>
-                        <p class="mt-2 text-sm text-slate-600">{{ $maintenance['maintenance_warranty_months'] ?? 0 }} bulan</p>
+                        <p class="mt-2 text-sm text-slate-600">{{ $warrantyMonths }} bulan</p>
                         @if(!empty($maintenance['maintenance_notes']))<p class="mt-1 text-xs text-slate-500">{{ $maintenance['maintenance_notes'] }}</p>@endif
                         <p class="mt-2 text-xs text-slate-500">Garansi dimulai sehari setelah persetujuan dan tanggal serah terima resmi.</p>
                     </div>

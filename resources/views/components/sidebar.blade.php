@@ -67,6 +67,7 @@
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
             ['id' => 'ajukan-projek','label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => route('klien.ajukan-proyek')],
             ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => route('klien.projek-saya')],
+            ['id' => 'bast',         'label' => 'BAST & Serah Terima',   'icon' => 'proposal',       'href' => route('klien.bast')],
             ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => route('klien.tagihan')],
             ['id' => 'maintenance',  'label' => 'Garansi & Maintenance', 'icon' => 'maintenance',    'href' => route('klien.maintenance')],
         ],
