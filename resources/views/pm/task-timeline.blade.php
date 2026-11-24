@@ -139,6 +139,15 @@
           }">
 
         {{-- ── 1. PAGE HEADER ── --}}
+        <div>
+            <a href="{{ route('pm.task-timeline') }}" class="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-[#0B3B82] transition-colors">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+                </svg>
+                Kembali ke Daftar Proyek
+            </a>
+        </div>
+
         @if(session('success') || session('error'))
             <div class="rounded-xl border {{ session('success') ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700' }} px-4 py-3 text-xs font-semibold" x-data="{ visible: true }" x-show="visible">
                 <div class="flex items-center justify-between gap-3">
@@ -249,12 +258,6 @@
 
             {{-- Actions --}}
             <div class="flex items-center gap-2 flex-shrink-0 relative">
-                <a href="{{ route('pm.task-timeline') }}" class="inline-flex items-center gap-1.5 border border-white/30 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors cursor-pointer" title="Kembali ke Daftar Proyek">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
-                    </svg>
-                    <span>Daftar Proyek</span>
-                </a>
                 <button type="button" @click="taskModal = true" @disabled($usingDemoData) class="inline-flex items-center gap-1.5 bg-[#F59E0B] hover:bg-yellow-400 text-[#0B254A] text-xs font-extrabold px-4 py-2 rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
