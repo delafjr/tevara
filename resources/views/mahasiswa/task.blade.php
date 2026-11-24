@@ -359,8 +359,10 @@
                             @endphp
                             <button type="button"
                                     @click="selectTask(@js($task))"
-                                    :class="selectedTask?.id === {{ (int) ($task['id'] ?? 0) }} ? 'border-[#0B3B82] ring-1 ring-[#0B3B82]' : 'border-slate-100 hover:border-slate-200'"
-                                    class="w-full text-left bg-white rounded-xl border shadow-2xs p-4 hover:shadow-sm transition-all cursor-pointer relative {{ $isNeedsImprovement ? 'border-l-4 border-l-rose-500' : '' }}">
+                                    :class="selectedTask?.id === {{ (int) ($task['id'] ?? 0) }}
+                                        ? 'border-slate-300 shadow-md {{ $isNeedsImprovement ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-[#2563EB]' }} -translate-y-0.5'
+                                        : 'border-slate-200/80 hover:border-slate-300 hover:shadow-xs {{ $isNeedsImprovement ? 'border-l-4 border-l-rose-500' : '' }}'"
+                                    class="w-full text-left bg-white rounded-xl border p-4 transition-all duration-150 cursor-pointer relative">
                                 
                                 @if($isNeedsImprovement)
                                     <div class="flex items-center gap-1 text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md mb-2">
