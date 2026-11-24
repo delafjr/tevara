@@ -53,6 +53,11 @@
 
                 <form method="POST" enctype="multipart/form-data" action="{{ route('pengurus-tefa.bast.prepare', $project['id']) }}" class="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2" x-data="{ items: {{ \Illuminate\Support\Js::from($deliverables) }}, addItem() { this.items.push({ name: '', type: 'digital', quantity: 1, unit: 'unit', condition: 'not_applicable', notes: '' }) }, removeItem(index) { if (this.items.length > 1) this.items.splice(index, 1) } }">
                     @csrf
+                    @php
+                        $deliveryType = $project['delivery_type'] ?? 'source_code';
+                        $isSourceCode = $deliveryType === 'source_code';
+                    @endphp
+                    <input type="hidden" name="delivery_type" value="{{ $deliveryType }}">
                     <div>
                         <label class="mb-1 block text-xs font-semibold text-slate-700">Nomor BAST</label>
                         <input type="text" value="{{ $project['bast_number'] ?? 'Dibuat otomatis saat disimpan' }}" readonly class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm text-slate-500">
@@ -61,10 +66,39 @@
                         <label class="mb-1 block text-xs font-semibold text-slate-700">Tanggal serah terima resmi</label>
                         <input type="text" value="Dicatat setelah PIC menyetujui" readonly class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm text-slate-500">
                     </div>
-                    <div>
-                        <label class="mb-1 block text-xs font-semibold text-slate-700">Repository source code</label>
-                        <input type="url" name="repository_url" required maxlength="255" value="{{ old('repository_url', $project['repository_url'] ?? '') }}" placeholder="https://github.com/..." class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
-                    </div>
+
+                    @if($isSourceCode)
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-700">Repository source code <span class="text-rose-500">*</span></label>
+                            <input type="url" name="repository_url" required maxlength="255" value="{{ old('repository_url', $project['repository_url'] ?? '') }}" placeholder="https://github.com/..." class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                            <p class="mt-1 text-[11px] text-slate-400">Tautan repository source code proyek untuk diserahkan ke klien.</p>
+                        </div>
+                    @else
+                        <div class="md:col-span-2 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
+                            <div class="flex items-center gap-2 mb-1.5">
+                                <svg class="h-4 w-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span class="text-xs font-bold text-[#0B3B82]">Skema Kelola Penuh oleh TeFa (Tanpa Penyerahan Source Code)</span>
+                            </div>
+                            <p class="text-xs text-slate-600">Klien tidak meminta penyerahan source code. Kolom repository ditiadakan. Silakan cantumkan URL akses aplikasi live dan kredensial login (email & password) untuk diserahkan kepada pihak klien.</p>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-700">URL Akses Aplikasi / Web Sistem <span class="text-rose-500">*</span></label>
+                            <input type="url" name="app_url" required maxlength="255" value="{{ old('app_url', $project['app_url'] ?? '') }}" placeholder="https://aplikasi.polines.ac.id" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                            <p class="mt-1 text-[11px] text-slate-400">Tautan live server / dashboard aplikasi yang siap digunakan klien.</p>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-700">Email Akses Login</label>
+                            <input type="email" name="access_email" maxlength="255" value="{{ old('access_email', $project['access_email'] ?? '') }}" placeholder="admin@perusahaan.com" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                            <p class="mt-1 text-[11px] text-slate-400">Email / username akun admin yang diserahkan ke klien.</p>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-700">Password / Kredensial Akses</label>
+                            <input type="text" name="access_password" maxlength="255" value="{{ old('access_password', $project['access_password'] ?? '') }}" placeholder="Contoh: Rahasia123! (atau petunjuk login)" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                            <p class="mt-1 text-[11px] text-slate-400">Password sementara untuk pertama kali login klien.</p>
+                        </div>
+                    @endif
                     <div>
                         <label class="mb-1 block text-xs font-semibold text-slate-700">Lampiran fisik dokumentasi API</label>
                         <input type="file" name="documentation_file" accept=".pdf,.docx,.zip,.doc" @required(empty($project['documentation_url'])) class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
