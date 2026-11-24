@@ -78,12 +78,9 @@
         }
     };
 
-    $overallProgress = isset($proposal['overall_progress'])
-        ? (int) round((float) $proposal['overall_progress'])
-        : (isset($summary['overall_progress'])
-            ? (int) round((float) $summary['overall_progress'])
-            : (count($tasks) > 0 ? (int) round((float) collect($tasks)->avg('progress_percentage')) : 0));
-    $overallProgress = max(0, min(100, $overallProgress));
+    $overallProgress = isset($summary['overall_progress'])
+        ? (int) round((float) $summary['overall_progress'])
+        : (count($tasks) > 0 ? (int) round((float) collect($tasks)->avg('progress_percentage')) : 0);
     $totalProjectTasks = (int) ($summary['total'] ?? count($tasks));
     $taskWeight = $totalProjectTasks > 0 ? round(100 / $totalProjectTasks, 1) : 0;
     $initialTask     = $tasks[0] ?? null;
@@ -261,6 +258,12 @@
 
             {{-- Actions --}}
             <div class="flex items-center gap-2 flex-shrink-0 relative">
+                <a href="{{ route('pm.task-timeline') }}" class="inline-flex items-center gap-1.5 border border-white/30 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors cursor-pointer" title="Kembali ke Daftar Proyek">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+                    </svg>
+                    <span>Daftar Proyek</span>
+                </a>
                 <button type="button" @click="taskModal = true" @disabled($usingDemoData) class="inline-flex items-center gap-1.5 bg-[#F59E0B] hover:bg-yellow-400 text-[#0B254A] text-xs font-extrabold px-4 py-2 rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
