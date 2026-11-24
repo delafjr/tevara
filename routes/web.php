@@ -531,6 +531,96 @@ Route::middleware('auth.api')->group(function () {
 
     // Klien: Ajukan Proyek Baru & Projek Saya
     Route::middleware('auth.api:klien')->prefix('klien')->name('klien.')->group(function () use ($storeProposal, $loadBilling) {
+        Route::get('/bast', function (ApiService $api) {
+            try {
+                $response = $api->get('proposals/mine');
+                if (!$response->successful()) {
+                    return view('klien.bast.index', [
+                        'user' => session('user'),
+                        'projects' => [],
+                        'loadError' => $response->json('message') ?? 'Gagal memuat daftar proyek.',
+                    ]);
+                }
+
+                $projects = $response->json('data') ?? $response->json();
+                if (!is_array($projects)) {
+                    return view('klien.bast.index', [
+                        'user' => session('user'),
+                        'projects' => [],
+                        'loadError' => 'Format daftar proyek dari server tidak valid.',
+                    ]);
+                }
+
+                return view('klien.bast.index', [
+                    'user' => session('user'),
+                    'projects' => $projects,
+                    'loadError' => null,
+                ]);
+            } catch (\Throwable $e) {
+                return view('klien.bast.index', [
+                    'user' => session('user'),
+                    'projects' => [],
+                    'loadError' => 'Tidak dapat memuat daftar proyek: ' . $e->getMessage(),
+                ]);
+            }
+        })->name('bast');
+
+        Route::get('/bast/{id}', function (int $id, ApiService $api) {
+            try {
+                $response = $api->get("proposals/{$id}/handover");
+            } catch (\Throwable $e) {
+                return redirect()
+                    ->route('klien.bast')
+                    ->with('error', 'Tidak dapat memuat detail BAST: ' . $e->getMessage());
+            }
+
+            if (!$response->successful()) {
+                return redirect()
+                    ->route('klien.bast')
+                    ->with('error', $response->json('message') ?? 'Gagal memuat detail BAST.');
+            }
+
+            $handover = $response->json('data');
+            if (!is_array($handover) || !is_array($handover['proposal'] ?? null)) {
+                return redirect()
+                    ->route('klien.bast')
+                    ->with('error', 'Format detail BAST dari server tidak valid.');
+            }
+
+            return view('klien.bast.show', [
+                'user' => session('user'),
+                'handover' => $handover,
+                'error' => session('error'),
+                'success' => session('success'),
+            ]);
+        })->whereNumber('id')->name('bast.show');
+
+        Route::post('/bast/{id}/approve', function (int $id, Request $request, ApiService $api) {
+            $validated = $request->validate([
+                'client_signoff_name' => ['required', 'string', 'max:255'],
+                'client_approved' => ['required', 'accepted'],
+            ]);
+
+            try {
+                $response = $api->patch("proposals/{$id}/handover/approve", [
+                    'client_signoff_name' => $validated['client_signoff_name'],
+                    'client_approved' => true,
+                ]);
+            } catch (\Throwable $e) {
+                return back()->withInput()->with('error', 'Tidak dapat mengirim persetujuan BAST: ' . $e->getMessage());
+            }
+
+            if (!$response->successful()) {
+                return back()
+                    ->withInput()
+                    ->with('error', $response->json('message') ?? 'Persetujuan BAST gagal.');
+            }
+
+            return redirect()
+                ->route('klien.bast.show', $id)
+                ->with('success', $response->json('message') ?? 'BAST berhasil disetujui.');
+        })->whereNumber('id')->name('bast.approve');
+
         Route::get('/projek-saya', function (ApiService $api) {
             $proposals = [];
             $error = null;
