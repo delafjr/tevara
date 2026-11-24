@@ -108,12 +108,14 @@
                         @endif
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-slate-700">URL panduan pengguna</label>
-                        <input type="url" name="user_manual_url" maxlength="255" value="{{ old('user_manual_url', $project['user_manual_url'] ?? '') }}" placeholder="https://..." class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                        <label class="mb-1 block text-xs font-semibold text-slate-700">URL panduan pengguna <span class="text-slate-400 font-normal">(Opsional)</span></label>
+                        <input type="url" name="user_manual_url" maxlength="255" value="{{ old('user_manual_url', $project['user_manual_url'] ?? '') }}" placeholder="https://... (kosongkan jika tidak ada)" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                        <p class="mt-1 text-[11px] text-slate-400">Tautan panduan/user manual untuk klien (opsional, tidak wajib diisi).</p>
                     </div>
                     <div>
                         <label class="mb-1 block text-xs font-semibold text-slate-700">Masa garansi (bulan)</label>
-                        <input type="number" name="maintenance_warranty_months" min="0" required value="{{ old('maintenance_warranty_months', $project['maintenance']['maintenance_warranty_months'] ?? 3) }}" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                        <input type="number" name="maintenance_warranty_months" min="0" required value="{{ old('maintenance_warranty_months', $project['warranty_months'] ?? $project['maintenance']['maintenance_warranty_months'] ?? $project['warranty']['warranty_months'] ?? 3) }}" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                        <p class="mt-1 text-[11px] text-slate-400">Durasi masa garansi pemeliharaan proyek yang disepakati.</p>
                     </div>
                     <div class="md:col-span-2">
                         <label class="mb-1 block text-xs font-semibold text-slate-700">Catatan serah terima</label>

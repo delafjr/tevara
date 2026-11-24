@@ -133,9 +133,15 @@
                             </div>
                         </div>
                     @endif
+                    @php
+                        $warrantyMonths = $maintenance['maintenance_warranty_months']
+                            ?? $project['warranty_months']
+                            ?? $project['warranty']['warranty_months']
+                            ?? 0;
+                    @endphp
                     <div class="rounded-xl border border-slate-200 p-4">
                         <h3 class="text-xs font-bold text-slate-700">Masa garansi</h3>
-                        <p class="mt-2 text-sm text-slate-600">{{ $maintenance['maintenance_warranty_months'] ?? 0 }} bulan</p>
+                        <p class="mt-2 text-sm text-slate-600">{{ $warrantyMonths }} bulan</p>
                         @if(!empty($maintenance['maintenance_notes']))<p class="mt-1 text-xs text-slate-500">{{ $maintenance['maintenance_notes'] }}</p>@endif
                         <p class="mt-2 text-xs text-slate-500">Garansi dimulai sehari setelah persetujuan dan tanggal serah terima resmi.</p>
                     </div>
