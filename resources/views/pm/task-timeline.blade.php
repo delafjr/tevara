@@ -78,7 +78,11 @@
         }
     };
 
-    $overallProgress = (int) round((float) ($summary['overall_progress'] ?? 0));
+    $overallProgress = isset($summary['overall_progress'])
+        ? (int) round((float) $summary['overall_progress'])
+        : (count($tasks) > 0 ? (int) round((float) collect($tasks)->avg('progress_percentage')) : 0);
+    $totalProjectTasks = (int) ($summary['total'] ?? count($tasks));
+    $taskWeight = $totalProjectTasks > 0 ? round(100 / $totalProjectTasks, 1) : 0;
     $initialTask     = $tasks[0] ?? null;
 
     $currentProposalId = $proposal['id'] ?? ($proposalId ?? null);
@@ -440,7 +444,10 @@
                             <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Progress</p>
                             <p class="text-xl font-extrabold text-[#0B254A]" x-text="(selectedTask?.progress_percentage ?? 0) + '%'"></p>
                         </div>
-                        <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#0B3B82]" x-text="selectedTask?.status ?? '—'"></span>
+                        <div class="text-right">
+                            <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#0B3B82] inline-block mb-1" x-text="selectedTask?.status ?? '—'"></span>
+                            <p class="text-[10px] text-slate-400 font-medium">Bobot: <strong class="text-[#0B3B82] font-bold">{{ $taskWeight }}%</strong> dari proyek</p>
+                        </div>
                     </div>
 
                     <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">

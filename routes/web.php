@@ -1224,8 +1224,15 @@ Route::middleware('auth.api')->group(function () {
         $progress = (float) $validated['progress_percentage'];
         $status = $validated['status'];
 
-        if ($progress >= 100) {
+        if ($status === 'TODO' || $progress <= 0) {
+            $status = 'TODO';
+            $progress = 0;
+        } elseif ($progress >= 100 || $status === 'TESTING') {
             $status = 'TESTING';
+            $progress = 100;
+        } else {
+            $status = 'IN_PROGRESS';
+            $progress = max(1, min(99, $progress));
         }
 
         $payload = [
