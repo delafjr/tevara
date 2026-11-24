@@ -67,6 +67,7 @@
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
             ['id' => 'ajukan-projek','label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => route('klien.ajukan-proyek')],
             ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => route('klien.projek-saya')],
+            ['id' => 'uat',          'label' => 'UAT & Pengujian',       'icon' => 'uat',            'href' => route('klien.uat')],
             ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => route('klien.tagihan')],
         ],
         'mahasiswa' => [
@@ -89,6 +90,7 @@
         'pengurus_tefa' => [
             ['id' => 'dashboard',         'label' => 'Dashboard',         'icon' => 'dashboard',      'href' => route('dashboard')],
             ['id' => 'projek',            'label' => 'Projek',            'icon' => 'project',        'href' => route('pengurus-tefa.projek')],
+            ['id' => 'bast',              'label' => 'BAST',              'icon' => 'proposal',       'href' => route('pengurus-tefa.bast')],
             ['id' => 'klien-mitra',       'label' => 'Klien & Mitra',     'icon' => 'team',           'href' => route('pengurus-tefa.klien-mitra')],
             ['id' => 'dosen',             'label' => 'Dosen',             'icon' => 'team',           'href' => route('pengurus-tefa.dosen')],
             ['id' => 'mahasiswa',         'label' => 'Mahasiswa',         'icon' => 'team',           'href' => route('pengurus-tefa.mahasiswa')],
@@ -99,9 +101,9 @@
         ],
         'jurusan' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
-            ['id' => 'ajukan',       'label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => url()->current() . '?page=ajukan'],
-            ['id' => 'projek',       'label' => 'Projek Saya',           'icon' => 'project',        'href' => url()->current() . '?page=projek'],
-            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => url()->current() . '?page=tagihan'],
+            ['id' => 'ajukan-projek','label' => 'Ajukan Projek',        'icon' => 'ajukan-projek',  'href' => route('jurusan.ajukan-proyek')],
+            ['id' => 'projek-saya',  'label' => 'Projek Saya',          'icon' => 'project',        'href' => route('jurusan.projek-saya')],
+            ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran', 'icon' => 'tagihan',        'href' => route('jurusan.tagihan')],
         ],
     ];
 

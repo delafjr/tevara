@@ -208,6 +208,9 @@ Route::middleware('auth.api')->group(function () {
 
     // Klien: Ajukan Proyek Baru & Projek Saya
     Route::middleware('auth.api:klien')->prefix('klien')->name('klien.')->group(function () {
+        // UAT bersifat per-proposal, jadi menu indeks mengarah ke daftar proyek.
+        Route::get('/uat', fn () => redirect()->route('klien.projek-saya'))->name('uat');
+
         Route::get('/projek-saya', function (ApiService $api) {
             $handoverProjects = [];
             $handoverProjectsAvailable = false;
