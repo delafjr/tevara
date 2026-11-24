@@ -85,7 +85,7 @@
     <x-sidebar active="task-saya" />
 
     {{-- ===== MAIN CONTENT ===== --}}
-    <main class="flex-1 ml-64 p-8 min-h-screen flex flex-col gap-5"
+    <main class="flex-1 ml-64 p-8 min-h-screen min-w-0 flex flex-col gap-5 overflow-x-hidden"
           x-data="{
             selectedTask: @js($initialTask),
             progressPercentage: @js((float) ($initialTask['progress_percentage'] ?? 0)),
@@ -233,7 +233,7 @@
                         <span class="inline-block px-2 py-0.5 rounded-full bg-white/10 text-white text-[9px] font-medium">Peran: {{ $selectedProject['role'] }}</span>
                     @endif
                 </div>
-                <p class="text-white font-extrabold text-sm leading-tight truncate">{{ $selectedProject['title'] ?? '—' }}</p>
+                <p class="text-white font-extrabold text-sm leading-snug line-clamp-2 break-words" title="{{ $selectedProject['title'] ?? '—' }}">{{ $selectedProject['title'] ?? '—' }}</p>
                 <div class="flex items-center gap-4 mt-2 text-[11px] text-blue-200 flex-wrap">
                     @if(!empty($selectedProject['category']))
                         <span class="flex items-center gap-1">

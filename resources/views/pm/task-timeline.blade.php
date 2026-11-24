@@ -94,7 +94,7 @@
     <x-sidebar active="task-timeline" />
 
     {{-- ===== MAIN CONTENT ===== --}}
-    <main class="flex-1 ml-64 p-8 min-h-screen flex flex-col gap-5"
+    <main class="flex-1 ml-64 p-8 min-h-screen min-w-0 flex flex-col gap-5 overflow-x-hidden"
           x-data="{
             selectedTask: @js($initialTask),
             note: @js($initialTask['pm_notes'] ?? ''),
@@ -204,7 +204,7 @@
                         <span class="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-200">Demo</span>
                     @endif
                 </div>
-                <p class="text-white font-extrabold text-sm leading-tight">{{ $proposal['title'] ?? '—' }}</p>
+                <p class="text-white font-extrabold text-sm leading-snug line-clamp-2 break-words" title="{{ $proposal['title'] ?? '—' }}">{{ $proposal['title'] ?? '—' }}</p>
                 <div class="flex items-center gap-4 mt-2 text-[11px] text-blue-200 flex-wrap">
                     @if(!empty($proposal['client_name']))
                         <span>Klien: {{ $proposal['client_name'] }}</span>
