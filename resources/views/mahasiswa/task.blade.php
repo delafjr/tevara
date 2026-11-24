@@ -69,9 +69,10 @@
 
     $overallProgress = isset($summary['overall_progress'])
         ? (int) round((float) $summary['overall_progress'])
-        : (isset($selectedProject['progress'])
-            ? (int) round((float) $selectedProject['progress'])
-            : (int) round((float) (collect($tasks)->avg('progress_percentage') ?? 0)));
+        : (isset($selectedProject['overall_progress'])
+            ? (int) round((float) $selectedProject['overall_progress'])
+            : (int) round((float) ($selectedProject['progress'] ?? (collect($tasks)->avg('progress_percentage') ?? 0))));
+    $overallProgress = max(0, min(100, $overallProgress));
     $totalProjectTasks = (int) ($summary['project_total'] ?? ($summary['total'] ?? count($tasks)));
     $taskWeight = $totalProjectTasks > 0 ? round(100 / $totalProjectTasks, 1) : 0;
     $initialTask     = $tasks[0] ?? null;
