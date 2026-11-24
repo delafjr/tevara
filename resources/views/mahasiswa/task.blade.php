@@ -173,6 +173,15 @@
           }">
 
         {{-- ── 1. PAGE HEADER & ALERTS ── --}}
+        <div>
+            <a href="{{ route('mahasiswa.task') }}" class="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-[#0B3B82] transition-colors">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+                </svg>
+                Kembali ke Daftar Proyek
+            </a>
+        </div>
+
         @if(session('success') || session('error'))
             <div class="rounded-xl border {{ session('success') ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700' }} px-4 py-3 text-xs font-semibold" x-data="{ visible: true }" x-show="visible">
                 <div class="flex items-center justify-between gap-3">
@@ -235,6 +244,15 @@
                 </div>
                 <p class="text-white font-extrabold text-sm leading-snug line-clamp-2 break-words" title="{{ $selectedProject['title'] ?? '—' }}">{{ $selectedProject['title'] ?? '—' }}</p>
                 <div class="flex items-center gap-4 mt-2 text-[11px] text-blue-200 flex-wrap">
+                    @if(!empty($selectedProject['pm_name']) && $selectedProject['pm_name'] !== '—')
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+                            </svg>
+                            Dosen PM: <strong class="text-white font-semibold">{{ $selectedProject['pm_name'] }}</strong>
+                        </span>
+                        <span>·</span>
+                    @endif
                     @if(!empty($selectedProject['category']))
                         <span class="flex items-center gap-1">
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -347,8 +365,10 @@
                             @endphp
                             <button type="button"
                                     @click="selectTask(@js($task))"
-                                    :class="selectedTask?.id === {{ (int) ($task['id'] ?? 0) }} ? 'border-[#0B3B82] ring-1 ring-[#0B3B82]' : 'border-slate-100 hover:border-slate-200'"
-                                    class="w-full text-left bg-white rounded-xl border shadow-2xs p-4 hover:shadow-sm transition-all cursor-pointer relative {{ $isNeedsImprovement ? 'border-l-4 border-l-rose-500' : '' }}">
+                                    :class="selectedTask?.id === {{ (int) ($task['id'] ?? 0) }}
+                                        ? 'border-slate-300 shadow-md {{ $isNeedsImprovement ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-[#2563EB]' }} -translate-y-0.5'
+                                        : 'border-slate-200/80 hover:border-slate-300 hover:shadow-xs {{ $isNeedsImprovement ? 'border-l-4 border-l-rose-500' : '' }}'"
+                                    class="w-full text-left bg-white rounded-xl border p-4 transition-all duration-150 cursor-pointer relative">
                                 
                                 @if($isNeedsImprovement)
                                     <div class="flex items-center gap-1 text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md mb-2">
