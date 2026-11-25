@@ -78,14 +78,26 @@
                         @endforelse
                     </dd>
                 </div>
-                @foreach(['repository_url' => 'Repositori', 'documentation_url' => 'Dokumentasi', 'user_manual_url' => 'Panduan pengguna'] as $field => $label)
+                @foreach(['repository_url' => 'Repositori', 'documentation_url' => 'Dokumentasi', 'user_manual_url' => 'Panduan pengguna (Web)'] as $field => $label)
                     @if(!empty($proposal[$field]))
                         <div>
                             <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ $label }}</dt>
-                            <dd class="mt-1 break-all text-sm"><a class="text-[#0B3B82] hover:underline" href="{{ $proposal[$field] }}" target="_blank" rel="noopener noreferrer">{{ $proposal[$field] }}</a></dd>
+                            @if($field === 'user_manual_url' && !filter_var($proposal[$field], FILTER_VALIDATE_URL))
+                                <dd class="mt-1 text-sm"><a class="text-[#0B3B82] hover:underline" href="{{ route('klien.projek-saya.bast.user-manual', $proposal['id']) }}">Unduh panduan pengguna</a></dd>
+                            @elseif($field === 'documentation_url' && !filter_var($proposal[$field], FILTER_VALIDATE_URL))
+                                <dd class="mt-1 text-sm"><a class="text-[#0B3B82] hover:underline" href="{{ route('klien.projek-saya.bast.documentation', $proposal['id']) }}">Unduh dokumentasi API</a></dd>
+                            @else
+                                <dd class="mt-1 break-all text-sm"><a class="text-[#0B3B82] hover:underline" href="{{ $proposal[$field] }}" target="_blank" rel="noopener noreferrer">{{ $proposal[$field] }}</a></dd>
+                            @endif
                         </div>
                     @endif
                 @endforeach
+                @if(!empty($proposal['user_manual_file_url']))
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">Dokumen Panduan</dt>
+                        <dd class="mt-1 text-sm"><a class="text-[#0B3B82] hover:underline" href="{{ route('klien.projek-saya.bast.user-manual', $proposal['id']) }}">Unduh dokumen panduan pengguna</a></dd>
+                    </div>
+                @endif
                 @if(!empty($proposal['handover_notes']))
                     <div class="sm:col-span-2">
                         <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">Catatan serah terima</dt>

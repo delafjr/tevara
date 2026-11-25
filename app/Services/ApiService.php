@@ -147,19 +147,35 @@ class ApiService
     }
 
     /**
-     * Send multipart request with file attachment.
+     * Send multipart request with a single file attachment.
      */
     public function sendWithFile(string $endpoint, string $fileParam, $file, array $data = [], string $method = 'POST'): Response
     {
-        $url = $this->baseUrl . '/' . ltrim($endpoint, '/');
-        $fileName = is_object($file) && method_exists($file, 'getClientOriginalName')
-            ? $file->getClientOriginalName()
-            : basename((string) $file);
-        $fileContents = is_object($file) && method_exists($file, 'getRealPath')
-            ? file_get_contents($file->getRealPath())
-            : (string) $file;
+        return $this->sendWithFiles($endpoint, [$fileParam => $file], $data, $method);
+    }
 
-        $client = $this->withToken()->attach($fileParam, $fileContents, $fileName);
+    /**
+     * Send multipart request with one or more file attachments.
+     */
+    public function sendWithFiles(string $endpoint, array $files, array $data = [], string $method = 'POST'): Response
+    {
+        $url = $this->baseUrl . '/' . ltrim($endpoint, '/');
+        $client = $this->withToken();
+
+        foreach ($files as $fileParam => $file) {
+            if ($file === null) {
+                continue;
+            }
+
+            $fileName = is_object($file) && method_exists($file, 'getClientOriginalName')
+                ? $file->getClientOriginalName()
+                : basename((string) $file);
+            $fileContents = is_object($file) && method_exists($file, 'getRealPath')
+                ? file_get_contents($file->getRealPath())
+                : (string) $file;
+
+            $client = $client->attach($fileParam, $fileContents, $fileName);
+        }
 
         if (strtoupper($method) === 'PATCH') {
             return $client->post($url, array_merge($data, ['_method' => 'PATCH']));
