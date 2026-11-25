@@ -73,63 +73,54 @@
         ];
     };
 
-    // category_distribution dari API berbentuk [{"web": 2}, ...] → ratakan lalu jumlahkan per kategori.
+    // Label & warna kategori dinamis dari category_distribution backend (DB).
+    $categoryLabels = [
+        'web' => 'Website', 'website' => 'Website',
+        'iot' => 'IoT & Embedded', 'embedded' => 'IoT & Embedded',
+        'app' => 'Aplikasi', 'apps' => 'Aplikasi', 'aplikasi' => 'Aplikasi', 'mobile' => 'Aplikasi',
+        'desktop' => 'Desktop',
+        'sis' => 'Pengembangan Sis.', 'sistem' => 'Pengembangan Sis.', 'software' => 'Pengembangan Sis.', 'system' => 'Pengembangan Sis.',
+        'other' => 'Lainnya', 'lainnya' => 'Lainnya',
+    ];
+    $categoryColors = [
+        'web' => '#0B3B82', 'website' => '#0B3B82',
+        'iot' => '#F59E0B', 'embedded' => '#F59E0B',
+        'app' => '#2563EB', 'apps' => '#2563EB', 'aplikasi' => '#2563EB', 'mobile' => '#2563EB',
+        'desktop' => '#0EA5E9',
+        'sis' => '#16A34A', 'sistem' => '#16A34A', 'software' => '#16A34A', 'system' => '#16A34A',
+        'other' => '#CBD5E1', 'lainnya' => '#CBD5E1',
+    ];
+    $extraCategoryColors = ['#8B5CF6', '#EC4899', '#F97316', '#14B8A6'];
+
     $categoryCounts = [];
     foreach (($dash['category_distribution'] ?? []) as $entry) {
         if (is_array($entry)) {
             foreach ($entry as $key => $count) {
-                $key = strtolower((string) $key);
+                $key = strtolower(trim((string) $key));
                 $categoryCounts[$key] = ($categoryCounts[$key] ?? 0) + (int) $count;
             }
         }
     }
 
-    $categoryDefaults = [
-        ['label' => 'Website',            'color' => '#0B3B82'],
-        ['label' => 'IoT & Embedded',     'color' => '#F59E0B'],
-        ['label' => 'Aplikasi',           'color' => '#2563EB'],
-        ['label' => 'Pengembangan Sis.',  'color' => '#94A3B8'],
-    ];
-    $categoryKeyMap = [
-        'web' => 0, 'website' => 0,
-        'iot' => 1, 'embedded' => 1,
-        'app' => 2, 'apps' => 2, 'aplikasi' => 2, 'mobile' => 2,
-        'sis' => 3, 'sistem' => 3, 'software' => 3, 'system' => 3,
-    ];
-
-    $categoryValues = [0, 0, 0, 0];
-    $categoryOther = 0;
-    foreach ($categoryCounts as $key => $count) {
-        $idx = $categoryKeyMap[$key] ?? null;
-        if ($idx === null) {
-            $categoryOther += $count;
-        } else {
-            $categoryValues[$idx] += $count;
-        }
-    }
-
     $categoryChart = [];
-    foreach ($categoryDefaults as $i => $default) {
+    foreach ($categoryCounts as $key => $count) {
+        if ($count <= 0) {
+            continue;
+        }
         $categoryChart[] = [
-            'label' => $default['label'],
-            'color' => $default['color'],
-            'count' => $categoryValues[$i],
+            'label' => $categoryLabels[$key] ?? ucfirst(str_replace('_', ' ', $key)),
+            'color' => $categoryColors[$key] ?? $extraCategoryColors[count($categoryChart) % count($extraCategoryColors)],
+            'count' => $count,
         ];
     }
-    if ($categoryOther > 0) {
-        $categoryChart[] = ['label' => 'Lainnya', 'color' => '#CBD5E1', 'count' => $categoryOther];
-    }
 
-    // Segmen donut chart (r = 40 → keliling 251.2).
-    $donutCircumference = 251.2;
+    // Segmen donut chart (r = 40 → keliling 251.33).
+    $donutCircumference = 251.33;
     $donutTotal = array_sum(array_column($categoryChart, 'count'));
     $donutSegments = [];
     $donutOffset = 0;
     if ($donutTotal > 0) {
         foreach ($categoryChart as $segment) {
-            if ($segment['count'] <= 0) {
-                continue;
-            }
             $length = ($segment['count'] / $donutTotal) * $donutCircumference;
             $donutSegments[] = [
                 'color'     => $segment['color'],
@@ -401,7 +392,7 @@
 
                     {{-- Legend List --}}
                     <div class="space-y-2.5">
-                        @foreach($categoryChart as $category)
+                        @forelse($categoryChart as $category)
                             <div class="flex items-center justify-between text-xs">
                                 <div class="flex items-center gap-2.5">
                                     <span class="w-2 h-2 rounded-full flex-shrink-0" style="background: {{ $category['color'] }}"></span>
@@ -409,7 +400,14 @@
                                 </div>
                                 <span class="font-bold text-[#1E293B]">{{ $category['count'] }}</span>
                             </div>
-                        @endforeach
+                        @empty
+                            <div class="py-3 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 text-slate-400 text-xs font-medium">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                    Belum ada data kategori
+                                </span>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
 

@@ -21,27 +21,30 @@
     $projectsList      = is_array($dash['projects'] ?? null) ? $dash['projects'] : [];
     $projectCount      = count($projectsList);
 
-    // Label & warna kategori
+    // Label & warna kategori dinamis dari category_distribution backend (DB).
     $categoryLabels = [
         'web' => 'Website', 'website' => 'Website',
-        'iot' => 'IoT & Emb.', 'embedded' => 'IoT & Emb.',
+        'iot' => 'IoT & Embedded', 'embedded' => 'IoT & Embedded',
         'app' => 'Aplikasi', 'apps' => 'Aplikasi', 'aplikasi' => 'Aplikasi', 'mobile' => 'Aplikasi',
-        'sis' => 'Sistem Informasi', 'sistem' => 'Sistem Informasi', 'software' => 'Sistem Informasi', 'system' => 'Sistem Informasi',
+        'desktop' => 'Desktop',
+        'sis' => 'Pengembangan Sis.', 'sistem' => 'Pengembangan Sis.', 'software' => 'Pengembangan Sis.', 'system' => 'Pengembangan Sis.',
         'other' => 'Lainnya', 'lainnya' => 'Lainnya',
     ];
     $categoryColors = [
         'web' => '#0B3B82', 'website' => '#0B3B82',
         'iot' => '#F59E0B', 'embedded' => '#F59E0B',
-        'app' => '#3B82F6', 'apps' => '#3B82F6', 'aplikasi' => '#3B82F6', 'mobile' => '#3B82F6',
-        'sis' => '#CBD5E1', 'sistem' => '#CBD5E1', 'software' => '#CBD5E1', 'system' => '#CBD5E1',
-        'other' => '#94A3B8', 'lainnya' => '#94A3B8',
+        'app' => '#2563EB', 'apps' => '#2563EB', 'aplikasi' => '#2563EB', 'mobile' => '#2563EB',
+        'desktop' => '#0EA5E9',
+        'sis' => '#16A34A', 'sistem' => '#16A34A', 'software' => '#16A34A', 'system' => '#16A34A',
+        'other' => '#CBD5E1', 'lainnya' => '#CBD5E1',
     ];
+    $extraCategoryColors = ['#8B5CF6', '#EC4899', '#F97316', '#14B8A6'];
 
     $categoryCounts = [];
     foreach (($dash['category_distribution'] ?? []) as $entry) {
         if (is_array($entry)) {
             foreach ($entry as $key => $count) {
-                $key = strtolower((string) $key);
+                $key = strtolower(trim((string) $key));
                 $categoryCounts[$key] = ($categoryCounts[$key] ?? 0) + (int) $count;
             }
         }
@@ -49,13 +52,32 @@
 
     $categoryChart = [];
     foreach ($categoryCounts as $key => $count) {
+        if ($count <= 0) {
+            continue;
+        }
         $categoryChart[] = [
-            'label' => $categoryLabels[$key] ?? ucfirst($key),
-            'color' => $categoryColors[$key] ?? '#94A3B8',
+            'label' => $categoryLabels[$key] ?? ucfirst(str_replace('_', ' ', $key)),
+            'color' => $categoryColors[$key] ?? $extraCategoryColors[count($categoryChart) % count($extraCategoryColors)],
             'count' => (int) $count,
         ];
     }
+
+    // Segmen donut chart (r = 40 → keliling 251.33).
+    $donutCircumference = 251.33;
     $categoryTotal = array_sum(array_column($categoryChart, 'count'));
+    $donutSegments = [];
+    $donutOffset = 0;
+    if ($categoryTotal > 0) {
+        foreach ($categoryChart as $segment) {
+            $length = ($segment['count'] / $categoryTotal) * $donutCircumference;
+            $donutSegments[] = [
+                'color'     => $segment['color'],
+                'dasharray' => round($length, 2) . ' ' . round($donutCircumference - $length, 2),
+                'offset'    => -round($donutOffset, 2),
+            ];
+            $donutOffset += $length;
+        }
+    }
 @endphp
 
 <div class="flex min-h-screen">
@@ -196,31 +218,48 @@
             </div>
 
             {{-- Chart Kategori --}}
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col">
-                <div class="flex items-start justify-between mb-8">
-                    <div>
-                        <h3 class="text-lg font-bold text-[#1E293B]">Distribusi Kategori</h3>
-                        <p class="text-sm text-slate-500 mt-1">Klasifikasi seluruh portofolio</p>
-                    </div>
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-6 self-start">
+                <div>
+                    <h2 class="font-bold text-[#1E293B] text-[15px]">Distribusi Kategori</h2>
+                    <p class="text-xs text-[#2563EB] font-medium mt-0.5">Klasifikasi Seluruh Portofolio</p>
                 </div>
-                
-                <div class="flex-1 flex flex-col items-center justify-center">
-                    <div class="relative w-48 h-48 rounded-full flex items-center justify-center bg-slate-100">
-                        <div class="absolute w-32 h-32 bg-white rounded-full flex flex-col items-center justify-center shadow-xs">
-                            <span class="text-3xl font-bold text-[#1E293B]">{{ $categoryTotal }}</span>
-                            <span class="text-[10px] font-semibold tracking-widest text-slate-500 uppercase mt-1">Project</span>
+
+                {{-- Donut Chart SVG --}}
+                <div class="flex items-center justify-center my-5">
+                    <div class="relative w-36 h-36">
+                        <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
+                            <!-- Background circle -->
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#F8FAFC" stroke-width="14" />
+
+                            @foreach($donutSegments as $segment)
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="{{ $segment['color'] }}" stroke-width="14"
+                                    stroke-dasharray="{{ $segment['dasharray'] }}" stroke-dashoffset="{{ $segment['offset'] }}" />
+                            @endforeach
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="text-2xl font-bold text-[#0B254A] leading-none">{{ $totalProjects }}</span>
+                            <span class="text-[9px] font-bold text-slate-400 tracking-wider mt-1">PROJECT</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-y-4 gap-x-2 mt-8 text-sm">
-                    @forelse($categoryChart as $cat)
-                    <div class="flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {{ $cat['color'] }}"></span>
-                        <span class="text-slate-600 truncate">{{ $cat['label'] }} <span class="font-semibold text-[#1E293B]">({{ $cat['count'] }})</span></span>
-                    </div>
+                {{-- Legend List --}}
+                <div class="space-y-2.5">
+                    @forelse($categoryChart as $category)
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-2 h-2 rounded-full flex-shrink-0" style="background: {{ $category['color'] }}"></span>
+                                <span class="text-slate-600 font-medium">{{ $category['label'] }}</span>
+                            </div>
+                            <span class="font-bold text-[#1E293B]">{{ $category['count'] }}</span>
+                        </div>
                     @empty
-                    <div class="col-span-2 text-center text-xs text-slate-400">Belum ada kategori terdaftar</div>
+                        <div class="py-3 text-center">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 text-slate-400 text-xs font-medium">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                Belum ada data kategori
+                            </span>
+                        </div>
                     @endforelse
                 </div>
             </div>
