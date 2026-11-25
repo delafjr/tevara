@@ -69,9 +69,9 @@
 
                     @if($isSourceCode)
                         <div>
-                            <label class="mb-1 block text-xs font-semibold text-slate-700">Repository source code <span class="text-rose-500">*</span></label>
-                            <input type="url" name="repository_url" required maxlength="255" value="{{ old('repository_url', $project['repository_url'] ?? '') }}" placeholder="https://github.com/..." class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
-                            <p class="mt-1 text-[11px] text-slate-400">Tautan repository source code proyek untuk diserahkan ke klien.</p>
+                            <label class="mb-1 block text-xs font-semibold text-slate-700">Repository source code <span class="text-slate-400 font-normal">(Opsional)</span></label>
+                            <input type="url" name="repository_url" maxlength="255" value="{{ old('repository_url', $project['repository_url'] ?? '') }}" placeholder="https://github.com/... (opsional)" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                            <p class="mt-1 text-[11px] text-slate-400">Tautan repository source code proyek untuk diserahkan ke klien (opsional).</p>
                         </div>
                     @else
                         <div class="md:col-span-2 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
@@ -81,36 +81,26 @@
                                 </svg>
                                 <span class="text-xs font-bold text-[#0B3B82]">Skema Kelola Penuh oleh TeFa (Tanpa Penyerahan Source Code)</span>
                             </div>
-                            <p class="text-xs text-slate-600">Klien tidak meminta penyerahan source code. Kolom repository ditiadakan. Silakan cantumkan URL akses aplikasi live dan kredensial login (email & password) untuk diserahkan kepada pihak klien.</p>
+                            <p class="text-xs text-slate-600">Klien tidak meminta penyerahan source code. Kolom repository ditiadakan. Silakan cantumkan URL akses aplikasi live untuk diserahkan kepada pihak klien.</p>
                         </div>
                         <div>
                             <label class="mb-1 block text-xs font-semibold text-slate-700">URL Akses Aplikasi / Web Sistem <span class="text-rose-500">*</span></label>
                             <input type="url" name="app_url" required maxlength="255" value="{{ old('app_url', $project['app_url'] ?? '') }}" placeholder="https://aplikasi.polines.ac.id" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
                             <p class="mt-1 text-[11px] text-slate-400">Tautan live server / dashboard aplikasi yang siap digunakan klien.</p>
                         </div>
-                        <div>
-                            <label class="mb-1 block text-xs font-semibold text-slate-700">Email Akses Login</label>
-                            <input type="email" name="access_email" maxlength="255" value="{{ old('access_email', $project['access_email'] ?? '') }}" placeholder="admin@perusahaan.com" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
-                            <p class="mt-1 text-[11px] text-slate-400">Email / username akun admin yang diserahkan ke klien.</p>
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-xs font-semibold text-slate-700">Password / Kredensial Akses</label>
-                            <input type="text" name="access_password" maxlength="255" value="{{ old('access_password', $project['access_password'] ?? '') }}" placeholder="Contoh: Rahasia123! (atau petunjuk login)" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
-                            <p class="mt-1 text-[11px] text-slate-400">Password sementara untuk pertama kali login klien.</p>
-                        </div>
                     @endif
                     <div>
                         <label class="mb-1 block text-xs font-semibold text-slate-700">Lampiran fisik dokumentasi API</label>
                         <input type="file" name="documentation_file" accept=".pdf,.docx,.zip,.doc" @required(empty($project['documentation_url'])) class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
-                        <p class="mt-1 text-[11px] text-slate-400">{{ !empty($project['documentation_url']) ? 'Opsional: unggah jika ingin mengganti lampiran (PDF, DOCX, ZIP maks 10 MB).' : 'Wajib diisi: PDF, DOCX, atau ZIP, maksimal 10 MB.' }}</p>
+                        <p class="mt-1 text-[11px] text-slate-400">{{ !empty($project['documentation_url']) ? 'Opsional: unggah jika ingin mengganti lampiran (PDF, DOCX, ZIP maks 10 MB).' : 'Wajib diisi: PDF, DOCX, atau ZIP, maksimal 10 MB.' }} Kredensial akses sudah terlampir dalam dokumentasi API.</p>
                         @if(!empty($project['documentation_url']))
                             <a href="{{ route('pengurus-tefa.bast.documentation', $project['id']) }}" class="mt-1 inline-block text-xs font-semibold text-blue-700 underline">Lihat lampiran saat ini</a>
                         @endif
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-slate-700">URL panduan pengguna <span class="text-slate-400 font-normal">(Opsional)</span></label>
-                        <input type="url" name="user_manual_url" maxlength="255" value="{{ old('user_manual_url', $project['user_manual_url'] ?? '') }}" placeholder="https://... (kosongkan jika tidak ada)" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
-                        <p class="mt-1 text-[11px] text-slate-400">Tautan panduan/user manual untuk klien (opsional, tidak wajib diisi).</p>
+                        <label class="mb-1 block text-xs font-semibold text-slate-700">URL panduan pengguna <span class="text-rose-500">*</span></label>
+                        <input type="url" name="user_manual_url" required maxlength="255" value="{{ old('user_manual_url', $project['user_manual_url'] ?? '') }}" placeholder="https://..." class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                        <p class="mt-1 text-[11px] text-slate-400">Tautan panduan/user manual untuk klien (wajib diisi).</p>
                     </div>
                     <div>
                         <label class="mb-1 block text-xs font-semibold text-slate-700">Masa garansi (bulan)</label>

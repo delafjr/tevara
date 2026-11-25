@@ -210,24 +210,43 @@
                         </div>
 
                         {{-- Metode Pembayaran --}}
+                        @php
+                            $selectedMethod = old('payment_method', request('method', 'BANK_TRANSFER'));
+                            $channelMap = [
+                                'bca' => 'Bank BCA — 1234 5678 9012 (a.n. TEFA Polines / TEVARA)',
+                                'mandiri' => 'Bank Mandiri — 1350 0987 6543 2 (a.n. TEFA Polines / TEVARA)',
+                                'bni' => 'Bank BNI — 0889 1122 3344 (a.n. TEFA Polines / TEVARA)',
+                                'bri' => 'Bank BRI — 0022 0100 4455 501 (a.n. TEFA Polines / TEVARA)',
+                                'gopay' => 'GoPay — 0811 2345 6789 (a.n. TEVARA Polines)',
+                                'ovo' => 'OVO — 0811 2345 6789 (a.n. TEVARA Polines)',
+                                'dana' => 'DANA — 0811 2345 6789 (a.n. TEVARA Polines)',
+                                'shopeepay' => 'ShopeePay — 0811 2345 6789 (a.n. TEVARA Polines)',
+                            ];
+                            $selectedChannelInfo = $channelMap[request('channel')] ?? null;
+                        @endphp
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-2">
                                 Metode / Kanal Pembayaran yang Digunakan <span class="text-red-500">*</span>
                             </label>
                             <select name="payment_method" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition">
-                                <option value="BANK_TRANSFER" {{ old('payment_method') === 'BANK_TRANSFER' ? 'selected' : '' }}>
-                                    Transfer Bank
+                                <option value="BANK_TRANSFER" {{ $selectedMethod === 'BANK_TRANSFER' ? 'selected' : '' }}>
+                                    Transfer Bank (BCA / Mandiri / BNI / BRI)
                                 </option>
-                                <option value="VIRTUAL_ACCOUNT" {{ old('payment_method') === 'VIRTUAL_ACCOUNT' ? 'selected' : '' }}>
+                                <option value="VIRTUAL_ACCOUNT" {{ $selectedMethod === 'VIRTUAL_ACCOUNT' ? 'selected' : '' }}>
                                     Virtual Account
                                 </option>
-                                <option value="CASH" {{ old('payment_method') === 'CASH' ? 'selected' : '' }}>
+                                <option value="CASH" {{ $selectedMethod === 'CASH' ? 'selected' : '' }}>
                                     Tunai
                                 </option>
-                                <option value="OTHER" {{ old('payment_method') === 'OTHER' ? 'selected' : '' }}>
-                                    Lainnya
+                                <option value="OTHER" {{ $selectedMethod === 'OTHER' ? 'selected' : '' }}>
+                                    E-Wallet (GoPay / OVO / DANA / ShopeePay) / Lainnya
                                 </option>
                             </select>
+                            @if($selectedChannelInfo)
+                                <p class="mt-2 rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2 text-[11px] font-medium text-[#0B3B82]">
+                                    Kanal tujuan dipilih: <span class="font-bold">{{ $selectedChannelInfo }}</span>
+                                </p>
+                            @endif
                         </div>
 
                         {{-- Tanggal Transfer --}}

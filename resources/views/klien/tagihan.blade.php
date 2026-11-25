@@ -358,9 +358,45 @@
                                         <th class="px-5 py-3.5 text-right">AKSI DOKUMEN</th>
                                     </tr>
                                 </thead>
+                                @php
+                                    $paymentChannels = [
+                                        'bca' => ['group' => 'Transfer Bank', 'method' => 'BANK_TRANSFER', 'label' => 'Bank BCA', 'account' => '1234 5678 9012', 'holder' => 'TEFA Polines / TEVARA'],
+                                        'mandiri' => ['group' => 'Transfer Bank', 'method' => 'BANK_TRANSFER', 'label' => 'Bank Mandiri', 'account' => '1350 0987 6543 2', 'holder' => 'TEFA Polines / TEVARA'],
+                                        'bni' => ['group' => 'Transfer Bank', 'method' => 'BANK_TRANSFER', 'label' => 'Bank BNI', 'account' => '0889 1122 3344', 'holder' => 'TEFA Polines / TEVARA'],
+                                        'bri' => ['group' => 'Transfer Bank', 'method' => 'BANK_TRANSFER', 'label' => 'Bank BRI', 'account' => '0022 0100 4455 501', 'holder' => 'TEFA Polines / TEVARA'],
+                                        'gopay' => ['group' => 'E-Wallet', 'method' => 'OTHER', 'label' => 'GoPay', 'account' => '0811 2345 6789', 'holder' => 'TEVARA Polines'],
+                                        'ovo' => ['group' => 'E-Wallet', 'method' => 'OTHER', 'label' => 'OVO', 'account' => '0811 2345 6789', 'holder' => 'TEVARA Polines'],
+                                        'dana' => ['group' => 'E-Wallet', 'method' => 'OTHER', 'label' => 'DANA', 'account' => '0811 2345 6789', 'holder' => 'TEVARA Polines'],
+                                        'shopeepay' => ['group' => 'E-Wallet', 'method' => 'OTHER', 'label' => 'ShopeePay', 'account' => '0811 2345 6789', 'holder' => 'TEVARA Polines'],
+                                    ];
+                                @endphp
                                 <tbody class="divide-y divide-slate-100 bg-white">
                                     @foreach($proj['termins'] as $termin)
-                                    <tr class="hover:bg-slate-50/70 transition">
+                                    @php
+                                        $uploadBaseUrl = route('klien.tagihan.unggah', ['proposal' => $termin['proposal_id'] ?? ($proj['proposal_id'] ?? 0), 'payment' => $termin['id'] ?? 0]);
+                                        $invoiceBaseUrl = route('klien.tagihan.invoice', $termin['id']);
+                                    @endphp
+                                    <tr class="hover:bg-slate-50/70 transition"
+                                        x-data="{
+                                            selectedChannel: '',
+                                            copied: false,
+                                            channels: {{ \Illuminate\Support\Js::from($paymentChannels) }},
+                                            get current() { return this.channels[this.selectedChannel] || null; },
+                                            get invoiceUrl() {
+                                                if (!this.selectedChannel) return '{{ $invoiceBaseUrl }}';
+                                                return '{{ $invoiceBaseUrl }}?channel=' + encodeURIComponent(this.selectedChannel);
+                                            },
+                                            get uploadUrl() {
+                                                if (!this.current) return '{{ $uploadBaseUrl }}';
+                                                return '{{ $uploadBaseUrl }}?method=' + encodeURIComponent(this.current.method) + '&channel=' + encodeURIComponent(this.selectedChannel);
+                                            },
+                                            copyAccount() {
+                                                if (!this.current) return;
+                                                navigator.clipboard?.writeText(this.current.account.replace(/\s+/g, ''));
+                                                this.copied = true;
+                                                setTimeout(() => this.copied = false, 1800);
+                                            }
+                                        }">
 
                                         {{-- 1. Termin & Uraian --}}
                                         <td class="px-5 py-4 max-w-sm">
@@ -394,22 +430,56 @@
                                         </td>
 
                                         {{-- 3. Kanal Pembayaran --}}
-                                        <td class="px-5 py-4 whitespace-nowrap">
-                                            <div class="inline-flex items-center gap-2 text-slate-600 font-medium">
-                                                @if(($termin['channel_icon'] ?? 'bank') === 'bank')
-                                                    {{-- Bank / Building Icon --}}
-                                                    <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5M4.5 21V10.5M3 21h18"/>
-                                                    </svg>
-                                                @else
-                                                    {{-- Card / Receipt Icon --}}
-                                                    <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                                        <rect width="20" height="14" x="2" y="5" rx="2"/>
-                                                        <line x1="2" x2="22" y1="10" y2="10"/>
-                                                    </svg>
-                                                @endif
-                                                <span>{{ $termin['channel'] ?? 'Transfer Bank' }}</span>
-                                            </div>
+                                        <td class="px-5 py-4 min-w-[230px]">
+                                            @if(!empty($termin['can_upload']))
+                                                <div class="space-y-2">
+                                                    <select x-model="selectedChannel"
+                                                            aria-label="Pilih kanal pembayaran"
+                                                            class="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-[#0B3B82] focus:bg-white focus:outline-none">
+                                                        <option value="">-- Pilih Kanal Pembayaran --</option>
+                                                        <optgroup label="Transfer Bank">
+                                                            <option value="bca">Transfer Bank - BCA</option>
+                                                            <option value="mandiri">Transfer Bank - Mandiri</option>
+                                                            <option value="bni">Transfer Bank - BNI</option>
+                                                            <option value="bri">Transfer Bank - BRI</option>
+                                                        </optgroup>
+                                                        <optgroup label="E-Wallet">
+                                                            <option value="gopay">E-Wallet - GoPay</option>
+                                                            <option value="ovo">E-Wallet - OVO</option>
+                                                            <option value="dana">E-Wallet - DANA</option>
+                                                            <option value="shopeepay">E-Wallet - ShopeePay</option>
+                                                        </optgroup>
+                                                    </select>
+
+                                                    <template x-if="current">
+                                                        <div class="rounded-lg border border-blue-100 bg-blue-50/60 px-2.5 py-2 text-[11px]">
+                                                            <div class="flex items-center justify-between gap-2">
+                                                                <span class="font-bold text-[#0B3B82]" x-text="current.label"></span>
+                                                                <button type="button"
+                                                                        @click="copyAccount()"
+                                                                        class="text-[10px] font-semibold text-[#0B3B82] hover:underline cursor-pointer"
+                                                                        x-text="copied ? 'Tersalin!' : 'Salin'"></button>
+                                                            </div>
+                                                            <p class="mt-0.5 font-mono font-bold text-slate-800 tracking-wide" x-text="current.account"></p>
+                                                            <p class="text-[10px] text-slate-500" x-text="'a.n. ' + current.holder"></p>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            @else
+                                                <div class="inline-flex items-center gap-2 text-slate-600 font-medium">
+                                                    @if(($termin['channel_icon'] ?? 'bank') === 'bank')
+                                                        <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5M4.5 21V10.5M3 21h18"/>
+                                                        </svg>
+                                                    @else
+                                                        <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                            <rect width="20" height="14" x="2" y="5" rx="2"/>
+                                                            <line x1="2" x2="22" y1="10" y2="10"/>
+                                                        </svg>
+                                                    @endif
+                                                    <span>{{ $termin['channel'] ?? 'Transfer Bank' }}</span>
+                                                </div>
+                                            @endif
                                         </td>
 
                                         {{-- 4. Status Transaksi --}}
@@ -463,7 +533,8 @@
                                         {{-- 5. Aksi Dokumen --}}
                                         <td class="px-5 py-4 whitespace-nowrap text-right">
                                             <div class="inline-flex items-center gap-2">
-                                                <a href="{{ route('klien.tagihan.invoice', $termin['id']) }}"
+                                                <a :href="invoiceUrl"
+                                                   href="{{ $invoiceBaseUrl }}"
                                                         class="bg-white border border-slate-200 hover:border-[#0B3B82] hover:text-[#0B3B82] text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer">
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
@@ -471,7 +542,8 @@
                                                     <span>Unduh Invoice</span>
                                                 </a>
                                                 @if($termin['can_upload'])
-                                                <a href="{{ route('klien.tagihan.unggah', ['proposal' => $termin['proposal_id'] ?? ($proj['proposal_id'] ?? 0), 'payment' => $termin['id'] ?? 0]) }}"
+                                                <a :href="uploadUrl"
+                                                   href="{{ $uploadBaseUrl }}"
                                                    class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 shadow-xs transition">
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/>
