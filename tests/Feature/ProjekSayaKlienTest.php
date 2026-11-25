@@ -309,6 +309,7 @@ class ProjekSayaKlienTest extends TestCase
             ->post('/pengurus-tefa/proposals/501/bast', [
                 'repository_url' => 'https://example.test/repository',
                 'documentation_file' => UploadedFile::fake()->create('api-documentation.pdf', 20, 'application/pdf'),
+                'user_manual_file' => UploadedFile::fake()->create('panduan.pdf', 20, 'application/pdf'),
                 'handover_deliverables' => json_encode([[
                     'name' => 'Aplikasi inventaris',
                     'type' => 'digital',
@@ -325,6 +326,7 @@ class ProjekSayaKlienTest extends TestCase
 
         Http::assertSent(fn ($request) => str_ends_with($request->url(), '/proposals/501/handover/prepare')
             && $request->hasFile('documentation_file')
+            && $request->hasFile('user_manual_file')
             && str_contains($request->body(), 'Aplikasi inventaris'));
     }
 
@@ -342,7 +344,6 @@ class ProjekSayaKlienTest extends TestCase
         $this->withSession($session)
             ->post('/pengurus-tefa/proposals/501/bast', [
                 'repository_url' => 'https://example.test/repository',
-                'user_manual_url' => 'https://example.test/manual',
                 'documentation_file' => UploadedFile::fake()->create('api-documentation.pdf', 20, 'application/pdf'),
                 'user_manual_file' => UploadedFile::fake()->create('panduan-pengguna.pdf', 50, 'application/pdf'),
                 'handover_deliverables' => json_encode([[
@@ -360,8 +361,7 @@ class ProjekSayaKlienTest extends TestCase
 
         Http::assertSent(fn ($request) => str_ends_with($request->url(), '/proposals/501/handover/prepare')
             && $request->hasFile('documentation_file')
-            && $request->hasFile('user_manual_file')
-            && str_contains($request->body(), 'https://example.test/manual'));
+            && $request->hasFile('user_manual_file'));
     }
 
     public function test_halaman_projek_saya_dicegah_untuk_role_lain(): void
