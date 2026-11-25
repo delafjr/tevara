@@ -985,6 +985,25 @@ Route::middleware('auth.api')->group(function () {
             }
         })->whereNumber('proposal')->name('projek-saya.bast.documentation');
 
+        Route::get('/projek-saya/{proposal}/bast/user-manual', function (ApiService $api, int $proposal) {
+            try {
+                $response = $api->get("proposals/{$proposal}/handover/user-manual");
+                if (!$response->successful()) {
+                    return back()->with('error', $response->json('message') ?? 'Panduan pengguna tidak dapat diunduh.');
+                }
+
+                return response($response->body(), 200, [
+                    'Content-Type' => $response->header('Content-Type') ?? 'application/octet-stream',
+                    'Content-Disposition' => $response->header('Content-Disposition') ?? 'attachment; filename="panduan-pengguna"',
+                ]);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::error('Gagal mengunduh panduan pengguna BAST: ' . $exception->getMessage(), [
+                    'proposal_id' => $proposal,
+                ]);
+                return back()->with('error', 'Panduan pengguna tidak dapat diunduh dari server.');
+            }
+        })->whereNumber('proposal')->name('projek-saya.bast.user-manual');
+
         Route::get('/ajukan-proyek', function (ApiService $api) {
             return view('klien.ajukan-proyek', [
                 'user'       => session('user'),
@@ -1769,7 +1788,9 @@ Route::middleware('auth.api')->group(function () {
 
             $rules = [
                 'documentation_file' => ['nullable', 'file', 'mimes:pdf,docx,zip,doc', 'max:10240'],
-                'user_manual_url' => ['required', 'url', 'max:255'],
+                'user_manual_url' => ['nullable', 'url', 'max:255'],
+                'user_manual_file' => ['nullable', 'file', 'mimes:pdf,docx,doc,zip', 'max:10240'],
+                'has_existing_user_manual' => ['nullable', 'in:0,1'],
                 'handover_notes' => ['nullable', 'string'],
                 'handover_deliverables' => ['required', 'json'],
                 'maintenance_warranty_months' => ['required', 'integer', 'min:0'],
@@ -1786,21 +1807,39 @@ Route::middleware('auth.api')->group(function () {
             }
 
             $validated = $request->validate($rules, [
-                'user_manual_url.required' => 'URL panduan pengguna wajib diisi.',
                 'app_url.required' => 'URL Akses Aplikasi Sistem wajib diisi karena klien memilih kelola penuh oleh TeFa.',
                 'documentation_file.mimes' => 'Berkas lampiran dokumentasi API harus berformat aman: .pdf, .docx, atau .zip.',
                 'documentation_file.max' => 'Ukuran berkas lampiran dokumentasi API maksimal 10 MB.',
+                'user_manual_file.mimes' => 'Berkas panduan pengguna harus berformat: PDF, DOCX, DOC, atau ZIP.',
+                'user_manual_file.max' => 'Ukuran berkas panduan pengguna maksimal 10 MB.',
             ]);
+
+            if (
+                !$request->hasFile('user_manual_file')
+                && blank($validated['user_manual_url'] ?? null)
+                && ($validated['has_existing_user_manual'] ?? '0') !== '1'
+            ) {
+                return back()->withInput()->withErrors([
+                    'user_manual_url' => 'Panduan pengguna wajib diisi (berupa tautan URL atau file dokumen).',
+                ]);
+            }
 
             try {
                 $payload = $validated;
-                unset($payload['documentation_file']);
+                unset($payload['documentation_file'], $payload['user_manual_file'], $payload['has_existing_user_manual']);
 
+                $files = [];
                 if ($request->hasFile('documentation_file')) {
-                    $response = $api->sendWithFile(
+                    $files['documentation_file'] = $request->file('documentation_file');
+                }
+                if ($request->hasFile('user_manual_file')) {
+                    $files['user_manual_file'] = $request->file('user_manual_file');
+                }
+
+                if ($files !== []) {
+                    $response = $api->sendWithFiles(
                         "proposals/{$proposal}/handover/prepare",
-                        'documentation_file',
-                        $request->file('documentation_file'),
+                        $files,
                         $payload
                     );
                 } else {
@@ -1862,6 +1901,25 @@ Route::middleware('auth.api')->group(function () {
                 return back()->with('error', 'Dokumentasi BAST tidak dapat diunduh dari server.');
             }
         })->whereNumber('proposal')->name('bast.documentation');
+
+        Route::get('/proposals/{proposal}/bast/user-manual', function (ApiService $api, int $proposal) {
+            try {
+                $response = $api->get("proposals/{$proposal}/handover/user-manual");
+                if (!$response->successful()) {
+                    return back()->with('error', $response->json('message') ?? 'Panduan pengguna tidak dapat diunduh.');
+                }
+
+                return response($response->body(), 200, [
+                    'Content-Type' => $response->header('Content-Type') ?? 'application/octet-stream',
+                    'Content-Disposition' => $response->header('Content-Disposition') ?? 'attachment; filename="panduan-pengguna"',
+                ]);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::error('Gagal mengunduh panduan pengguna BAST: ' . $exception->getMessage(), [
+                    'proposal_id' => $proposal,
+                ]);
+                return back()->with('error', 'Panduan pengguna tidak dapat diunduh dari server.');
+            }
+        })->whereNumber('proposal')->name('bast.user-manual');
         Route::get('/klien-mitra', function (ApiService $api) use ($readApiList) {
             $clients = [];
             $error = null;

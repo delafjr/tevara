@@ -328,6 +328,42 @@ class ProjekSayaKlienTest extends TestCase
             && str_contains($request->body(), 'Aplikasi inventaris'));
     }
 
+    public function test_pengurus_dapat_mengunggah_file_pdf_panduan_pengguna_saat_menyiapkan_bast(): void
+    {
+        Http::fake([
+            '*proposals/501/handover/prepare' => Http::response(['success' => true], 200),
+        ]);
+        $session = [
+            'api_token' => 'dummy-token',
+            'user' => ['id' => 5, 'name' => 'Pengurus', 'roles' => ['pengurus_tefa']],
+            'active_role' => 'pengurus_tefa',
+        ];
+
+        $this->withSession($session)
+            ->post('/pengurus-tefa/proposals/501/bast', [
+                'repository_url' => 'https://example.test/repository',
+                'user_manual_url' => 'https://example.test/manual',
+                'documentation_file' => UploadedFile::fake()->create('api-documentation.pdf', 20, 'application/pdf'),
+                'user_manual_file' => UploadedFile::fake()->create('panduan-pengguna.pdf', 50, 'application/pdf'),
+                'handover_deliverables' => json_encode([[
+                    'name' => 'Aplikasi inventaris',
+                    'type' => 'digital',
+                    'quantity' => 1,
+                    'unit' => 'aplikasi',
+                    'condition' => 'not_applicable',
+                    'notes' => 'Akses tersedia melalui repository.',
+                ]]),
+                'maintenance_warranty_months' => '3',
+            ])
+            ->assertRedirect('/pengurus-tefa/bast')
+            ->assertSessionHas('success', 'BAST berhasil disiapkan untuk persetujuan PIC Klien.');
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/proposals/501/handover/prepare')
+            && $request->hasFile('documentation_file')
+            && $request->hasFile('user_manual_file')
+            && str_contains($request->body(), 'https://example.test/manual'));
+    }
+
     public function test_halaman_projek_saya_dicegah_untuk_role_lain(): void
     {
         $this->withSession([

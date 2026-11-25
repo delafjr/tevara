@@ -95,7 +95,12 @@
                             <h3 class="text-xs font-bold text-slate-700">Source code &amp; dokumentasi</h3>
                             @if(!empty($project['repository_url']))<a href="{{ $project['repository_url'] }}" target="_blank" rel="noopener noreferrer" class="mt-2 block break-all text-xs font-semibold text-blue-700 underline">Buka repository source code</a>@endif
                             @if(!empty($project['id']) && !empty($project['documentation_url']))<a href="{{ route('klien.projek-saya.bast.documentation', $project['id']) }}" class="mt-2 block text-xs font-semibold text-blue-700 underline">Unduh dokumentasi API</a>@endif
-                            @if(!empty($project['user_manual_url']))<a href="{{ $project['user_manual_url'] }}" target="_blank" rel="noopener noreferrer" class="mt-2 block break-all text-xs font-semibold text-blue-700 underline">Buka panduan pengguna</a>@endif
+                            @if(!empty($project['user_manual_url']) && filter_var($project['user_manual_url'], FILTER_VALIDATE_URL))
+                                <a href="{{ $project['user_manual_url'] }}" target="_blank" rel="noopener noreferrer" class="mt-2 block break-all text-xs font-semibold text-blue-700 underline">Buka panduan pengguna (Web)</a>
+                            @endif
+                            @if(!empty($project['user_manual_file_url']) || (!empty($project['user_manual_url']) && !filter_var($project['user_manual_url'], FILTER_VALIDATE_URL)))
+                                <a href="{{ route('klien.projek-saya.bast.user-manual', $project['id']) }}" class="mt-2 block text-xs font-semibold text-blue-700 underline">Unduh dokumen panduan pengguna</a>
+                            @endif
                         </div>
                     @else
                         <div class="rounded-xl border border-blue-100 bg-blue-50/40 p-4">
@@ -129,7 +134,12 @@
                             @endif
                             <div class="mt-3 pt-2 border-t border-blue-100 flex flex-wrap gap-3">
                                 @if(!empty($project['id']) && !empty($project['documentation_url']))<a href="{{ route('klien.projek-saya.bast.documentation', $project['id']) }}" class="text-xs font-semibold text-blue-700 underline">Unduh dokumentasi API</a>@endif
-                                @if(!empty($project['user_manual_url']))<a href="{{ $project['user_manual_url'] }}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-blue-700 underline">Buka panduan pengguna</a>@endif
+                                @if(!empty($project['user_manual_url']) && filter_var($project['user_manual_url'], FILTER_VALIDATE_URL))
+                                    <a href="{{ $project['user_manual_url'] }}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-blue-700 underline">Buka panduan pengguna (Web)</a>
+                                @endif
+                                @if(!empty($project['user_manual_file_url']) || (!empty($project['user_manual_url']) && !filter_var($project['user_manual_url'], FILTER_VALIDATE_URL)))
+                                    <a href="{{ route('klien.projek-saya.bast.user-manual', $project['id']) }}" class="text-xs font-semibold text-blue-700 underline">Unduh dokumen panduan pengguna</a>
+                                @endif
                             </div>
                         </div>
                     @endif
