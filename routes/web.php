@@ -947,6 +947,25 @@ Route::middleware('auth.api')->group(function () {
             }
         })->whereNumber('proposal')->name('projek-saya.bast.approve');
 
+        Route::get('/projek-saya/{proposal}/bast/pdf', function (ApiService $api, int $proposal) {
+            try {
+                $response = $api->get("proposals/{$proposal}/handover/bast");
+                if ($response->failed()) {
+                    return back()->with('error', $response->json('message') ?? 'PDF BAST belum tersedia.');
+                }
+
+                return response($response->body(), 200, [
+                    'Content-Type' => $response->header('Content-Type') ?? 'application/pdf',
+                    'Content-Disposition' => $response->header('Content-Disposition') ?? 'attachment; filename="bast-' . $proposal . '.pdf"',
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Gagal mengunduh PDF BAST klien: ' . $e->getMessage(), [
+                    'proposal_id' => $proposal,
+                ]);
+                return back()->with('error', 'PDF BAST tidak dapat diunduh dari server TEVARA.');
+            }
+        })->whereNumber('proposal')->name('projek-saya.bast.pdf');
+
         Route::get('/projek-saya/{proposal}/bast/documentation', function (ApiService $api, int $proposal) {
             try {
                 $response = $api->get("proposals/{$proposal}/handover/documentation");
@@ -1805,6 +1824,25 @@ Route::middleware('auth.api')->group(function () {
                 ]);
             }
         })->whereNumber('proposal')->name('bast.prepare');
+
+        Route::get('/proposals/{proposal}/bast/pdf', function (ApiService $api, int $proposal) {
+            try {
+                $response = $api->get("proposals/{$proposal}/handover/bast");
+                if ($response->failed()) {
+                    return back()->with('error', $response->json('message') ?? 'PDF BAST belum tersedia.');
+                }
+
+                return response($response->body(), 200, [
+                    'Content-Type' => $response->header('Content-Type') ?? 'application/pdf',
+                    'Content-Disposition' => $response->header('Content-Disposition') ?? 'attachment; filename="bast-' . $proposal . '.pdf"',
+                ]);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::error('Gagal mengunduh PDF BAST: ' . $exception->getMessage(), [
+                    'proposal_id' => $proposal,
+                ]);
+                return back()->with('error', 'PDF BAST tidak dapat diunduh dari server.');
+            }
+        })->whereNumber('proposal')->name('bast.pdf');
 
         Route::get('/proposals/{proposal}/bast/documentation', function (ApiService $api, int $proposal) {
             try {

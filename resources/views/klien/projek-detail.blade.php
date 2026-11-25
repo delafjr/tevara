@@ -744,6 +744,26 @@
                                     </svg>
                                 </a>
                             </div>
+                            @if(!empty($proposal['client_approved']))
+                                <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2.5">
+                                    <div class="flex items-center gap-2 text-emerald-800">
+                                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                        </svg>
+                                        <span class="text-xs font-bold uppercase tracking-wider">Dokumen BAST Resmi</span>
+                                    </div>
+                                    <p class="text-[11px] text-emerald-800/80 leading-relaxed">
+                                        Serah terima telah disetujui ({{ $proposal['bast_number'] ?? 'BAST' }}). PDF berita acara siap diunduh.
+                                    </p>
+                                    <a href="{{ route('klien.projek-saya.bast.pdf', $proposalId) }}"
+                                       class="inline-flex items-center justify-center w-full gap-2 px-3 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition shadow-xs">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                                        </svg>
+                                        Unduh PDF BAST
+                                    </a>
+                                </div>
+                            @endif
                         </section>
 
                         <section class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-3">
