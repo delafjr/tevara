@@ -15,339 +15,83 @@
     $userName = $user['name'] ?? 'Project Manager';
     $isDosen = session('active_role') === 'dosen';
 
-    $projects = [
-        [
-            'id'               => 'PRJ-2026/044',
-            'kategori'         => 'IoT & Web Portal',
-            'status'           => 'Active / Berjalan',
-            'status_type'      => 'berjalan',
-            'judul'            => 'Sistem Monitoring Rantai Pasok Terpadu (Supply Chain Cold Storage)',
-            'klien'            => 'PT. ABC Indonesia',
-            'pm_name'          => 'Budi Santoso',
-            'spk'              => 'SPK/TEFA/2026/888',
-            'nilai'            => 'Rp 75.000.000',
-            'progress'         => 75,
-            'deadline'         => '25 Nov 2026',
-            'deadline_status'  => 'mepet',
-            'lingkup'          => 'Platform IoT terintegrasi sensor suhu & GPS armada cold storage terintegrasi dashboard analitik Next.js dan broker telemetri MQTT.',
-            'mulai'            => '15 Agu 2026',
-            'selesai'          => '25 Nov 2026',
-            'jadwal_klien'     => '10 Nov 2026',
-            'jadwal_klien_st'  => 'terlambat',
-            'modul_count'      => 3,
-            'modul_selesai'    => 24,
-            'modul_total'      => 34,
-            'moduls' => [
-                ['no'=>'01','label'=>'RBAC & SSO Auth',    'desc'=>'Autentikasi role-based admin, operator logistik, dan audit sistem.'],
-                ['no'=>'02','label'=>'Telemetri IoT & GPS','desc'=>'Streaming protokol MQTT/ESP32 sensor suhu & pelacakan rute armada.'],
-                ['no'=>'03','label'=>'Analitik & WA Alert','desc'=>'Laporan diagram fluktuasi suhu dan notifikasi darurat via WhatsApp gateway.'],
-            ],
-            'tim' => [
-                ['inisial'=>'AR','nama'=>'Ahmad Rifai',    'nim'=>'22641199042','peran'=>'Fullstack Lead'],
-                ['inisial'=>'SN','nama'=>'Siti Nurhaliza', 'nim'=>'22641199088','peran'=>'UI/UX Designer'],
-                ['inisial'=>'DP','nama'=>'Dimas Prasetyo', 'nim'=>'22641199023','peran'=>'Backend Lead'],
-                ['inisial'=>'KS','nama'=>'Kevin Sanjaya',  'nim'=>'22641199073','peran'=>'QA Tester'],
-            ],
-            'klien_detail'     => 'PT. ABC Indonesia Tbk (Logistics Division)',
-            'klien_email'      => 'budi.santoso@abc-indonesia.co.id',
-            'klien_telp'       => '+62 361-2201-209',
-            'expanded'         => true,
-        ],
-        [
-            'id'               => 'PRJ-2026/009',
-            'kategori'         => 'Mobile App (Flutter)',
-            'status'           => 'Testing / UAT (Tahap 3)',
-            'status_type'      => 'review',
-            'judul'            => 'Aplikasi Mobile Portal Layanan Nasabah & Pembayaran Digital',
-            'klien'            => 'PT. DEF Solusi Finance',
-            'pm_name'          => 'Rizky Pratama',
-            'spk'              => 'FIN/SPK/10/4/2026/764',
-            'nilai'            => 'Rp 60.000.000',
-            'progress'         => 88,
-            'deadline'         => '16 Okt 2026',
-            'deadline_status'  => 'terlambat',
-            'lingkup'          => 'Aplikasi mobile nasabah berbasis Flutter mencakup modul e-KYC verifikasi wajah, payment gateway QRIS dinamis, virtual account multi-bank, dan push notification.',
-            'mulai'            => '01 Jul 2026',
-            'selesai'          => '30 Okt 2026',
-            'jadwal_klien'     => '16 Okt 2026',
-            'jadwal_klien_st'  => 'terlambat',
-            'modul_count'      => 3,
-            'modul_selesai'    => 28,
-            'modul_total'      => 32,
-            'moduls' => [
-                ['no'=>'01','label'=>'e-KYC & Onboarding',      'desc'=>'Verifikasi OCR KTP dan liveness face recognition nasabah baru.'],
-                ['no'=>'02','label'=>'Payment Gateway & Top Up','desc'=>'Integrasi Midtrans QRIS, transfer antar bank, dan riwayat mutasi.'],
-                ['no'=>'03','label'=>'Push Notif & Security',   'desc'=>'Biometric authentication (fingerprint/face id) dan audit log transaksi.'],
-            ],
-            'tim' => [
-                ['inisial'=>'BR','nama'=>'Bagas Rahmawan',   'nim'=>'22641181701','peran'=>'Mobile Dev'],
-                ['inisial'=>'PA','nama'=>'Putri Ayu Lestari','nim'=>'22641181722','peran'=>'UI/UX Designer'],
-                ['inisial'=>'DS','nama'=>'Daffa Syahputra',  'nim'=>'22641181745','peran'=>'QA Tester'],
-            ],
-            'klien_detail'     => 'PT. DEF Solusi Finance Tbk (Digital Banking)',
-            'klien_email'      => 'finance.partner@def-solusi.co.id',
-            'klien_telp'       => '+62 21-515-0988',
-            'expanded'         => false,
-        ],
-        [
-            'id'               => 'PRJ-2026/021',
-            'kategori'         => 'IoT & Desktop',
-            'status'           => 'Active / Berjalan',
-            'status_type'      => 'berjalan',
-            'judul'            => 'Smart Warehouse Environmental Sensor & Desktop Control Unit',
-            'klien'            => 'Dinas Ketahanan Pangan',
-            'pm_name'          => 'Nadia Putri',
-            'spk'              => 'DPK/TEFA/2026/317',
-            'nilai'            => 'Rp 45.000.000',
-            'progress'         => 45,
-            'deadline'         => '20 Des 2026',
-            'deadline_status'  => 'aman',
-            'lingkup'          => 'Instalasi jaringan node sensor LoRaWAN pemantau suhu, kelembaban, dan gas gudang pangan regional dengan aplikasi kontrol desktop berbasis Electron.',
-            'mulai'            => '01 Sep 2026',
-            'selesai'          => '20 Des 2026',
-            'jadwal_klien'     => '15 Des 2026',
-            'jadwal_klien_st'  => 'aman',
-            'modul_count'      => 3,
-            'modul_selesai'    => 12,
-            'modul_total'      => 26,
-            'moduls' => [
-                ['no'=>'01','label'=>'Node Sensor LoRa Gateway','desc'=>'Pemasangan 16 probe sensor suhu-kelembaban di silo penyimpanan biji-bijian.'],
-                ['no'=>'02','label'=>'Desktop Control Panel',   'desc'=>'Aplikasi Electron.js visualisasi 3D posisi sensor dan grafik real-time.'],
-                ['no'=>'03','label'=>'Laporan Bulanan & Ekspor','desc'=>'Ekspor otomatis rekaman data format PDF/Excel sesuai standar audit ISO.'],
-            ],
-            'tim' => [
-                ['inisial'=>'BR','nama'=>'Budi Ramadhan',  'nim'=>'22641181810','peran'=>'DevOps'],
-                ['inisial'=>'MI','nama'=>'M. Irfan Hakim', 'nim'=>'22641181833','peran'=>'Frontend Lead'],
-            ],
-            'klien_detail'     => 'Dinas Ketahanan Pangan Provinsi Jawa Tengah',
-            'klien_email'      => 'dkp.jateng@pangan.go.id',
-            'klien_telp'       => '+62 24-841-4560',
-            'expanded'         => false,
-        ],
-        [
-            'id'               => 'PRJ-2026/005',
-            'kategori'         => 'Web Dashboard',
-            'status'           => 'Active / Berjalan',
-            'status_type'      => 'berjalan',
-            'judul'            => 'Sistem Informasi Manajemen Inventori & Logistik Sekolah',
-            'klien'            => 'Dinas Pendidikan Provinsi',
-            'pm_name'          => 'Thomas Elang',
-            'spk'              => 'DIK/TEF/2026/219',
-            'nilai'            => 'Rp 50.000.000',
-            'progress'         => 40,
-            'deadline'         => '16 Okt 2026',
-            'deadline_status'  => 'terlambat',
-            'lingkup'          => 'Sistem web portal pencatatan dan distribusi bantuan sarana prasarana sekolah negeri, cetak label QR barcode inventaris, serta berita acara serah terima.',
-            'mulai'            => '10 Agu 2026',
-            'selesai'          => '15 Des 2026',
-            'jadwal_klien'     => '16 Okt 2026',
-            'jadwal_klien_st'  => 'terlambat',
-            'modul_count'      => 3,
-            'modul_selesai'    => 14,
-            'modul_total'      => 30,
-            'moduls' => [
-                ['no'=>'01','label'=>'Katalog & Pelabelan QR',  'desc'=>'Pencatatan aset sarpras laboratorium dan generator QR-code unik aset.'],
-                ['no'=>'02','label'=>'Alur Distribusi & BAST',  'desc'=>'Manajemen surat jalan, tanda tangan digital kepala sekolah penerima.'],
-                ['no'=>'03','label'=>'Rekonsiliasi Aset Daerah','desc'=>'Sinkronisasi neraca aset ke aplikasi SIMDA BPKAD Jawa Tengah.'],
-            ],
-            'tim' => [
-                ['inisial'=>'FA','nama'=>'Farhan Aditya','nim'=>'22641181902','peran'=>'Frontend Lead'],
-                ['inisial'=>'NI','nama'=>'Nurul Izzah',  'nim'=>'22641181919','peran'=>'Backend Lead'],
-                ['inisial'=>'HW','nama'=>'Hendra Wijaya','nim'=>'22641181954','peran'=>'DevOps'],
-            ],
-            'klien_detail'     => 'Dinas Pendidikan dan Kebudayaan Provinsi Jawa Tengah',
-            'klien_email'      => 'sarpras.diknas@jatengprov.go.id',
-            'klien_telp'       => '+62 24-831-2900',
-            'expanded'         => false,
-        ],
-        [
-            'id'               => 'PRJ-2026/037',
-            'kategori'         => 'AgriTech IoT',
-            'status'           => 'Review Proposal / F-02',
-            'status_type'      => 'proposal',
-            'judul'            => 'Smart Farming IoT & Irigasi Otomatis Berbasis Sensor Tanah',
-            'klien'            => 'CV. Tani Maju Mandiri',
-            'pm_name'          => 'Dimas Setiawan',
-            'spk'              => 'FIN/TEF/2026/733.Vix',
-            'nilai'            => 'Rp 35.000.000',
-            'progress'         => 20,
-            'deadline'         => '10 Des 2026',
-            'deadline_status'  => 'aman',
-            'lingkup'          => 'Sistem kendali fertigasi presisi hidroponik berbasis mikrokontroler ESP32 tenaga surya dengan integrasi webhook prakiraan cuaca BMKG.',
-            'mulai'            => '01 Nov 2026',
-            'selesai'          => '31 Jan 2027',
-            'jadwal_klien'     => '10 Des 2026',
-            'jadwal_klien_st'  => 'aman',
-            'modul_count'      => 2,
-            'modul_selesai'    => 4,
-            'modul_total'      => 18,
-            'moduls' => [
-                ['no'=>'01','label'=>'Rancang Hardware Sensor','desc'=>'Desain PCB aktuator solenoid valve dan sensor NPK tanah tahan cuaca.'],
-                ['no'=>'02','label'=>'Web Dashboard Monitor',  'desc'=>'Antarmuka kendali jadwal siram otomatis dan monitoring kapasitas tandon.'],
-            ],
-            'tim' => [
-                ['inisial'=>'MI','nama'=>'M. Iqbal Kurniawan','nim'=>'22641182001','peran'=>'Fullstack Lead'],
-                ['inisial'=>'MZ','nama'=>'M. Zaki Fadhilah',  'nim'=>'22641182035','peran'=>'Backend Lead'],
-            ],
-            'klien_detail'     => 'CV. Tani Maju Mandiri (Kawasan Agro Ungaran)',
-            'klien_email'      => 'kemitraan@tanimaju.id',
-            'klien_telp'       => '+62 298-522-104',
-            'expanded'         => false,
-        ],
-        [
-            'id'               => 'PRJ-2026/012',
-            'kategori'         => 'IoT & Web Portal',
-            'status'           => 'Active / Berjalan',
-            'status_type'      => 'berjalan',
-            'judul'            => 'Monitoring Kualitas Air Tambak Udang Terintegrasi Seluler',
-            'klien'            => 'PT. Mina Bahari Nusantara',
-            'pm_name'          => 'Budi Santoso',
-            'spk'              => 'MBN/SPK/TEFA/2026/102',
-            'nilai'            => 'Rp 55.000.000',
-            'progress'         => 65,
-            'deadline'         => '30 Nov 2026',
-            'deadline_status'  => 'aman',
-            'lingkup'          => 'Probe sensor dissolved oxygen (DO), pH, dan salinitas pada 12 kolam tambak intensif dengan telemetri 4G LTE dan notifikasi WhatsApp realtime saat level oksigen kritis.',
-            'mulai'            => '01 Agu 2026',
-            'selesai'          => '30 Nov 2026',
-            'jadwal_klien'     => '20 Nov 2026',
-            'jadwal_klien_st'  => 'aman',
-            'modul_count'      => 3,
-            'modul_selesai'    => 18,
-            'modul_total'      => 28,
-            'moduls' => [
-                ['no'=>'01','label'=>'Probe Multi-Parameter',  'desc'=>'Kalibrasi sensor industri DO & salinitas tahan korosi air asin.'],
-                ['no'=>'02','label'=>'Gateway 4G & MQTT Broker','desc'=>'Transmisi data periodik per 5 menit dengan failover penyimpanan lokal SD Card.'],
-                ['no'=>'03','label'=>'Dashboard Peringatan Dini','desc'=>'Sistem alert alarm buzzer lokal dan broadcast WhatsApp ke teknisi tambak.'],
-            ],
-            'tim' => [
-                ['inisial'=>'AR','nama'=>'Ahmad Rifai',    'nim'=>'22641199042','peran'=>'Fullstack Lead'],
-                ['inisial'=>'DP','nama'=>'Dimas Prasetyo', 'nim'=>'22641199023','peran'=>'Backend Lead'],
-                ['inisial'=>'KS','nama'=>'Kevin Sanjaya',  'nim'=>'22641199073','peran'=>'QA Tester'],
-            ],
-            'klien_detail'     => 'PT. Mina Bahari Nusantara (Sentra Budidaya Kendal)',
-            'klien_email'      => 'ops@minabahari.co.id',
-            'klien_telp'       => '+62 294-381-992',
-            'expanded'         => false,
-        ],
-        [
-            'id'               => 'PRJ-2026/018',
-            'kategori'         => 'Web Dashboard',
-            'status'           => 'Active / Berjalan',
-            'status_type'      => 'berjalan',
-            'judul'            => 'E-Commerce B2B Pengadaan Suku Cadang Mesin Tekstil',
-            'klien'            => 'CV. Sinar Abadi Tekstil',
-            'pm_name'          => 'Nadia Putri',
-            'spk'              => 'SAT/PBL/2026/049',
-            'nilai'            => 'Rp 40.000.000',
-            'progress'         => 55,
-            'deadline'         => '10 Des 2026',
-            'deadline_status'  => 'aman',
-            'lingkup'          => 'Marketplace pemesanan sparepart tenun B2B dilengkapi fitur request for quotation (RFQ), approval purchase order bertingkat, dan pelacakan kurir logistik kargo.',
-            'mulai'            => '15 Agu 2026',
-            'selesai'          => '10 Des 2026',
-            'jadwal_klien'     => '05 Des 2026',
-            'jadwal_klien_st'  => 'aman',
-            'modul_count'      => 3,
-            'modul_selesai'    => 16,
-            'modul_total'      => 28,
-            'moduls' => [
-                ['no'=>'01','label'=>'Katalog Suku Cadang & RFQ', 'desc'=>'Modul negosiasi harga dan penawaran resmi PDF digital.'],
-                ['no'=>'02','label'=>'Approval Multi-Level PO',   'desc'=>'Otorisasi pesanan oleh supervisor gudang hingga direktur operasional.'],
-                ['no'=>'03','label'=>'Integrasi Resi Kargo',      'desc'=>'Cek ongkir kargo truk kontainer dan pelacakan resi pengiriman real-time.'],
-            ],
-            'tim' => [
-                ['inisial'=>'FA','nama'=>'Farhan Aditya','nim'=>'22641181902','peran'=>'Frontend Lead'],
-                ['inisial'=>'NI','nama'=>'Nurul Izzah',  'nim'=>'22641181919','peran'=>'Backend Lead'],
-                ['inisial'=>'HW','nama'=>'Hendra Wijaya','nim'=>'22641181954','peran'=>'DevOps'],
-                ['inisial'=>'SN','nama'=>'Siti Nurhaliza','nim'=>'22641199088','peran'=>'UI/UX Designer'],
-            ],
-            'klien_detail'     => 'CV. Sinar Abadi Tekstil (Kawasan Industri Candi)',
-            'klien_email'      => 'purchase@sinarabadi-textile.com',
-            'klien_telp'       => '+62 24-762-8819',
-            'expanded'         => false,
-        ],
-        [
-            'id'               => 'PRJ-2026/031',
-            'kategori'         => 'Mobile App (Flutter)',
-            'status'           => 'Active / Berjalan',
-            'status_type'      => 'berjalan',
-            'judul'            => 'Aplikasi Mobile Panduan & Reservasi Wisata Sejarah Kota',
-            'klien'            => 'Dinas Kebudayaan & Pariwisata',
-            'pm_name'          => 'Thomas Elang',
-            'spk'              => 'DISPORA/TEFA/2026/512',
-            'nilai'            => 'Rp 48.000.000',
-            'progress'         => 70,
-            'deadline'         => '25 Nov 2026',
-            'deadline_status'  => 'aman',
-            'lingkup'          => 'Aplikasi mobile pemandu audio GPS cagar budaya, tiket elektronik QR Code, integrasi e-wallet, dan CMS pengelola kalender event pariwisata daerah.',
-            'mulai'            => '20 Jul 2026',
-            'selesai'          => '25 Nov 2026',
-            'jadwal_klien'     => '18 Nov 2026',
-            'jadwal_klien_st'  => 'aman',
-            'modul_count'      => 3,
-            'modul_selesai'    => 21,
-            'modul_total'      => 30,
-            'moduls' => [
-                ['no'=>'01','label'=>'Peta Interaktif & Audio Guide','desc'=>'Navigasi rute titik peninggalan bersejarah dan pemutar narasi suara otomatis.'],
-                ['no'=>'02','label'=>'Tiket Elektronik & Scanner',   'desc'=>'Pembelian tiket masuk destinasi dengan QR Code diverifikasi di gerbang masuk.'],
-                ['no'=>'03','label'=>'CMS Kalender Event',          'desc'=>'Dashboard administrator dinas untuk pembaruan jadwal festival dan promo wisata.'],
-            ],
-            'tim' => [
-                ['inisial'=>'BR','nama'=>'Bagas Rahmawan',   'nim'=>'22641181701','peran'=>'Mobile Dev'],
-                ['inisial'=>'PA','nama'=>'Putri Ayu Lestari','nim'=>'22641181722','peran'=>'UI/UX Designer'],
-                ['inisial'=>'DS','nama'=>'Daffa Syahputra',  'nim'=>'22641181745','peran'=>'QA Tester'],
-            ],
-            'klien_detail'     => 'Dinas Kebudayaan dan Pariwisata Kota Semarang',
-            'klien_email'      => 'disbudpar@semarangkota.go.id',
-            'klien_telp'       => '+62 24-358-4077',
-            'expanded'         => false,
-        ],
-        [
-            'id'               => 'PRJ-2026/029',
-            'kategori'         => 'Web Dashboard',
-            'status'           => 'Testing / UAT (Tahap 3)',
-            'status_type'      => 'review',
-            'judul'            => 'Dashboard Analitik Penjualan & Peramalan Stok Retail',
-            'klien'            => 'PT. Retail Megah Mart',
-            'pm_name'          => 'Rizky Pratama',
-            'spk'              => 'RMM/TEFA/2026/091',
-            'nilai'            => 'Rp 65.000.000',
-            'progress'         => 92,
-            'deadline'         => '31 Okt 2026',
-            'deadline_status'  => 'aman',
-            'lingkup'          => 'Dashboard analitik transaksi POS kasir di 8 cabang retail, visualisasi tren produk, dan algoritma peramalan Moving Average untuk estimasi restock gudang pusat.',
-            'mulai'            => '05 Jun 2026',
-            'selesai'          => '31 Okt 2026',
-            'jadwal_klien'     => '25 Okt 2026',
-            'jadwal_klien_st'  => 'aman',
-            'modul_count'      => 3,
-            'modul_selesai'    => 26,
-            'modul_total'      => 28,
-            'moduls' => [
-                ['no'=>'01','label'=>'Pipeline Data POS Kasir',     'desc'=>'Sinkronisasi data penjualan harian dari server cabang ke data warehouse cloud.'],
-                ['no'=>'02','label'=>'Mesin Peramalan Restock',     'desc'=>'Kalkulasi rekomendasi jumlah pemesanan barang per supplier sebelum stok menipis.'],
-                ['no'=>'03','label'=>'Dashboard Executive Summary', 'desc'=>'Grafik performa KPI revenue harian/mingguan dan laporan margin keuntungan.'],
-            ],
-            'tim' => [
-                ['inisial'=>'DP','nama'=>'Dimas Prasetyo', 'nim'=>'22641199023','peran'=>'Backend Lead'],
-                ['inisial'=>'AR','nama'=>'Ahmad Rifai',    'nim'=>'22641199042','peran'=>'Fullstack Lead'],
-                ['inisial'=>'SN','nama'=>'Siti Nurhaliza', 'nim'=>'22641199088','peran'=>'UI/UX Designer'],
-                ['inisial'=>'KS','nama'=>'Kevin Sanjaya',  'nim'=>'22641199073','peran'=>'QA Tester'],
-            ],
-            'klien_detail'     => 'PT. Retail Megah Mart Indonesia Tbk',
-            'klien_email'      => 'it.bi@megahmart.co.id',
-            'klien_telp'       => '+62 21-806-2211',
-            'expanded'         => false,
-        ],
-    ];
-
     $projectData = is_array($projectData ?? null) ? $projectData : [];
-    $totalProjectCount = (int) ($projectData['total_projects'] ?? 9);
-    $runningProjectCount = (int) ($projectData['active_projects'] ?? 5);
-    $completedProjectCount = (int) ($projectData['completed_projects'] ?? 4);
-    $reviewProjectCount = (int) ($projectData['waiting_review'] ?? 2);
+    $rawProjects = $projects ?? ($projectData['projects'] ?? []);
+    $rawProjects = is_array($rawProjects) ? $rawProjects : [];
+    $usingDemoData = empty($rawProjects) && in_array(session('active_role'), ['pm', 'dosen'], true);
+    if ($usingDemoData) {
+        $rawProjects = [[
+            'id' => 44,
+            'project_code' => 'PRJ-2026/044',
+            'category' => 'Web',
+            'status' => 'Berjalan',
+            'status_type' => 'berjalan',
+            'title' => 'Sistem Informasi UMKM',
+            'client_name' => 'Koperasi Mitra',
+            'progress' => 75,
+            'moduls' => [],
+            'tim' => [],
+        ]];
+    }
 
+    $dynamicProjects = [];
+    foreach ($rawProjects as $idx => $item) {
+        $st = $item['status'] ?? 'Berjalan';
+        $stType = $item['status_type'] ?? 'berjalan';
+        $code = $item['project_code'] ?? $item['proposal_code'] ?? ('PRJ-' . str_pad($item['id'] ?? ($idx + 1), 3, '0', STR_PAD_LEFT));
+        $dl = $item['deadline'] ?? null;
+        $dlFormatted = !empty($dl) ? date('d M Y', strtotime($dl)) : '—';
+
+        $totalAmt = $item['total_amount'] ?? null;
+        $nilai = !empty($totalAmt) ? 'Rp ' . number_format((float) $totalAmt, 0, ',', '.') : '—';
+
+        $prog = (int) ($item['progress'] ?? 0);
+        $dlStatus = 'normal';
+        if (!empty($dl)) {
+            $diffDays = (strtotime($dl) - time()) / 86400;
+            if ($diffDays < 0 && $prog < 100) {
+                $dlStatus = 'terlambat';
+            } elseif ($diffDays <= 7 && $prog < 100) {
+                $dlStatus = 'mepet';
+            }
+        }
+
+        $dynamicProjects[] = [
+            'id'              => $code,
+            'raw_id'          => $item['id'] ?? null,
+            'kategori'        => $item['kategori'] ?? $item['category'] ?? 'Teaching Factory',
+            'status'          => $st,
+            'status_type'     => $stType,
+            'judul'           => $item['title'] ?? $item['judul'] ?? 'Projek Tanpa Judul',
+            'klien'           => $item['client_name'] ?? $item['klien'] ?? '—',
+            'pm_name'         => $item['pm_name'] ?? $userName,
+            'spk'             => $item['spk_number'] ?? ('SPK/TEFA/' . date('Y') . '/' . ($item['id'] ?? 1)),
+            'nilai'           => $nilai,
+            'progress'        => $prog,
+            'deadline'        => $dlFormatted,
+            'deadline_status' => $dlStatus,
+            'lingkup'         => $item['scope_of_work'] ?? $item['lingkup'] ?? 'Pengerjaan sistem terintegrasi Teaching Factory Politeknik Negeri Semarang.',
+            'mulai'           => !empty($item['start_date']) ? date('d M Y', strtotime($item['start_date'])) : '—',
+            'selesai'         => $dlFormatted,
+            'jadwal_klien'    => $dlFormatted,
+            'jadwal_klien_st' => $dlStatus,
+            'modul_count'     => count($item['moduls'] ?? []),
+            'modul_selesai'   => (int) round($prog * count($item['moduls'] ?? []) / 100),
+            'modul_total'     => count($item['moduls'] ?? []),
+            'moduls'          => $item['moduls'] ?? [],
+            'tim'             => $item['tim'] ?? [],
+            'klien_detail'    => $item['client_name'] ?? '—',
+            'klien_email'     => $item['client_email'] ?? '—',
+            'klien_telp'      => $item['client_phone'] ?? '—',
+            'expanded'        => $idx === 0,
+        ];
+    }
+
+    $projects = $dynamicProjects;
+    $totalProjectCount = count($projects);
+    $runningProjectCount = collect($projects)->where('status_type', 'berjalan')->count();
+    $reviewProjectCount = collect($projects)->where('status_type', 'review')->count();
+    $completedProjectCount = collect($projects)->where('status_type', 'selesai')->count();
     $statusMap = [
         'berjalan' => ['bg'=>'bg-[#DBEAFE]','text'=>'text-[#1D4ED8]','dot'=>'bg-[#2563EB]'],
         'review'   => ['bg'=>'bg-[#FEF3C7]','text'=>'text-[#B45309]','dot'=>'bg-[#F59E0B]'],
@@ -386,14 +130,22 @@
             <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
 
             <div class="relative z-10">
+                <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                    Workspace Project Manager
+                </span>
                 <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
-                    Daftar &amp; Kelola <br><span class="text-[#FFB800]">Proyek</span>
+                    Daftar &amp; Kelola <span class="text-[#FFB800]">Proyek</span>
                 </h1>
-                <p class="text-sm text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
-                    Kelola progress, ambil keputusan eksekusi, dan validasi milestone proyek Teaching Factory secara terpadu.
-                </p>
+                <p class="text-sm text-slate-400 mt-1.5">Kelola progres, ambil keputusan eksekusi, dan validasi milestone proyek secara terpadu</p>
             </div>
         </div>
+
+        @if($usingDemoData)
+            <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-800">
+                Preview data demo — data proyek ini tidak tersimpan ke backend.
+            </div>
+        @endif
 
         @if(empty($projects))
             <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs px-8 py-14 text-center">
@@ -402,76 +154,11 @@
             </div>
         @else
         {{-- ── 2. STAT CARDS ── --}}
-        <div class="grid grid-cols-4 gap-5">
-
-            {{-- Card 1: Total Proyek --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Total Proyek</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">Yang dikelola</p>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-[#EBF3FE] flex items-center justify-center text-[#2563EB]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">{{ $totalProjectCount }}</p>
-                <p class="text-[10px] text-slate-400 mt-1">Aktif dimonitor</p>
-            </div>
-
-            {{-- Card 2: Proyek Berjalan --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Proyek Berjalan</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">Sesuai milestones target</p>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-[#DBEAFE] flex items-center justify-center text-[#2563EB]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">{{ $runningProjectCount }}</p>
-                <p class="text-[10px] text-slate-400 mt-1">Sesuai timeline</p>
-            </div>
-
-            {{-- Card 3: Proyek Selesai --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Proyek Selesai</p>
-                        <p class="text-[10px] text-[#16A34A] font-semibold mt-0.5">Tervalidasi 36%</p>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-[#DCFCE7] flex items-center justify-center text-[#16A34A]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">{{ $completedProjectCount }}</p>
-                <p class="text-[10px] text-slate-400 mt-1">Tervalidasi 36%</p>
-            </div>
-
-            {{-- Card 4: Mendekati Deadline --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-2xs p-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Mendekati Deadline</p>
-                        <p class="text-[10px] text-[#EF4444] font-semibold mt-0.5">~ 20 hari lagi</p>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-[#FEF3C7] flex items-center justify-center text-[#F59E0B]">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-3xl font-bold text-[#0B254A] mt-4 leading-none">{{ $reviewProjectCount }}</p>
-                <p class="text-[10px] text-[#EF4444] font-semibold mt-1">~ 20 hari lagi</p>
-            </div>
-
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+            <x-stat-card label="Total Proyek" :value="$totalProjectCount" sub="Aktif dimonitor" color="#0B3B82" icon="folder" />
+            <x-stat-card label="Proyek Berjalan" :value="$runningProjectCount" sub="Sesuai timeline" color="#6366F1" icon="play" />
+            <x-stat-card label="Proyek Selesai" :value="$completedProjectCount" sub="Tervalidasi selesai" color="#16A34A" icon="check" />
+            <x-stat-card label="Mendekati Deadline" :value="$reviewProjectCount" sub="Perlu perhatian khusus" color="#EF4444" icon="clock-file" />
         </div>
 
         {{-- ── 3. PROJECT LIST ── --}}
@@ -540,19 +227,6 @@
                                 </svg>
                                 {{ $proj['deadline'] }}
                             </div>
-                            {{-- Lembar UAT Shortcut --}}
-                            @php
-                                $pmPropIdNum = (int) (preg_replace('/[^0-9]/', '', $proj['id'] ?? '') ?: 1);
-                            @endphp
-                            <a href="{{ route('pengurus-tefa.uat.detail', $pmPropIdNum) }}"
-                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] font-bold text-amber-800 hover:bg-amber-100 transition-all shadow-2xs">
-                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.5 2h7M7 16h10"/>
-                                </svg>
-                                Lembar UAT
-                            </a>
-
                             {{-- Toggle --}}
                             <button
                                 type="button"

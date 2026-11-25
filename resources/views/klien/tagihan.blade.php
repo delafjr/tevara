@@ -10,11 +10,124 @@
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#F4F7FB] font-sans text-[#1E293B] antialiased min-h-screen">
+<body class="bg-[#F4F7FB] font-sans text-[#1E293B] antialiased min-h-screen overflow-x-hidden">
 
 @php
     $user = $user ?? session('user', []);
     $userName = $user['name'] ?? 'Budi Santoso';
+
+    $hasBillingData = isset($projectsBilling);
+    $projectsBilling = is_array($projectsBilling ?? null) ? $projectsBilling : [];
+    $hasRealBilling = !empty($projectsBilling);
+    $realProjectsBilling = $projectsBilling;
+    $fallbackProjectsBilling = [];
+    if (!$hasRealBilling) {
+        $fallbackProjectsBilling = [
+            [
+                'id'             => 'PRJ-2026/014',
+                'proposal_id'    => 1,
+                'spk'            => 'SPK/TEFA/2026/008',
+                'spk_status'     => 'SPK Ditandatangani',
+                'spk_status_type'=> 'success',
+                'title'          => 'Sistem Monitoring Rantai Pasok Terpadu (IoT & Web)',
+                'period'         => 'Periode: 01 Agt 2026 s.d. 30 Nov 2026 • Skema: 3 Termin (30% - 40% - 30%)',
+                'total_value'    => 'Rp 75.000.000',
+                'paid_percent'   => 66.6,
+                'paid_status'    => '66.6% Terbayar',
+                'has_open'       => false,
+                'termins' => [
+                    [
+                        'id'           => 1,
+                        'proposal_id'  => 1,
+                        'name'         => 'Termin 1 — Down Payment (30%)',
+                        'desc'         => 'Kick-off, Spesifikasi Teknis, dan Persetujuan Arsitektur Sistem',
+                        'nominal'      => 'Rp 22.500.000',
+                        'channel'      => 'Virtual Account BCA',
+                        'channel_icon' => 'bank',
+                        'status'       => 'verified',
+                        'status_label' => 'VERIFIED (Lunas)',
+                        'due_date'     => null,
+                        'can_download' => true,
+                        'can_upload'   => false,
+                    ],
+                    [
+                        'id'           => 2,
+                        'proposal_id'  => 1,
+                        'name'         => 'Termin 2 — Progres Lapangan & Integrasi IoT (40%)',
+                        'desc'         => 'Implementasi Firmware Sensor, Broker MQTT, dan Visualisasi Web',
+                        'nominal'      => 'Rp 30.000.000',
+                        'channel'      => 'Virtual Account BCA',
+                        'channel_icon' => 'bank',
+                        'status'       => 'verified',
+                        'status_label' => 'VERIFIED (Lunas)',
+                        'due_date'     => null,
+                        'can_download' => true,
+                        'can_upload'   => false,
+                    ],
+                    [
+                        'id'           => 3,
+                        'proposal_id'  => 1,
+                        'name'         => 'Termin 3 — Final UAT & Serah Terima (30%)',
+                        'desc'         => 'Uji Terima Pengguna (UAT) Final, Pelatihan Operator, & Handover',
+                        'nominal'      => 'Rp 22.500.000',
+                        'channel'      => 'BCA VA / Mandiri Giro',
+                        'channel_icon' => 'card',
+                        'status'       => 'pending',
+                        'status_label' => 'BELUM TERBUKA',
+                        'due_date'     => 'Est. 25 Nov 2026',
+                        'can_download' => false,
+                        'can_upload'   => false,
+                    ],
+                ],
+            ],
+            [
+                'id'             => 'PRJ-2026/009',
+                'proposal_id'    => 2,
+                'spk'            => 'SPK/TEFA/2026/005',
+                'spk_status'     => 'SPK Aktif',
+                'spk_status_type'=> 'success',
+                'has_open'       => true,
+                'open_badge'     => '! Tagihan Terbuka',
+                'title'          => 'Aplikasi Mobile Portal Layanan Nasabah & Pembayaran Digital',
+                'period'         => 'Periode: 10 Mei 2026 s.d. 30 Okt 2026 • Skema: 2 Termin (DP 50% & Pelunasan 50%)',
+                'total_value'    => 'Kontrak: Rp 60.000.000',
+                'paid_percent'   => 50.0,
+                'paid_status'    => '50.0%',
+                'active_action'  => 'Bayar Termin 2',
+                'termins' => [
+                    [
+                        'id'           => 4,
+                        'proposal_id'  => 2,
+                        'name'         => 'Termin 1 — Down Payment (50%)',
+                        'desc'         => 'Kick-off & Approval System Architecture & UI/UX',
+                        'nominal'      => 'Rp 30.000.000',
+                        'channel'      => 'Virtual Account BCA',
+                        'channel_icon' => 'bank',
+                        'status'       => 'verified',
+                        'status_label' => 'VERIFIED (Lunas)',
+                        'due_date'     => null,
+                        'can_download' => true,
+                        'can_upload'   => false,
+                    ],
+                    [
+                        'id'           => 5,
+                        'proposal_id'  => 2,
+                        'name'         => 'Termin 2 — Pelunasan & Deployment (50%)',
+                        'is_urgent'    => true,
+                        'desc'         => 'UAT Final, User Training, & Penyerahan Source Code',
+                        'nominal'      => 'Rp 30.000.000',
+                        'channel'      => 'BCA VA / Mandiri Giro',
+                        'channel_icon' => 'card',
+                        'status'       => 'unpaid',
+                        'status_label' => 'MENUNGGU PEMBAYARAN',
+                        'due_date'     => 'Jatuh Tempo: 15 Okt 2026',
+                        'can_download' => false,
+                        'can_upload'   => true,
+                    ],
+                ],
+            ],
+        ];
+    }
 
     $projectsBilling = [
         [
@@ -173,7 +286,54 @@
                     'can_upload'   => false,
                 ],
             ],
-        ];
+        ],
+    ];
+
+    if ($hasBillingData) {
+        $projectsBilling = $realProjectsBilling;
+    } else {
+        $fallbackByProject = collect($fallbackProjectsBilling)->keyBy('id');
+        $projectsBilling = collect($projectsBilling)
+            ->map(fn (array $project) => array_replace_recursive(
+                $fallbackByProject->get($project['id'] ?? '', []),
+                $project
+            ))
+            ->values()
+            ->all();
+    }
+
+    $billingTerms = collect($projectsBilling)
+        ->flatMap(fn ($project) => is_array($project['termins'] ?? null) ? $project['termins'] : [])
+        ->filter(fn ($term) => is_array($term))
+        ->values();
+    $getTermAmount = function ($term) {
+        if (is_numeric($term['amount'] ?? null)) {
+            return (float) $term['amount'];
+        }
+
+        return (float) preg_replace('/\D/', '', (string) ($term['nominal'] ?? '0'));
+    };
+    $totalBilled = $billingTerms->sum($getTermAmount);
+    $totalVerified = $billingTerms->where('status', 'verified')->sum($getTermAmount);
+    $totalVerifying = $billingTerms->where('status', 'verifying')->sum($getTermAmount);
+    $openTerms = $billingTerms->filter(fn ($term) => in_array($term['status'] ?? '', ['unpaid', 'rejected'], true));
+    $totalOpen = $openTerms->sum($getTermAmount);
+    $statusCounts = [
+        'Dalam Verifikasi' => $billingTerms->where('status', 'verifying')->count(),
+        'Menunggu Bayar' => $openTerms->count(),
+        'Lunas' => $billingTerms->where('status', 'verified')->count(),
+    ];
+    $verifiedPercent = $totalBilled > 0 ? round(($totalVerified / $totalBilled) * 100, 1) : 0;
+    $urgentProject = null;
+    $urgentTerm = null;
+    foreach ($projectsBilling as $project) {
+        foreach (($project['termins'] ?? []) as $term) {
+            if (!empty($term['can_upload'])) {
+                $urgentProject = $project;
+                $urgentTerm = $term;
+                break 2;
+            }
+        }
     }
 @endphp
 
@@ -212,7 +372,7 @@
 
              if (this.activeStatusFilter === 'Semua') return true;
              if (this.activeStatusFilter === 'Menunggu Bayar') {
-                 return p.termins.some(t => t.status === 'unpaid');
+                 return p.termins.some(t => ['unpaid', 'rejected'].includes(t.status));
              }
              if (this.activeStatusFilter === 'Dalam Verifikasi') {
                  return p.termins.some(t => t.status === 'verifying');
@@ -228,7 +388,7 @@
     <x-sidebar active="tagihan" />
 
     {{-- == ( konten utama ) == --}}
-    <div class="flex-1 ml-64 flex flex-col min-h-screen">
+    <div class="flex-1 ml-64 flex flex-col min-h-screen min-w-0 max-w-[calc(100vw-16rem)] overflow-x-hidden">
 
         {{-- Toast Notification --}}
         <div x-show="showToast"
@@ -246,7 +406,7 @@
             <span x-text="toastMessage"></span>
         </div>
 
-        <main class="flex-1 px-8 py-7 space-y-6">
+        <main class="flex-1 px-8 py-7 space-y-6 min-w-0 w-full overflow-hidden">
 
             {{-- Flash Alert Messages --}}
             @if (session('success'))
@@ -269,87 +429,32 @@
                 </div>
             @endif
 
-            {{-- == ( header card : judul halaman & informasi sinkronisasi ) == --}}
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#EFF6FF] via-[#F4F8FE] to-[#FCF8EC] border border-blue-100/70 px-8 py-7 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div class="relative z-10 max-w-3xl">
-                    <div class="inline-flex items-center gap-2 bg-[#EAF3FF] text-[#0B3B82] text-[10.5px] font-bold tracking-wide uppercase px-3 py-1 rounded-full mb-2.5">
+            {{-- == ( hero card : judul halaman & informasi sinkronisasi ) == --}}
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                {{-- gradient dekoratif --}}
+                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                        TAGIHAN & KEUANGAN • WORKSPACE KLIEN
-                    </div>
-                    <h1 class="text-2xl lg:text-[28px] font-extrabold text-[#1E293B] tracking-tight">
+                        Workspace Klien
+                    </span>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Tagihan & Pembayaran <span class="text-[#FFB800]">Proyek</span>
                     </h1>
-                    <p class="text-xs md:text-sm text-slate-500 mt-2 leading-relaxed font-normal">
-                        Pantau status penagihan termin proyek (SPK), riwayat pembayaran terverifikasi, dan unggah bukti transfer per termin secara terintegrasi dengan akuntansi Politeknik.
-                    </p>
-                </div>
-
-                {{-- Date & Sync Info Right Box --}}
-                <div class="relative z-10 flex flex-col items-start md:items-end gap-1.5 flex-shrink-0 bg-white/70 backdrop-blur-xs p-3.5 rounded-2xl border border-blue-100/50 shadow-xs">
-                    <div class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700">
-                        <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5"/>
-                        </svg>
-                        <span>Rabu, 30 September 2026</span>
-                    </div>
-                    <div class="inline-flex items-center gap-1 text-[11px] text-slate-500 font-medium">
-                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
-                        </svg>
-                        <span>Sync Otomatis: <strong class="text-slate-700">Aktif</strong> (Cache 60s)</span>
-                    </div>
+                    <p class="text-sm text-slate-400 mt-1.5">Pantau status penagihan termin, riwayat pembayaran, dan unggah bukti transfer per termin</p>
                 </div>
             </div>
 
-            {{-- == ( kartu metrik nilai kontrak & distribusi termin ) == --}}
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 md:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-
-                {{-- Sisi Kiri: Total Nilai Kontrak --}}
-                <div class="space-y-1.5 flex-1">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400">TOTAL NILAI KONTRAK TERIKAT SPK</p>
-                    <div class="text-3xl lg:text-[36px] font-extrabold text-slate-800 tracking-tight">
-                        Rp 185.000.000
-                    </div>
-                    <div class="inline-flex items-center gap-1.5 text-xs text-slate-500 pt-1 font-medium">
-                        <span class="w-2 h-2 rounded-full bg-[#0B3B82]"></span>
-                        <span>3 Proyek Aktif Terikat Dokumen SPK Sah</span>
-                    </div>
-                </div>
-
-                {{-- Sisi Kanan: Distribusi Termin Pembayaran --}}
-                <div class="space-y-3 w-full lg:w-[460px] flex-shrink-0">
-                    <div class="flex items-center justify-between text-xs font-bold text-slate-700">
-                        <span>Distribusi Termin Pembayaran</span>
-                        <span class="text-[#0B3B82]">Realisasi 60.8%</span>
-                    </div>
-
-                    {{-- Multi-color segmented progress bar --}}
-                    <div class="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex gap-0.5">
-                        <div class="h-full bg-emerald-500 rounded-l-full transition-all duration-500" style="width: 60.8%" title="Terverifikasi: 60.8%"></div>
-                        <div class="h-full bg-[#FFB800] transition-all duration-500" style="width: 17.6%" title="Verifikasi: 17.6%"></div>
-                        <div class="h-full bg-[#0B3B82] rounded-r-full transition-all duration-500" style="width: 21.6%" title="Terbuka: 21.6%"></div>
-                    </div>
-
-                    {{-- Legend --}}
-                    <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium pt-0.5">
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span>Terverifikasi (60.8%)</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-[#FFB800]"></span>
-                            <span>Verifikasi (17.6%)</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-[#0B3B82]"></span>
-                            <span>Terbuka (21.6%)</span>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
+            <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" aria-label="Ringkasan tagihan">
+                <x-stat-card label="Total Tagihan" :value="'Rp ' . number_format($totalBilled, 0, ',', '.')" :sub="$billingTerms->count() . ' Termin tercatat'" color="#0B3B82" icon="folder" />
+                <x-stat-card label="Terverifikasi" :value="'Rp ' . number_format($totalVerified, 0, ',', '.')" :sub="$verifiedPercent . '% dari total tagihan'" color="#16A34A" icon="check" />
+                <x-stat-card label="Dalam Verifikasi" :value="'Rp ' . number_format($totalVerifying, 0, ',', '.')" :sub="$statusCounts['Dalam Verifikasi'] . ' Termin'" color="#F59E0B" icon="clock-file" />
+                <x-stat-card label="Menunggu Pembayaran" :value="'Rp ' . number_format($totalOpen, 0, ',', '.')" :sub="$statusCounts['Menunggu Bayar'] . ' Termin'" color="#6366F1" icon="calendar" />
+            </section>
 
             {{-- == ( banner peringatan tindakan : unggah bukti pembayaran termin berjalan ) == --}}
+            @if($urgentTerm && $urgentProject)
             <div class="bg-gradient-to-r from-[#EFF5FF] to-[#FAF5E8] border border-blue-100/90 rounded-2xl p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
 
                 <div class="flex items-start gap-4">
@@ -367,16 +472,16 @@
                             </span>
                             <span class="bg-red-50 text-red-600 text-[10.5px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
                                 <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                                Jatuh Tempo: 15 Okt 2026
+                                {{ $urgentTerm['due_date'] ?? 'Jatuh tempo belum ditetapkan' }}
                             </span>
                         </div>
 
                         <h2 class="text-base font-bold text-slate-800 leading-snug">
-                            Unggah Bukti Pembayaran Termin Berjalan (Termin 2)
+                            Unggah Bukti Pembayaran {{ $urgentTerm['name'] ?? 'Termin' }}
                         </h2>
 
                         <p class="text-xs text-slate-500 leading-relaxed max-w-2xl">
-                            Proyek <strong class="text-slate-700">Aplikasi Mobile Portal Layanan Nasabah (PRJ-2026/009)</strong> siap untuk proses pelunasan 50% (Rp 30.000.000). Silakan unggah slip transaksi atau bukti transfer bank guna mempercepat penerbitan kwitansi sah bendahara Politeknik.
+                            Proyek <strong class="text-slate-700">{{ $urgentProject['title'] }}</strong> memiliki tagihan {{ $urgentTerm['invoice_number'] ?? '' }} sebesar {{ $urgentTerm['nominal'] ?? '—' }} yang menunggu pembayaran.
                         </p>
                     </div>
                 </div>
@@ -407,36 +512,24 @@
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
                         </svg>
-                        <span>Unggah Bukti Bayar Sekarang</span>
+                        <span>Unggah Bukti Pembayaran Termin Berjalan</span>
                     </a>
                 </div>
 
             </div>
+            @endif
 
             {{-- == ( filter & search bar ) == --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-2.5 flex flex-col md:flex-row items-center justify-between gap-3">
-
-                {{-- Search Box --}}
-                <div class="relative w-full md:w-72">
-                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
-                        </svg>
-                    </span>
-                    <input type="text"
-                           x-model="searchQuery"
-                           placeholder="Cari termin"
-                           class="w-full bg-[#F8FAFC] border border-slate-200/70 rounded-xl pl-10 pr-4 py-2 text-xs md:text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0B3B82] focus:bg-white transition">
-                </div>
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
 
                 {{-- Status Pills --}}
-                <div class="flex items-center gap-1.5 flex-wrap">
+                <div class="flex items-center gap-1.5 flex-nowrap overflow-x-auto">
                     @php
                         $statusTabs = [
-                            'Semua'            => 'Semua (5)',
-                            'Menunggu Bayar'   => 'Menunggu Bayar (1)',
-                            'Dalam Verifikasi' => 'Dalam Verifikasi (1)',
-                            'Lunas'            => 'Lunas (3)',
+                            'Semua'            => 'Semua (' . $billingTerms->count() . ')',
+                            'Menunggu Bayar'   => 'Menunggu Bayar (' . $statusCounts['Menunggu Bayar'] . ')',
+                            'Dalam Verifikasi' => 'Dalam Verifikasi (' . $statusCounts['Dalam Verifikasi'] . ')',
+                            'Lunas'            => 'Lunas (' . $statusCounts['Lunas'] . ')',
                         ];
                     @endphp
 
@@ -446,21 +539,25 @@
                                 :class="activeStatusFilter === '{{ $tabKey }}'
                                     ? 'bg-[#0B3B82] text-white shadow-xs font-semibold'
                                     : 'bg-transparent text-slate-600 hover:bg-slate-100 font-medium'"
-                                class="px-4 py-2 rounded-xl text-xs transition cursor-pointer">
+                                class="px-3.5 py-1.5 rounded-xl text-xs transition cursor-pointer shrink-0 whitespace-nowrap">
                             {{ $tabLabel }}
                         </button>
                     @endforeach
                 </div>
 
-                {{-- Project Filter Dropdown --}}
-                <div class="w-full md:w-auto">
-                    <select x-model="selectedProjectFilter"
-                            class="w-full md:w-auto bg-[#F8FAFC] border border-slate-200/80 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:border-[#0B3B82] cursor-pointer">
-                        <option value="all">Semua Proyek Aktif (3)</option>
-                        <option value="PRJ-2026/014">PRJ-2026/014 - Sistem Monitoring</option>
-                        <option value="PRJ-2026/009">PRJ-2026/009 - Aplikasi Mobile Nasabah</option>
-                        <option value="PRJ-2026/021">PRJ-2026/021 - Smart Warehouse Sensor</option>
-                    </select>
+                <div class="flex items-center gap-2.5 shrink-0">
+                    {{-- Search Box --}}
+                    <div class="relative w-48 sm:w-56">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+                            </svg>
+                        </span>
+                        <input type="text"
+                               x-model="searchQuery"
+                               placeholder="Cari termin..."
+                               class="w-full bg-[#F8FAFC] border border-slate-200/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0B3B82] focus:bg-white transition">
+                    </div>
                 </div>
 
             </div>
@@ -468,7 +565,7 @@
             {{-- == ( daftar kartu proyek & termin tagihan ) == --}}
             <div class="space-y-4">
 
-                @foreach($projectsBilling as $proj)
+                @forelse($projectsBilling as $proj)
                 <div x-show="matches(@js($proj))"
                      x-transition:enter="transition ease-out duration-200"
                      x-transition:enter-start="opacity-0 translate-y-1"
@@ -514,12 +611,12 @@
                             <div class="space-y-1 text-left md:text-right">
                                 <div class="flex items-center gap-3">
                                     <span class="text-xs text-slate-500 font-medium">{{ $proj['total_value'] }}</span>
-                                    <span class="text-xs font-bold {{ $proj['id'] === 'PRJ-2026/009' ? 'text-slate-800' : 'text-[#0B3B82]' }}">
+                                    <span class="text-xs font-bold {{ $proj['has_open'] ? 'text-amber-700' : 'text-[#0B3B82]' }}">
                                         {{ $proj['paid_status'] }}
                                     </span>
                                 </div>
                                 <div class="w-32 md:w-36 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                    <div class="h-full {{ $proj['id'] === 'PRJ-2026/009' ? 'bg-[#FFB800]' : 'bg-[#0B3B82]' }} rounded-full"
+                                    <div class="h-full {{ $proj['has_open'] ? 'bg-[#FFB800]' : 'bg-[#0B3B82]' }} rounded-full"
                                          style="width: {{ $proj['paid_percent'] }}%"></div>
                                 </div>
                             </div>
@@ -565,7 +662,7 @@
                                 Rincian Dokumen & Riwayat Termin Proyek
                             </h4>
                             <span class="text-slate-400 font-medium">
-                                Diperbarui sistem otomatis: 15 menit yang lalu
+                                Status pembayaran tersinkron dari database
                             </span>
                         </div>
 
@@ -601,8 +698,8 @@
                                                 {{ $termin['desc'] ?? ($termin['name'] ?? '-') }}
                                             </p>
                                             <p class="mt-2 text-[11px] text-slate-500">
-                                                Invoice: <span class="font-semibold text-slate-700">{{ $termin['invoice_number'] }}</span>
-                                                <span class="mx-1">•</span> Termin {{ $termin['term_sequence'] }}
+                                                Invoice: <span class="font-semibold text-slate-700">{{ $termin['invoice_number'] ?? 'Belum diterbitkan' }}</span>
+                                                <span class="mx-1">•</span> Termin {{ $termin['term_sequence'] ?? ($loop->iteration ?? 1) }}
                                             </p>
                                             <p class="mt-1 text-[11px] text-slate-500">
                                                 Jatuh tempo: <span class="font-medium text-slate-700">{{ $termin['due_date'] ?? 'Belum ditetapkan' }}</span>
@@ -685,28 +782,25 @@
 
                                         {{-- 5. Aksi Dokumen --}}
                                         <td class="px-5 py-4 whitespace-nowrap text-right">
-                                            @if($termin['can_download'])
-                                                <button type="button"
-                                                        @click="triggerToast('Mengunduh berkas Kwitansi Resmi bermeterai (PDF)...')"
+                                            <div class="inline-flex items-center gap-2">
+                                                @if($termin['can_download'])
+                                                <a href="{{ route('klien.tagihan.invoice', $termin['id']) }}"
                                                         class="bg-white border border-slate-200 hover:border-[#0B3B82] hover:text-[#0B3B82] text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer">
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                                                     </svg>
                                                     <span>Unduh Kwitansi</span>
-                                                </button>
+                                                </a>
                                             @elseif($termin['can_upload'])
-                                                <a href="{{ route('klien.tagihan.unggah', ['proposal' => $termin['proposal_id'] ?? ($proj['proposal_id'] ?? 0), 'payment' => $termin['id'] ?? 0]) }}"
+                                                <a href="{{ route('klien.tagihan.unggah', ['proposal' => $termin['proposal_id'] ?? ($p['proposal_id'] ?? 0), 'payment' => $termin['id'] ?? 0]) }}"
                                                    class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 shadow-xs transition">
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/>
                                                     </svg>
                                                     <span>Unggah Bukti</span>
                                                 </a>
-                                            @else
-                                                <span class="text-xs text-slate-300 font-medium italic">
-                                                    Belum Tersedia
-                                                </span>
-                                            @endif
+                                                @endif
+                                            </div>
                                         </td>
 
                                     </tr>
@@ -718,10 +812,21 @@
                     </div>
 
                 </div>
-                @endforeach
+                @empty
+                    <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+                        <p class="text-sm font-semibold text-slate-700">Belum ada tagihan proyek.</p>
+                        <p class="mt-1 text-xs text-slate-500">Tagihan akan tampil setelah termin pembayaran dibuat pada proyek Anda.</p>
+                    </div>
+                @endforelse
 
             </div>
 
+            <section class="rounded-2xl border border-blue-100 bg-white p-6 shadow-xs" aria-label="Informasi pembayaran">
+                <h2 class="text-sm font-bold text-slate-800">Informasi Pembayaran</h2>
+                <p class="mt-2 text-xs leading-relaxed text-slate-500">
+                    Gunakan informasi rekening yang tercantum pada dokumen invoice resmi untuk setiap termin. Pastikan nomor invoice dan nominal pembayaran sesuai sebelum mengirim bukti transfer.
+                </p>
+            </section>
         </main>
 
     </div>

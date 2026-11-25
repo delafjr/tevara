@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Unggah bukti pembayaran termin proyek TEVARA. Konfirmasi transfer bank giro atau virtual account untuk verifikasi bagian keuangan.">
+    <meta name="description" content="Unggah bukti pembayaran termin proyek TEVARA. Konfirmasi transfer bank giro untuk verifikasi bagian keuangan.">
     <title>Unggah Bukti Pembayaran - Tevara</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon-32x32.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
@@ -130,18 +130,19 @@
             @endif
 
             {{-- Header Card --}}
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#EFF6FF] via-[#F4F8FE] to-[#FCF8EC] border border-blue-100/70 px-8 py-7 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div class="relative z-10 max-w-2xl">
-                    <div class="inline-flex items-center gap-2 bg-[#EAF3FF] text-[#0B3B82] text-[10.5px] font-bold tracking-wide uppercase px-3 py-1 rounded-full mb-2.5">
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                {{-- gradient dekoratif --}}
+                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                        F-09 • PEMBAYARAN PROYEK
-                    </div>
-                    <h1 class="text-2xl lg:text-[28px] font-extrabold text-[#1E293B] tracking-tight">
+                        F-09 • Pembayaran Proyek
+                    </span>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Unggah Bukti <span class="text-[#FFB800]">Pembayaran</span>
                     </h1>
-                    <p class="text-xs md:text-sm text-slate-500 mt-2 leading-relaxed">
-                        Kirimkan berkas struk atau slip bukti transfer termin proyek untuk diverifikasi oleh Bagian Keuangan TEFA Politeknik.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Kirimkan berkas struk atau bukti transfer termin untuk verifikasi tim keuangan TeFa</p>
                 </div>
 
                 <div class="relative z-10 flex flex-col items-start md:items-end gap-1 bg-white/80 backdrop-blur-xs p-4 rounded-2xl border border-blue-100/60 shadow-2xs flex-shrink-0">
@@ -188,58 +189,13 @@
                         </div>
                     </div>
 
-                    {{-- Card Rekening Pembayaran Resmi TEVARA --}}
-                    <div class="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-4">
-                        <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
-                            <div>
-                                <h3 class="text-sm font-bold text-slate-800">Rekening Tujuan Resmi</h3>
-                                <p class="text-[11px] text-slate-400 mt-0.5">Gunakan salah satu kanal resmi di bawah</p>
-                            </div>
-                            <span class="inline-flex items-center gap-1 text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
-                                Resmi TEFA
-                            </span>
-                        </div>
-
-                        <div class="space-y-3.5">
-                            {{-- Bank Mandiri Giro --}}
-                            <div class="p-4 rounded-2xl bg-[#F8FAFD] border border-slate-200/80 space-y-2 hover:border-[#0B3B82] transition">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[10.5px] font-bold px-2 py-0.5 rounded bg-blue-100 text-[#0B3B82]">BANK MANDIRI (GIRO)</span>
-                                    <button type="button"
-                                            @click="copyText('1420099281721', 'Rekening Mandiri')"
-                                            class="text-xs font-bold text-[#0B3B82] hover:underline inline-flex items-center gap-1 cursor-pointer">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"/></svg>
-                                        Salin
-                                    </button>
-                                </div>
-                                <div>
-                                    <p class="text-base font-extrabold text-slate-800 font-mono tracking-wide">142-00-9928172-1</p>
-                                    <p class="text-[11px] text-slate-500 font-medium">a.n. Teaching Factory Politeknik</p>
-                                </div>
-                            </div>
-
-                            {{-- BCA Virtual Account --}}
-                            <div class="p-4 rounded-2xl bg-[#F8FAFD] border border-slate-200/80 space-y-2 hover:border-[#0B3B82] transition">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[10.5px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">BCA VIRTUAL ACCOUNT</span>
-                                    <button type="button"
-                                            @click="copyText('8872008123456789', 'No. VA BCA')"
-                                            class="text-xs font-bold text-[#0B3B82] hover:underline inline-flex items-center gap-1 cursor-pointer">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"/></svg>
-                                        Salin
-                                    </button>
-                                </div>
-                                <div>
-                                    <p class="text-base font-extrabold text-slate-800 font-mono tracking-wide">88720-08123456789</p>
-                                    <p class="text-[11px] text-slate-500 font-medium">a.n. TEVARA - {{ $userName }}</p>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="rounded-3xl border border-blue-100 bg-blue-50/60 p-6">
+                        <h3 class="text-sm font-bold text-slate-800">Informasi Pembayaran</h3>
+                        <p class="mt-2 text-xs leading-relaxed text-slate-600">
+                            Gunakan nomor rekening atau virtual account yang tercantum pada invoice resmi proyek. Pastikan nominal dan nomor invoice sesuai sebelum mengirim bukti pembayaran.
+                        </p>
                     </div>
-
                 </div>
-
                 {{-- Kolom Kanan (7 Kolom): Formulir Bukti Transfer --}}
                 <div class="lg:col-span-7">
                     <form method="POST"
@@ -260,43 +216,30 @@
                             </label>
                             <select name="payment_method" required class="w-full bg-[#F8FAFC] border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition">
                                 <option value="BANK_TRANSFER" {{ old('payment_method') === 'BANK_TRANSFER' ? 'selected' : '' }}>
-                                    Transfer Bank Mandiri Giro (142-00-9928172-1)
+                                    Transfer Bank
                                 </option>
                                 <option value="VIRTUAL_ACCOUNT" {{ old('payment_method') === 'VIRTUAL_ACCOUNT' ? 'selected' : '' }}>
-                                    BCA Virtual Account (88720-08123456789)
+                                    Virtual Account
                                 </option>
                                 <option value="CASH" {{ old('payment_method') === 'CASH' ? 'selected' : '' }}>
-                                    Setor Tunai Langsung ke Kasir TEFA
+                                    Tunai
                                 </option>
                                 <option value="OTHER" {{ old('payment_method') === 'OTHER' ? 'selected' : '' }}>
-                                    Transfer Antar Bank (BI-FAST / Realtime Online)
+                                    Lainnya
                                 </option>
                             </select>
                         </div>
 
-                        {{-- Grid Tanggal & No Referensi --}}
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-2">
-                                    Tanggal Transfer <span class="text-red-500">*</span>
-                                </label>
-                                <input type="date"
-                                       name="payment_date"
-                                       required
-                                       value="{{ old('payment_date', date('Y-m-d')) }}"
-                                       class="w-full bg-[#F8FAFC] border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-2">
-                                    Nomor Referensi / 4 Digit Rekening
-                                </label>
-                                <input type="text"
-                                       name="transfer_reference"
-                                       value="{{ old('transfer_reference') }}"
-                                       placeholder="Contoh: REF98213 / Rek 4321"
-                                       maxlength="255"
-                                       class="w-full bg-[#F8FAFC] border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition">
-                            </div>
+                        {{-- Tanggal Transfer --}}
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-2">
+                                Tanggal Transfer <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date"
+                                   name="payment_date"
+                                   required
+                                   value="{{ old('payment_date', date('Y-m-d')) }}"
+                                   class="w-full bg-[#F8FAFC] border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:border-[#0B3B82] focus:ring-2 focus:ring-[#0B3B82]/10 transition">
                         </div>
 
                         {{-- File Upload Box --}}

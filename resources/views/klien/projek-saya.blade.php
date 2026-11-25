@@ -12,48 +12,33 @@
 </head>
 <body class="bg-[#F4F7FB] font-sans text-[#1E293B] antialiased min-h-screen"
       x-data="{
+          expanded: {},
           searchQuery: '',
-          activeCategory: 'Semua',
-          expanded: {
-              'PRJ-2026/014': true,
-              'PRJ-2026/008': false,
-              'PRJ-2026/021': false
-          },
-          handoverModalOpen: false,
-          handoverProject: '',
-          handoverMessage: '',
           toggle(id) {
               this.expanded[id] = !this.expanded[id];
           },
-          openHandoverForm(projectId) {
-              this.handoverProject = projectId;
-              this.handoverModalOpen = true;
-          },
-          matches(p) {
-              const matchCat = this.activeCategory === 'Semua' ||
-                  (this.activeCategory === 'Web Platform' && (p.category === 'Web' || p.category_badge.includes('Web') || p.title.includes('Web'))) ||
-                  (this.activeCategory === 'Mobile' && (p.category === 'Mobile' || p.title.includes('Mobile'))) ||
-                  (this.activeCategory === 'IoT & Hardware' && (p.category === 'IoT & Hardware' || p.title.includes('IoT') || p.title.includes('Sensor')));
-
-              const q = this.searchQuery.toLowerCase().trim();
-              if (!q) return matchCat;
-
-              const matchQuery = p.id.toLowerCase().includes(q) ||
-                  p.title.toLowerCase().includes(q) ||
-                  p.dosen.name.toLowerCase().includes(q) ||
-                  p.status.toLowerCase().includes(q);
-
-              return matchCat && matchQuery;
+          matches(project) {
+              const query = this.searchQuery.trim().toLowerCase();
+              const searchable = [project.id, project.title, project.category, project.status, project.dosen.name].join(' ').toLowerCase();
+              return !query || searchable.includes(query);
           }
       }">
 
 @php
+    $hasProposalData = isset($proposals);
     $user = $user ?? session('user', []);
     $userName = $user['name'] ?? 'Budi Santoso';
+    $proposals = is_array($proposals ?? null) ? $proposals : [];
     $handoverProjects = $handoverProjects ?? [];
     $handoverProjectsAvailable = $handoverProjectsAvailable ?? false;
+    $error = $error ?? null;
+    $routePrefix = request()->routeIs('jurusan.*') ? 'jurusan' : 'klien';
+    $uatReadyCount = collect($proposals)->filter(fn ($proposal) => is_array($proposal)
+        && !empty($proposal['bast_eligible'])
+        && empty($proposal['bast_prepared'])
+        && empty($proposal['client_approved']))->count();
 
-    $projectsData = [
+    $demoProjectsData = [
         [
             'id'               => 'PRJ-2026/014',
             'category'         => 'IoT & Hardware',
@@ -229,6 +214,90 @@
             ],
         ],
     ];
+
+    $formatProjectDate = static fn ($value) => $value
+        ? \Carbon\Carbon::parse($value)->translatedFormat('d M Y')
+        : 'Belum ditentukan';
+    $projectsData = $hasProposalData
+        ? collect($proposals)
+            ->filter(fn ($proposal) => is_array($proposal) && (!empty($proposal['project_code']) || !empty($proposal['client_approved'])))
+            ->map(function ($proposal) use ($formatProjectDate) {
+                $projectCode = (string) ($proposal['project_code'] ?? $proposal['proposal_code'] ?? ('PRJ-' . ($proposal['id'] ?? '')));
+                $targetDate = $proposal['target_completion_date'] ?? null;
+                $daysRemaining = $targetDate
+                    ? \Carbon\Carbon::today()->diffInDays(\Carbon\Carbon::parse($targetDate)->startOfDay(), false)
+                    : null;
+                $pm = is_array($proposal['pm'] ?? null) ? $proposal['pm'] : [];
+                $pmName = $pm['name'] ?? 'Belum ditetapkan';
+                $pmInitials = collect(explode(' ', trim($pmName)))
+                    ->filter()
+                    ->take(2)
+                    ->map(fn ($part) => mb_substr($part, 0, 1))
+                    ->implode('');
+                $categoryData = $proposal['category'] ?? 'Proyek';
+                $category = is_array($categoryData) ? ($categoryData['name'] ?? 'Proyek') : (string) $categoryData;
+                $categoryAndTitle = strtolower($category . ' ' . ($proposal['title'] ?? ''));
+                $statusData = $proposal['status'] ?? 'Berjalan';
+                $status = is_array($statusData) ? ($statusData['name'] ?? 'Berjalan') : (string) $statusData;
+                $statusType = !empty($proposal['client_approved'])
+                    ? 'complete'
+                    : (!empty($proposal['bast_prepared'])
+                        ? 'pending_approval'
+                        : (!empty($proposal['bast_eligible']) ? 'uat' : 'running'));
+                $modules = collect($proposal['modules'] ?? [])
+                    ->filter(fn ($module) => is_array($module))
+                    ->map(fn ($module) => [
+                        'icon' => 'file',
+                        'title' => $module['title'] ?? 'Modul',
+                        'desc' => $module['description'] ?? 'Tidak ada deskripsi modul.',
+                    ])
+                    ->values()
+                    ->all();
+                $students = collect($proposal['team_members'] ?? $proposal['project_teams'] ?? [])
+                    ->filter(fn ($member) => is_array($member))
+                    ->map(fn ($member) => [
+                        'icon' => 'code',
+                        'name' => $member['student']['name'] ?? $member['name'] ?? 'Mahasiswa',
+                        'role' => $member['role']['name'] ?? $member['role'] ?? 'Anggota Tim',
+                    ])
+                    ->values()
+                    ->all();
+
+                return [
+                    'id' => $projectCode,
+                    'client_approved' => !empty($proposal['client_approved']),
+                    'has_handover_deliverables' => !empty($proposal['handover_deliverables']),
+                    'category' => $category,
+                    'status' => $status,
+                    'status_type' => $statusType,
+                    'title' => $proposal['title'] ?? 'Proyek TEVARA',
+                    'icon_type' => str_contains($categoryAndTitle, 'mobile') ? 'mobile' : (str_contains($categoryAndTitle, 'iot') ? 'iot' : 'robot'),
+                    'dates' => $formatProjectDate($proposal['start_date'] ?? null) . ' — ' . $formatProjectDate($targetDate),
+                    'days_left' => $daysRemaining === null
+                        ? 'Target belum ditentukan'
+                        : ($daysRemaining >= 0 ? 'Sisa ' . $daysRemaining . ' Hari Kalender' : 'Terlambat ' . abs($daysRemaining) . ' Hari Kalender'),
+                    'progress' => max(0, min(100, (int) ($proposal['overall_progress'] ?? 0))),
+                    'dosen' => [
+                        'initials' => $pmInitials !== '' ? strtoupper($pmInitials) : 'PM',
+                        'name' => $pmName,
+                        'tag' => 'DOSEN PEMBIMBING / PM',
+                        'nidn' => 'NIDN: ' . ($pm['nidn'] ?? '—') . ' • ' . ($pm['department'] ?? 'Jurusan belum diisi'),
+                        'role_badge' => 'Penanggung Jawab Teknis',
+                    ],
+                    'modules' => $modules,
+                    'students' => $students,
+                ];
+            })
+            ->values()
+            ->all()
+        : $demoProjectsData;
+
+    $totalProjectCount = count($projectsData);
+    $activeProjectCount = count(array_filter($projectsData, fn ($project) => $project['status_type'] === 'running'));
+    $averageProjectProgress = $totalProjectCount > 0
+        ? round(array_sum(array_column($projectsData, 'progress')) / $totalProjectCount, 1)
+        : 0;
+    $totalModuleCount = array_sum(array_map(fn ($project) => count($project['modules']), $projectsData));
 @endphp
 
 <div class="flex min-h-screen">
@@ -241,164 +310,78 @@
 
         <main class="flex-1 px-8 py-7 space-y-6">
 
-            {{-- == ( header card : judul halaman & deskripsi ) == --}}
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#EFF6FF] via-[#F3F7FD] to-[#FCF8EC] border border-blue-100/70 px-8 py-7 shadow-xs">
-                <div class="relative z-10 max-w-4xl">
-                    <h1 class="text-2xl lg:text-[28px] font-extrabold text-[#1E293B] tracking-tight">
+            {{-- == ( hero card : judul halaman & deskripsi ) == --}}
+            <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm px-8 py-6 flex items-center justify-between gap-6">
+                {{-- gradient dekoratif --}}
+                <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-white via-[#EAF3FF] to-[#FFF6E0] opacity-60 pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                        Workspace Klien
+                    </span>
+                    <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Daftar <span class="text-[#FFB800]">Projek Saya</span>
                     </h1>
-                    <p class="text-xs md:text-sm text-slate-500 mt-2 leading-relaxed font-normal">
-                        Pantau progres eksekusi teknis, evaluasi berkas deliverable, dan spesifikasi pengerjaan proyek Teaching Factory secara terpadu.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Pantau progres eksekusi teknis, evaluasi deliverable, dan spesifikasi pengerjaan proyek</p>
                 </div>
             </div>
 
             @if(session('success'))
                 <div role="status" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
             @endif
-            @if($errors->any())
+            @if(!empty($errors) && $errors->any())
                 <div role="alert" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                    <p class="font-semibold">BAST belum dapat dikirim:</p>
+                    <p class="font-semibold">Persetujuan BAST belum dapat dikirim:</p>
                     <ul class="mt-1 list-disc pl-5">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
+                        @foreach($errors->all() as $errItem)
+                            <li>{{ $errItem }}</li>
                         @endforeach
                     </ul>
                 </div>
             @endif
 
+            @if($routePrefix === 'klien')
             <section class="border-b border-slate-200 pb-5" aria-labelledby="bast-ready-title">
                 <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
                     <div>
-                        <h2 id="bast-ready-title" class="text-sm font-bold text-slate-800">Proyek siap serah terima</h2>
-                        <p class="mt-1 text-xs text-slate-500">Daftar ini mengikuti hasil UAT terbaru dari backend.</p>
+                        <h2 id="bast-ready-title" class="text-sm font-bold text-slate-800">Persetujuan BAST</h2>
+                        <p class="mt-1 text-xs text-slate-500">Pengurus TeFa menyiapkan dokumen. Periksa dan setujui BAST di sini.</p>
                     </div>
-                    <span class="text-xs font-medium text-slate-500">{{ count($handoverProjects) }} proyek siap</span>
+                    <span class="text-xs font-medium text-slate-500">{{ count($handoverProjects) }} menunggu persetujuan</span>
                 </div>
                 @if(count($handoverProjects))
                     <div class="mt-3 divide-y divide-slate-100 border-y border-slate-100">
                         @foreach($handoverProjects as $handoverProjectItem)
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3">
+                            <article class="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
-                                    <p class="text-xs font-bold text-slate-800">{{ $handoverProjectItem['title'] }}</p>
-                                    <p class="mt-1 font-mono text-[11px] text-slate-500">{{ $handoverProjectItem['project_code'] }}</p>
+                                    <p class="text-sm font-bold text-slate-800">{{ $handoverProjectItem['title'] ?? 'Proyek' }}</p>
+                                    <p class="mt-1 font-mono text-[11px] text-slate-500">{{ $handoverProjectItem['bast_number'] ?? 'Nomor BAST belum tersedia' }} · {{ $handoverProjectItem['project_code'] ?? '' }}</p>
+                                    <p class="mt-2 text-xs text-slate-500">Dokumen serah terima sudah disiapkan. Silakan tinjau daftar hasil/barang sebelum menyetujui.</p>
                                 </div>
-                                <button type="button" @click="openHandoverForm(@js($handoverProjectItem['project_code']))"
-                                        class="inline-flex w-fit items-center gap-2 rounded-lg bg-[#0B3B82] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#082d64]">
-                                    Isi formulir BAST
-                                </button>
-                            </div>
+                                <a href="{{ route('klien.projek-saya.bast.review', $handoverProjectItem['id']) }}" class="inline-flex shrink-0 justify-center rounded-lg bg-[#0B3B82] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#082d64]">Tinjau BAST</a>
+                            </article>
                         @endforeach
                     </div>
                 @elseif($handoverProjectsAvailable)
-                    <p class="mt-3 text-xs text-slate-500">Belum ada proyek dengan hasil UAT terakhir PASSED.</p>
+                    <p class="mt-3 text-xs text-slate-500">
+                        @if($uatReadyCount > 0)
+                            Ada {{ $uatReadyCount }} proyek dengan UAT lulus yang menunggu Pengurus TeFa menyiapkan BAST.
+                        @else
+                            Belum ada BAST yang menunggu persetujuan PIC Klien.
+                        @endif
+                    </p>
                 @else
                     <p class="mt-3 text-xs text-amber-800">Data kelayakan BAST belum dapat dimuat dari backend.</p>
                 @endif
             </section>
+            @endif
 
             {{-- == ( 3 kartu ringkasan metrik statistik ) == --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-
-                {{-- Kartu 1: Total Proyek Portofolio --}}
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 flex flex-col justify-between hover:shadow-md transition">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-3">TOTAL PROYEK PORTOFOLIO</p>
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-2.5">
-                            <span class="text-2xl font-bold text-slate-800">3 Proyek</span>
-                            <span class="text-[11px] font-semibold text-[#0B3B82] bg-[#EAF3FF] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                                Aktif Berjalan
-                            </span>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0">
-                            {{-- Bento Grid Icon --}}
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
-                                <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                                <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                                <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-                                <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Kartu 2: Rata - Rata Progres --}}
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 flex flex-col justify-between hover:shadow-md transition">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-3">RATA - RATA PROGRES</p>
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="space-y-1.5">
-                            <span class="text-2xl font-bold text-slate-800">68.4%</span>
-                            <div class="w-28 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-[#0B3B82] rounded-full" style="width: 68.4%"></div>
-                            </div>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0">
-                            {{-- Trending Up Icon --}}
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Kartu 3: Distribusi Fase Pengerjaan --}}
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-6 flex flex-col justify-between hover:shadow-md transition">
-                    <p class="text-[10.5px] font-bold tracking-wider uppercase text-slate-400 mb-3">DISTRIBUSI FASE PENGERJAAN</p>
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <span class="text-2xl font-bold text-slate-800">3 Milestone</span>
-                        </div>
-                        <div class="w-10 h-10 rounded-xl bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0">
-                            {{-- Clipboard / Checklist Icon --}}
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            {{-- == ( filter & search bar ) == --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-2.5 flex flex-col md:flex-row items-center justify-between gap-3">
-
-                {{-- Search Box --}}
-                <div class="relative flex-1 w-full">
-                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
-                        </svg>
-                    </span>
-                    <input type="text"
-                           x-model="searchQuery"
-                           placeholder="Cari kode proyek, judul deliverable, nama dosen..."
-                           class="w-full bg-[#F8FAFC] border border-slate-200/70 rounded-xl pl-10 pr-4 py-2.5 text-xs md:text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0B3B82] focus:bg-white transition">
-                </div>
-
-                {{-- Filter Pills --}}
-                <div class="flex items-center gap-1.5 flex-shrink-0 flex-wrap">
-                    @php
-                        $categories = [
-                            'Semua'          => 'Semua (3)',
-                            'Web Platform'   => 'Web Platform',
-                            'Mobile'         => 'Mobile',
-                            'IoT & Hardware' => 'IoT & Hardware',
-                        ];
-                    @endphp
-
-                    @foreach($categories as $catKey => $catLabel)
-                        <button type="button"
-                                @click="activeCategory = '{{ $catKey }}'"
-                                :class="activeCategory === '{{ $catKey }}'
-                                    ? 'bg-[#0B3B82] text-white shadow-xs font-semibold'
-                                    : 'bg-transparent text-slate-600 hover:bg-slate-100 font-medium'"
-                                class="px-4 py-2 rounded-xl text-xs transition cursor-pointer">
-                            {{ $catLabel }}
-                        </button>
-                    @endforeach
-                </div>
-
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <x-stat-card label="TOTAL PROYEK PORTOFOLIO" :value="$totalProjectCount . ' Proyek'" :sub="$activeProjectCount . ' Proyek aktif'" color="#0B3B82" icon="folder" />
+                <x-stat-card label="RATA - RATA PROGRES" :value="number_format($averageProjectProgress, 1) . '%'" sub="Target performa pengerjaan" color="#16A34A" icon="play" />
+                <x-stat-card label="DISTRIBUSI FASE PENGERJAAN" :value="$totalModuleCount . ' Modul'" sub="Total deliverable proyek" color="#6366F1" icon="check" />
             </div>
 
             {{-- Flash Messages --}}
@@ -426,7 +409,7 @@
                             <h2 class="text-sm font-bold text-slate-800">Proposal &amp; Pengajuan Proyek Anda</h2>
                             <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#EAF3FF] text-[#0B3B82]">{{ count($proposals) }}</span>
                         </div>
-                        <a href="{{ route('klien.ajukan-proyek') }}" class="text-xs font-semibold text-[#0B3B82] hover:underline inline-flex items-center gap-1">
+                        <a href="{{ route($routePrefix . '.ajukan-proyek') }}" class="text-xs font-semibold text-[#0B3B82] hover:underline inline-flex items-center gap-1">
                             + Ajukan Proyek Baru
                         </a>
                     </div>
@@ -470,6 +453,16 @@
                                 </div>
 
                                 <div class="flex items-center gap-3 flex-shrink-0">
+                                    @if(!empty($prop['contract_file_url']))
+                                        <a href="{{ route('dokumen.spk', $prop['id']) }}"
+                                           class="inline-flex items-center gap-2 rounded-xl border border-[#0B3B82]/20 bg-[#EAF3FF] px-4 py-2.5 text-xs font-bold text-[#0B3B82] hover:bg-[#DBEAFE] transition"
+                                           title="Unduh dokumen SPK/kontrak proyek">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                                            </svg>
+                                            Unduh SPK
+                                        </a>
+                                    @endif
                                     <a href="{{ route('klien.projek-saya.detail', $prop['id']) }}"
                                        class="inline-flex items-center gap-2 rounded-xl {{ $isPropRevision ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-sm shadow-amber-600/30' : 'bg-[#0B3B82] hover:bg-[#082a5c] text-white' }} px-5 py-2.5 text-xs font-bold transition cursor-pointer">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -500,6 +493,13 @@
 
             {{-- == ( daftar kartu proyek ) == --}}
             <div class="space-y-4">
+
+                @if(empty($projectsData))
+                    <div class="rounded-2xl border border-slate-100 bg-white p-12 text-center shadow-xs">
+                        <h3 class="text-sm font-bold text-slate-700">Belum ada proyek aktif.</h3>
+                        <p class="mt-1 text-xs text-slate-400">Proyek yang sudah berjalan akan muncul di sini.</p>
+                    </div>
+                @endif
 
                 @foreach($projectsData as $proj)
                 <div x-show="matches(@js($proj))"
@@ -596,19 +596,6 @@
                                     <div class="h-full bg-[#0B3B82] rounded-full" style="width: {{ $proj['progress'] }}%"></div>
                                 </div>
                             </div>
-
-                            {{-- Lembar UAT Button --}}
-                            @php
-                                $propIdNum = (int) (preg_replace('/[^0-9]/', '', $proj['id'] ?? '') ?: 1);
-                            @endphp
-                            <a href="{{ route('klien.projek-saya.uat', $propIdNum) }}"
-                               class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold px-3.5 py-2 rounded-xl inline-flex items-center gap-1.5 transition flex-shrink-0 shadow-2xs">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.5 2h7M7 16h10"/>
-                                </svg>
-                                Lembar UAT
-                            </a>
 
                             {{-- Accordion Toggle Button --}}
                             <button type="button"
@@ -764,6 +751,12 @@
 
                         </div>
 
+                        @if(!empty($proj['client_approved']) && empty($proj['has_handover_deliverables']))
+                        <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
+                            BAST ini sudah disetujui sebelum daftar hasil/barang dicatat. Silakan hubungi Pengurus TeFa untuk koreksi resmi.
+                        </div>
+                        @endif
+
                         @if($proj['status_type'] === 'uat')
                         <section class="border-t border-slate-100 pt-5 space-y-4" aria-labelledby="bast-title-{{ $proj['id'] }}">
                             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -800,7 +793,7 @@
                 @endforeach
 
                 {{-- Empty Search / Filter State --}}
-                <div x-show="!$el.previousElementSibling || searchQuery && [ 'PRJ-2026/014', 'PRJ-2026/008', 'PRJ-2026/021' ].every(id => !matches(projectsData.find(p => p.id === id)))"
+                <div x-show="searchQuery && !@js($projectsData).some(project => matches(project))"
                      style="display: none;"
                      class="bg-white rounded-2xl border border-slate-100 p-12 text-center shadow-xs">
                     <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
@@ -820,76 +813,6 @@
 
     </div>
 
-</div>
-
-<div x-show="handoverModalOpen" x-cloak style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="handover-modal-title">
-    <div class="fixed inset-0 bg-slate-900/50" @click="handoverModalOpen = false"></div>
-    <div class="min-h-screen px-4 py-8 flex items-center justify-center">
-        <div class="relative z-10 w-full max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-            <div class="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
-                <div>
-                    <h2 id="handover-modal-title" class="text-base font-bold text-slate-800">Formulir Berita Acara Serah Terima</h2>
-                    <p class="mt-1 text-xs text-slate-500">Proyek <span x-text="handoverProject"></span></p>
-                </div>
-                <button type="button" @click="handoverModalOpen = false" aria-label="Tutup formulir BAST" class="text-xl leading-none text-slate-500 hover:text-slate-800">&times;</button>
-            </div>
-            <form method="POST" action="{{ route('klien.projek-saya.bast.store') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                @csrf
-                <input type="hidden" name="project_code" :value="handoverProject">
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Nomor BAST</label>
-                    <input type="text" value="Diterbitkan sistem setelah UAT disetujui" disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-slate-500">
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tanggal serah terima</label>
-                    <input type="date" name="handover_date" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tautan repositori</label>
-                    <input type="url" name="repository_url" placeholder="https://" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tautan dokumentasi</label>
-                    <input type="url" name="documentation_url" placeholder="https://" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tautan panduan pengguna</label>
-                    <input type="url" name="user_manual_url" placeholder="https://" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Nama penandatangan klien</label>
-                    <input type="text" name="client_signoff_name" required maxlength="255" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Masa garansi (bulan)</label>
-                    <input type="number" name="maintenance_warranty_months" min="0" value="3" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tanggal mulai pemeliharaan</label>
-                    <input type="date" name="maintenance_start_date" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
-                </div>
-                <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Tanggal selesai pemeliharaan</label>
-                    <input type="date" name="maintenance_end_date" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
-                </div>
-                <label class="flex items-center gap-2 text-xs font-medium text-slate-700">
-                    <input type="checkbox" name="client_approved" value="1" required class="rounded border-slate-300 text-[#0B3B82]">
-                    Saya menyetujui serah terima produk
-                </label>
-                <div class="md:col-span-2">
-                    <label class="mb-1 block text-xs font-semibold text-slate-700">Catatan serah terima / pemeliharaan</label>
-                    <textarea name="handover_notes" rows="3" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700"></textarea>
-                </div>
-                <div class="md:col-span-2 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-t border-slate-100 pt-4">
-                    <p class="text-xs text-amber-800" role="status">Pengiriman hanya berhasil jika hasil UAT terakhir berstatus PASSED.</p>
-                    <div class="flex justify-end gap-2">
-                        <button type="button" @click="handoverModalOpen = false" class="rounded-lg px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
-                        <button type="submit" class="rounded-lg bg-[#0B3B82] px-4 py-2 text-xs font-semibold text-white hover:bg-[#082d64]">Kirim persetujuan</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
 </div>
 
 </body>

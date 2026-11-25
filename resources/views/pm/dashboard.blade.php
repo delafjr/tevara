@@ -22,7 +22,28 @@
     $activeProjects    = (int) ($dash['active_projects'] ?? 0);
     $completedProjects = (int) ($dash['completed_projects'] ?? 0);
     $waitingReview     = (int) ($dash['waiting_review'] ?? 0);
-    $projectsList      = $dash['projects'] ?? [];
+    $projectsList      = is_array($dash['projects'] ?? null) ? $dash['projects'] : [];
+    $usingDemoData     = false;
+    if ($currentRole === 'pm' && empty($projectsList)) {
+        $usingDemoData = true;
+        $dash = [
+            'total_projects' => 15,
+            'active_projects' => 8,
+            'completed_projects' => 4,
+            'waiting_review' => 3,
+            'category_distribution' => [['web' => 6], ['iot' => 4], ['mobile' => 3], ['software' => 2]],
+            'projects' => [
+                ['title' => 'Sistem Informasi UMKM', 'client_name' => 'Koperasi Mitra', 'status' => 'Berjalan', 'progress' => 75],
+                ['title' => 'Smart Farming IoT', 'client_name' => 'Agro Mandiri', 'status' => 'Review', 'progress' => 100],
+                ['title' => 'Website Company Profile', 'client_name' => 'PT Tevara', 'status' => 'Selesai', 'progress' => 100],
+            ],
+        ];
+        $totalProjects = (int) $dash['total_projects'];
+        $activeProjects = (int) $dash['active_projects'];
+        $completedProjects = (int) $dash['completed_projects'];
+        $waitingReview = (int) $dash['waiting_review'];
+        $projectsList = $dash['projects'];
+    }
 
     // category_distribution dari API berbentuk [{"web": 1}, ...] → ratakan lalu jumlahkan per kategori.
     $categoryCounts = [];
@@ -109,7 +130,7 @@
             <div class="relative z-10">
                 <span class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full mb-2.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                    Dashboard Project Manager
+                    {{ $workspaceLabel }}
                 </span>
                 <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                     Selamat Datang, <span class="text-[#FFB800]">{{ $userName }}</span>
@@ -118,6 +139,11 @@
             </div>
 
             <div class="relative z-10 flex flex-col items-end gap-2 flex-shrink-0">
+                @if($usingDemoData)
+                    <span class="inline-flex items-center gap-1.5 rounded-lg border border-amber-100 bg-amber-50 px-3 py-1.5 text-[10px] font-bold text-amber-700">
+                        Preview data demo
+                    </span>
+                @endif
                 <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-1.5 bg-[#EAF3FF] text-[#0B3B82] text-[11.5px] font-semibold px-3 py-1.5 rounded-lg hover:bg-[#DCEBFF] transition-colors" title="Ambil ulang data dashboard dari backend">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
                     Data terbaru
@@ -125,17 +151,20 @@
             </div>
         </div>
 
+        {{-- ── NOTIFIKASI & AKTIVITAS HIGHLIGHT ── --}}
+        <x-dashboard-notifications :notifications="$notifications ?? []" :unread-count="$unreadCount ?? 0" />
+
         {{-- ── 2. 4 STAT CARDS ── --}}
         @php
             $pmStats = [
                 ['label' => 'Total Proyek',    'value' => $totalProjects,     'sub' => 'Inisiatif Terdaftar', 'color' => '#0B3B82', 'icon' => 'folder'],
-                ['label' => 'Proyek Berjalan', 'value' => $activeProjects,    'sub' => 'Dalam Pengerjaan',    'color' => '#0B3B82', 'icon' => 'play'],
-                ['label' => 'Proyek Selesai',  'value' => $completedProjects, 'sub' => 'Siap Produksi',       'color' => '#0B3B82', 'icon' => 'check'],
+                ['label' => 'Proyek Berjalan', 'value' => $activeProjects,    'sub' => 'Dalam Pengerjaan',    'color' => '#6366F1', 'icon' => 'play'],
+                ['label' => 'Proyek Selesai',  'value' => $completedProjects, 'sub' => 'Siap Produksi',       'color' => '#16A34A', 'icon' => 'check'],
                 ['label' => 'Menunggu Review', 'value' => $waitingReview,     'sub' => 'Perlu Review',        'color' => '#F59E0B', 'icon' => 'clock-file'],
             ];
         @endphp
 
-        <div class="grid grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
             @foreach($pmStats as $stat)
                 <x-stat-card :label="$stat['label']" :value="$stat['value']" :sub="$stat['sub']" :color="$stat['color']" :icon="$stat['icon']" />
             @endforeach
@@ -197,6 +226,9 @@
                             <div class="px-5 py-4 grid grid-cols-12 items-center hover:bg-slate-50/50 transition-colors">
                                 <div class="col-span-5 pr-4">
                                     <p class="font-bold text-[#1E293B] text-[13px] leading-tight">{{ $proj['title'] ?? '-' }}</p>
+                                    @if(!empty($proj['description']))
+                                        <p class="mt-1 truncate text-[10px] text-slate-400">{{ $proj['description'] }}</p>
+                                    @endif
                                 </div>
                                 <div class="col-span-3">
                                     <span class="text-[12px] font-medium text-slate-600">{{ $proj['client_name'] ?? '-' }}</span>

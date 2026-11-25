@@ -68,7 +68,9 @@
             ['id' => 'ajukan-projek','label' => 'Ajukan Projek',         'icon' => 'ajukan-projek',  'href' => route('klien.ajukan-proyek')],
             ['id' => 'projek-saya',  'label' => 'Projek Saya',           'icon' => 'project',        'href' => route('klien.projek-saya')],
             ['id' => 'uat',          'label' => 'UAT & Pengujian',       'icon' => 'uat',            'href' => route('klien.uat')],
+            ['id' => 'bast',         'label' => 'BAST & Serah Terima',   'icon' => 'proposal',       'href' => route('klien.bast')],
             ['id' => 'tagihan',      'label' => 'Tagihan & Pembayaran',  'icon' => 'tagihan',        'href' => route('klien.tagihan')],
+            ['id' => 'maintenance',  'label' => 'Garansi & Maintenance', 'icon' => 'maintenance',    'href' => route('klien.maintenance')],
         ],
         'mahasiswa' => [
             ['id' => 'dashboard',    'label' => 'Dashboard',             'icon' => 'dashboard',      'href' => route('dashboard')],
@@ -91,6 +93,7 @@
             ['id' => 'dashboard',         'label' => 'Dashboard',         'icon' => 'dashboard',      'href' => route('dashboard')],
             ['id' => 'projek',            'label' => 'Projek',            'icon' => 'project',        'href' => route('pengurus-tefa.projek')],
             ['id' => 'bast',              'label' => 'BAST',              'icon' => 'proposal',       'href' => route('pengurus-tefa.bast')],
+            ['id' => 'maintenance',       'label' => 'Maintenance',       'icon' => 'maintenance',    'href' => route('pengurus-tefa.maintenance')],
             ['id' => 'klien-mitra',       'label' => 'Klien & Mitra',     'icon' => 'team',           'href' => route('pengurus-tefa.klien-mitra')],
             ['id' => 'dosen',             'label' => 'Dosen',             'icon' => 'team',           'href' => route('pengurus-tefa.dosen')],
             ['id' => 'mahasiswa',         'label' => 'Mahasiswa',         'icon' => 'team',           'href' => route('pengurus-tefa.mahasiswa')],
@@ -193,6 +196,11 @@
                             <path d="M3 3v18h18"/>
                             <path d="m19 9-5 5-4-4-3 3"/>
                         </svg>
+                    @elseif($item['icon'] === 'maintenance')
+                        {{-- Wrench / maintenance icon --}}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                        </svg>
                     @elseif($item['icon'] === 'uat')
                         {{-- UAT / Test Tube / Beaker icon --}}
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
@@ -251,6 +259,20 @@
                         </a>
                     @endforeach
                 </div>
+
+                {{-- Divider --}}
+                <div class="h-px bg-slate-100 my-1"></div>
+
+                {{-- Profile Link --}}
+                <a
+                    href="{{ route('profile') }}"
+                    class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors {{ $active === 'profile' ? 'bg-[#EAF3FF] text-[#0B3B82]' : 'text-slate-700 hover:bg-[#EAF3FF] hover:text-[#0B3B82]' }}"
+                >
+                    <svg class="w-4 h-4 {{ $active === 'profile' ? 'text-[#0B3B82]' : 'text-slate-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                    </svg>
+                    <span>Profil Saya</span>
+                </a>
 
                 {{-- Divider --}}
                 <div class="h-px bg-slate-100 my-1"></div>

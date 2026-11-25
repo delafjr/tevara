@@ -26,9 +26,7 @@
                     <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                         Kelola Semua <span class="text-[#FFB800]">Projek TeFa</span>
                     </h1>
-                    <p class="text-sm text-[#64748B] mt-1.5 max-w-2xl leading-relaxed">
-                        Pantau status, progress, dan tim untuk setiap projek yang berjalan.
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1.5">Pantau status, progres eksekusi, dan alokasi tim untuk setiap projek aktif</p>
                 </div>
 
                 <div class="relative z-10 flex-shrink-0">
@@ -40,13 +38,19 @@
             </div>
 
             {{-- Stats --}}
-            <div class="grid grid-cols-4 gap-4 items-stretch">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
                 @php
+                $dash = $dashboard ?? [];
+                $totalProjects   = (int) ($dash['total_projects'] ?? 0);
+                $runningProjects = (int) ($dash['running_projects'] ?? 0);
+                $inReview        = (int) ($dash['in_review_projects'] ?? 0);
+                $submitted       = (int) ($dash['submitted_proposals'] ?? 0);
+
                 $projStats = [
-                    ['label' => 'Total Projek',     'value' => '28', 'sub' => 'Seluruh Projek',  'color' => '#0B3B82', 'icon' => 'folder'],
-                    ['label' => 'Sedang Berjalan',  'value' => '17', 'sub' => 'Dalam Pengerjaan','color' => '#0B3B82', 'icon' => 'play'],
-                    ['label' => 'Dalam Review',     'value' => '4',  'sub' => 'Perlu Review',    'color' => '#F59E0B', 'icon' => 'clock-file'],
-                    ['label' => 'Proposal Masuk',   'value' => '7',  'sub' => 'Menunggu Validasi','color' => '#0B3B82', 'icon' => 'check'],
+                    ['label' => 'Total Projek',     'value' => (string) $totalProjects,   'sub' => 'Seluruh Projek',  'color' => '#0B3B82', 'icon' => 'folder'],
+                    ['label' => 'Sedang Berjalan',  'value' => (string) $runningProjects, 'sub' => 'Dalam Pengerjaan','color' => '#16A34A', 'icon' => 'play'],
+                    ['label' => 'Dalam Review',     'value' => (string) $inReview,        'sub' => 'Perlu Review',    'color' => '#F59E0B', 'icon' => 'clock-file'],
+                    ['label' => 'Proposal Masuk',   'value' => (string) $submitted,       'sub' => 'Menunggu Validasi','color' => '#6366F1', 'icon' => 'check'],
                 ];
                 @endphp
                 @foreach($projStats as $stat)
@@ -55,17 +59,34 @@
             </div>
 
             {{-- Filter + Tabel --}}
-            <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            @php
+            $projectsList = is_array($dash['projects'] ?? null) ? $dash['projects'] : [];
+            $ss = [
+                'active'   => 'bg-blue-50 text-blue-700',
+                'berjalan' => 'bg-blue-50 text-blue-700',
+                'testing'  => 'bg-purple-50 text-purple-700',
+                'review'   => 'bg-amber-50 text-amber-700',
+                'handover' => 'bg-emerald-50 text-emerald-700',
+                'selesai'  => 'bg-green-50 text-green-700',
+                'completed'=> 'bg-green-50 text-green-700',
+                'proposal' => 'bg-purple-50 text-purple-700',
+            ];
+            $pc = fn($p) => $p >= 100 ? '#16A34A' : ($p >= 60 ? '#0B3B82' : ($p >= 30 ? '#F59E0B' : '#DC2626'));
+            @endphp
+            <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden" x-data="{ search: '', statusFilter: 'Semua Status' }">
                 <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                     <div>
                         <p class="font-semibold text-[#1E293B] text-[15px]">Daftar Projek</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Semua projek yang terdaftar</p>
+                        <p class="text-xs text-slate-400 mt-0.5">Semua projek yang terdaftar di database</p>
                     </div>
                     <div class="flex items-center gap-2">
-                        <input type="text" placeholder="Cari projek..." class="text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0B3B82] w-48">
-                        <select class="text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0B3B82]">
+                        <input type="text" x-model="search" placeholder="Cari projek..." class="text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0B3B82] w-48">
+                        <select x-model="statusFilter" class="text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0B3B82]">
                             <option>Semua Status</option>
-                            <option>Berjalan</option><option>Review</option><option>Selesai</option><option>Proposal</option>
+                            <option>Active</option>
+                            <option>Testing</option>
+                            <option>Handover</option>
+                            <option>Completed</option>
                         </select>
                     </div>
                 </div>
@@ -80,62 +101,56 @@
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Status</th>
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3 w-32">Progress</th>
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Deadline</th>
-                                <th class="px-3 py-3 w-10"></th>
+                                <th class="text-center text-[11px] font-semibold text-slate-400 px-3 py-3 w-24">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
+                            @forelse($projectsList as $p)
                             @php
-                            $projects = [
-                                ['name'=>'Sistem Informasi UMKM','client'=>'PT. ABC Indonesia','pm'=>'Dimas Setiawan','mhs'=>8,'cat'=>'Website','status'=>'Berjalan','prog'=>75,'dl'=>'12 Okt 2026'],
-                                ['name'=>'Smart Farming IoT','client'=>'CV. Tani Maju','pm'=>'Rizky Pratama','mhs'=>6,'cat'=>'IoT','status'=>'Review','prog'=>60,'dl'=>'5 Nov 2026'],
-                                ['name'=>'Website Company Profile','client'=>'PT. DEF Solusi','pm'=>'Nadia Putri','mhs'=>4,'cat'=>'Website','status'=>'Selesai','prog'=>100,'dl'=>'—'],
-                                ['name'=>'Aplikasi Inventori','client'=>'PT. Maju Sentosa','pm'=>'Thomas Elang','mhs'=>5,'cat'=>'Aplikasi','status'=>'Proposal','prog'=>25,'dl'=>'18 Nov 2026'],
-                                ['name'=>'Monitoring Produksi','client'=>'CV. Tani Maju','pm'=>'Dimas Setiawan','mhs'=>7,'cat'=>'Aplikasi','status'=>'Berjalan','prog'=>40,'dl'=>'25 Nov 2026'],
-                                ['name'=>'Sistem Parkir Cerdas','client'=>'Pemkot Semarang','pm'=>'Ari Wibowo','mhs'=>9,'cat'=>'IoT','status'=>'Berjalan','prog'=>55,'dl'=>'1 Des 2026'],
-                                ['name'=>'E-Commerce UMKM Batik','client'=>'Koperasi Batik','pm'=>'Siti Rahayu','mhs'=>6,'cat'=>'Website','status'=>'Review','prog'=>80,'dl'=>'10 Nov 2026'],
-                                ['name'=>'Absensi Digital','client'=>'SMK Negeri 1','pm'=>'Budi Prasetyo','mhs'=>5,'cat'=>'Aplikasi','status'=>'Berjalan','prog'=>30,'dl'=>'20 Des 2026'],
-                            ];
-                            $ss=['Berjalan'=>'bg-blue-50 text-blue-700','Review'=>'bg-amber-50 text-amber-700','Selesai'=>'bg-green-50 text-green-700','Proposal'=>'bg-purple-50 text-purple-700'];
-                            $pc=fn($p)=>$p>=100?'#16A34A':($p>=60?'#0B3B82':($p>=30?'#F59E0B':'#DC2626'));
+                                $statusKey = strtolower($p['status'] ?? 'other');
+                                $badgeClass = $ss[$statusKey] ?? 'bg-slate-100 text-slate-600';
+                                $prog = (int) ($p['progress'] ?? 0);
                             @endphp
-                            @foreach($projects as $p)
-                            <tr class="hover:bg-slate-50/60 transition-colors">
+                            <tr class="hover:bg-slate-50/60 transition-colors"
+                                x-show="(statusFilter === 'Semua Status' || statusFilter.toLowerCase() === '{{ $statusKey }}') && (!search || '{{ strtolower(addslashes($p['title'] ?? '')) }}'.includes(search.toLowerCase()) || '{{ strtolower(addslashes($p['client_name'] ?? '')) }}'.includes(search.toLowerCase()))">
                                 <td class="px-6 py-3.5">
-                                    <p class="font-semibold text-[#1E293B] text-[13px] leading-tight">{{ $p['name'] }}</p>
-                                    <p class="text-[11px] text-slate-400 mt-0.5">{{ $p['cat'] }}</p>
+                                    <a href="{{ route('pengurus-tefa.projek.detail', $p['id']) }}" class="font-semibold text-[#1E293B] hover:text-[#0B3B82] text-[13px] leading-tight block transition-colors">
+                                        {{ $p['title'] }}
+                                    </a>
+                                    <p class="text-[11px] text-slate-400 mt-0.5 capitalize">{{ $p['category'] ?? 'Lainnya' }}</p>
                                 </td>
-                                <td class="px-3 py-3.5 text-[12px] text-slate-600">{{ $p['client'] }}</td>
-                                <td class="px-3 py-3.5 text-[12px] text-slate-600">{{ $p['pm'] }}</td>
-                                <td class="px-3 py-3.5"><span class="text-[12px] font-semibold text-[#0B3B82]">{{ $p['mhs'] }} mhs</span></td>
-                                <td class="px-3 py-3.5"><span class="text-[11px] font-semibold px-2.5 py-1 rounded-full {{ $ss[$p['status']] ?? 'bg-slate-100 text-slate-600' }}">{{ $p['status'] }}</span></td>
+                                <td class="px-3 py-3.5 text-[12px] text-slate-600">{{ $p['client_name'] ?? '—' }}</td>
+                                <td class="px-3 py-3.5 text-[12px] text-slate-600 font-medium">{{ $p['pm_name'] ?? '—' }}</td>
+                                <td class="px-3 py-3.5"><span class="text-[12px] font-semibold text-[#0B3B82]">{{ $p['student_count'] ?? 0 }} mhs</span></td>
+                                <td class="px-3 py-3.5"><span class="text-[11px] font-semibold px-2.5 py-1 rounded-full {{ $badgeClass }}">{{ $p['status'] }}</span></td>
                                 <td class="px-3 py-3.5 w-32">
                                     <div class="flex items-center gap-2">
                                         <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                            <div class="h-full rounded-full" style="width:{{ $p['prog'] }}%;background:{{ $pc($p['prog']) }}"></div>
+                                            <div class="h-full rounded-full" style="width:{{ $prog }}%;background:{{ $pc($prog) }}"></div>
                                         </div>
-                                        <span class="text-[11px] font-semibold text-slate-500 w-7 text-right">{{ $p['prog'] }}%</span>
+                                        <span class="text-[11px] font-semibold text-slate-500 w-7 text-right">{{ $prog }}%</span>
                                     </div>
                                 </td>
-                                <td class="px-3 py-3.5 text-[12px] text-slate-500">{{ $p['dl'] }}</td>
-                                <td class="px-3 py-3.5">
-                                    <button class="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
-                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
-                                    </button>
+                                <td class="px-3 py-3.5 text-[12px] text-slate-500">{{ $p['deadline'] ?? '—' }}</td>
+                                <td class="px-3 py-3.5 text-center">
+                                    <a href="{{ route('pengurus-tefa.projek.detail', $p['id']) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#EAF3FF] text-[#0B3B82] hover:bg-[#0B3B82] hover:text-white text-[11px] font-bold transition-all" title="Lihat Detail Projek">
+                                        <span>Detail</span>
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                                    </a>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="8" class="px-6 py-12 text-center text-slate-400 text-xs">
+                                    Belum ada projek aktif yang berjalan di database.
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
                 <div class="px-6 py-3.5 border-t border-slate-100 flex items-center justify-between">
-                    <p class="text-xs text-slate-400">Menampilkan 8 dari 28 projek</p>
-                    <div class="flex items-center gap-1">
-                        <button class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-500 hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors">← Prev</button>
-                        <button class="px-3 py-1.5 text-xs rounded-lg bg-[#0B3B82] text-white">1</button>
-                        <button class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-500 hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors">2</button>
-                        <button class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-500 hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors">3</button>
-                        <button class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-500 hover:border-[#0B3B82] hover:text-[#0B3B82] transition-colors">Next →</button>
-                    </div>
+                    <p class="text-xs text-slate-400">Menampilkan {{ count($projectsList) }} projek</p>
                 </div>
             </div>
         </main>

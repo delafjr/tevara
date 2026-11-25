@@ -40,7 +40,7 @@
             <h1 class="text-2xl font-bold leading-snug text-[#1E293B]">
                 Selamat Datang kembali, <span class="text-[#FFB800]">{{ $firstName }}!</span>
             </h1>
-            <p class="text-sm text-slate-400 mt-1.5">Terus berkontribusi dan wujudkan solusi nyata bersama Teaching Factory untuk transformasi digital industri.</p>
+            <p class="text-sm text-slate-400 mt-1.5">Pantau tugas aktif, laporkan progres capaian, dan pantau evaluasi dosen pembimbing</p>
         </div>
 
         <div class="relative z-10 flex flex-col items-end gap-2 flex-shrink-0">
@@ -51,17 +51,20 @@
         </div>
     </div>
 
+    {{-- ===== NOTIFIKASI & AKTIVITAS HIGHLIGHT ===== --}}
+    <x-dashboard-notifications :notifications="$notifications ?? []" :unread-count="$unreadCount ?? 0" />
+
     {{-- ===== 4 STAT CARDS ===== --}}
     @php
         $deadlineText = $daysRemaining === null ? 'Aman' : ($daysRemaining < 0 ? 'Terlewat' : ($daysRemaining === 0 ? 'Hari ini' : $daysRemaining . ' Hari'));
         $deadlineSub = $daysRemaining === null ? 'Sisa Waktu' : ($daysRemaining < 0 ? 'Terlewat' : 'Sisa Waktu');
         $isUrgentDeadline = ($daysRemaining !== null && $daysRemaining <= 3);
-        $deadlineColor = $isUrgentDeadline ? '#DC2626' : '#0B3B82';
+        $deadlineColor = $isUrgentDeadline ? '#DC2626' : '#6366F1';
 
         $studentStats = [
             ['label' => 'Project Aktif',     'value' => $activeProjects,    'sub' => 'Dalam Pengerjaan', 'color' => '#0B3B82', 'icon' => 'play'],
             ['label' => 'Menunggu Review',   'value' => $pendingTasks,      'sub' => 'Perlu Review',     'color' => '#F59E0B', 'icon' => 'clock-file'],
-            ['label' => 'Project Selesai',   'value' => $completedProjects, 'sub' => 'Siap Produksi',    'color' => '#0B3B82', 'icon' => 'check'],
+            ['label' => 'Project Selesai',   'value' => $completedProjects, 'sub' => 'Siap Produksi',    'color' => '#16A34A', 'icon' => 'check'],
             ['label' => 'Deadline Terdekat', 'value' => $deadlineText,      'sub' => $deadlineSub,       'color' => $deadlineColor, 'icon' => 'calendar'],
         ];
     @endphp
