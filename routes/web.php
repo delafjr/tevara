@@ -474,27 +474,40 @@ Route::middleware('auth.api')->group(function () {
                                     $hasOpen = true;
                                 }
 
+                                $rawDueDate = $pay['due_date'] ?? $pay['payment_date'] ?? null;
+                                $formattedDueDate = !empty($rawDueDate)
+                                    ? \Carbon\Carbon::parse($rawDueDate)->translatedFormat('d M Y')
+                                    : null;
+                                $invoiceNumber = !empty($pay['invoice_number'])
+                                    ? $pay['invoice_number']
+                                    : (!empty($pay['id'])
+                                        ? sprintf('INV/%s/%06d', !empty($pay['created_at']) ? \Carbon\Carbon::parse($pay['created_at'])->format('Y') : date('Y'), (int) $pay['id'])
+                                        : 'Belum diterbitkan');
+                                $termDesc = (!empty($pay['verification_notes']) && $status !== 'REJECTED')
+                                    ? $pay['verification_notes']
+                                    : 'Pembayaran Termin ' . ($pay['term_sequence'] ?? 1);
+
                                 $termins[] = [
                                     'id'                 => $pay['id'],
                                     'proposal_id'        => $pId,
-                                    'invoice_number'     => $pay['invoice_number'] ?? 'Belum diterbitkan',
+                                    'invoice_number'     => $invoiceNumber,
                                     'term_sequence'      => $pay['term_sequence'] ?? 1,
                                     'name'               => 'Termin ' . ($pay['term_sequence'] ?? 1),
-                                    'desc'               => !empty($pay['due_date']) ? 'Jatuh tempo: ' . \Carbon\Carbon::parse($pay['due_date'])->translatedFormat('d M Y') : 'Pembayaran Termin ' . ($pay['term_sequence'] ?? 1),
+                                    'desc'               => $termDesc,
                                     'nominal'            => 'Rp ' . number_format($amount, 0, ',', '.'),
                                     'amount'             => $amount,
                                     'channel'            => match ($pay['payment_method'] ?? null) {
                                         'BANK_TRANSFER' => 'Transfer Bank',
                                         'VIRTUAL_ACCOUNT' => 'Virtual Account',
                                         'CASH' => 'Tunai',
-                                        'OTHER' => 'Lainnya',
+                                        'OTHER' => 'E-Wallet / Lainnya',
                                         default => 'Belum dipilih',
                                     },
                                     'channel_icon'       => 'bank',
                                     'status'             => $statusType,
                                     'raw_status'         => $status,
                                     'status_label'       => $statusLabel,
-                                    'due_date'           => !empty($pay['due_date']) ? 'Jatuh Tempo: ' . \Carbon\Carbon::parse($pay['due_date'])->translatedFormat('d M Y') : null,
+                                    'due_date'           => $formattedDueDate,
                                     'can_download'       => $canDownload,
                                     'can_upload'         => $canUpload,
                                     'proof_url'          => $proofUrl,
@@ -846,7 +859,7 @@ Route::middleware('auth.api')->group(function () {
         Route::post('/tagihan/{proposal}/payments/{payment}/proof', function (Request $request, ApiService $api, int $proposal, int $payment) {
             $validated = $request->validate([
                 'payment_date'       => ['required', 'date'],
-                'payment_method'     => ['required', 'in:BANK_TRANSFER,CASH,OTHER'],
+                'payment_method'     => ['required', 'in:BANK_TRANSFER,VIRTUAL_ACCOUNT,CASH,OTHER'],
                 'transfer_reference' => ['nullable', 'string', 'max:255'],
                 'proof'              => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             ], [
@@ -878,9 +891,11 @@ Route::middleware('auth.api')->group(function () {
             }
         })->whereNumber('proposal')->whereNumber('payment')->name('tagihan.upload-proof');
 
-        Route::get('/tagihan/payments/{payment}/invoice', function (ApiService $api, int $payment) {
+        Route::get('/tagihan/payments/{payment}/invoice', function (Request $request, ApiService $api, int $payment) {
             try {
-                $response = $api->get("payments/{$payment}/invoice");
+                $channel = $request->query('channel');
+                $query = $channel ? ('?channel=' . urlencode((string) $channel)) : '';
+                $response = $api->get("payments/{$payment}/invoice{$query}");
                 if ($response->failed()) {
                     return back()->with('error', $response->json('message') ?? 'Invoice belum dapat diunduh.');
                 }
@@ -1735,27 +1750,24 @@ Route::middleware('auth.api')->group(function () {
 
             $rules = [
                 'documentation_file' => ['nullable', 'file', 'mimes:pdf,docx,zip,doc', 'max:10240'],
-                'user_manual_url' => ['nullable', 'url', 'max:255'],
+                'user_manual_url' => ['required', 'url', 'max:255'],
                 'handover_notes' => ['nullable', 'string'],
                 'handover_deliverables' => ['required', 'json'],
                 'maintenance_warranty_months' => ['required', 'integer', 'min:0'],
                 'maintenance_notes' => ['nullable', 'string'],
+                'repository_url' => ['nullable', 'url', 'max:255'],
+                'access_email' => ['nullable', 'string', 'max:255'],
+                'access_password' => ['nullable', 'string', 'max:255'],
             ];
 
             if ($isSourceCode) {
-                $rules['repository_url'] = ['required', 'url', 'max:255'];
                 $rules['app_url'] = ['nullable', 'url', 'max:255'];
-                $rules['access_email'] = ['nullable', 'string', 'max:255'];
-                $rules['access_password'] = ['nullable', 'string', 'max:255'];
             } else {
-                $rules['repository_url'] = ['nullable', 'url', 'max:255'];
                 $rules['app_url'] = ['required', 'url', 'max:255'];
-                $rules['access_email'] = ['nullable', 'string', 'max:255'];
-                $rules['access_password'] = ['nullable', 'string', 'max:255'];
             }
 
             $validated = $request->validate($rules, [
-                'repository_url.required' => 'URL Repository source code wajib diisi untuk penyerahan source code.',
+                'user_manual_url.required' => 'URL panduan pengguna wajib diisi.',
                 'app_url.required' => 'URL Akses Aplikasi Sistem wajib diisi karena klien memilih kelola penuh oleh TeFa.',
                 'documentation_file.mimes' => 'Berkas lampiran dokumentasi API harus berformat aman: .pdf, .docx, atau .zip.',
                 'documentation_file.max' => 'Ukuran berkas lampiran dokumentasi API maksimal 10 MB.',
