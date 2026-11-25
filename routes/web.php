@@ -368,7 +368,7 @@ Route::middleware('auth.api')->group(function () {
             'kategori_id'       => ['required', 'integer', 'min:1'],
             'delivery_type'     => ['nullable', 'in:source_code,tefa_managed'],
             'has_warranty'      => ['nullable', 'in:0,1,true,false'],
-            'warranty_months'   => ['nullable', 'integer', 'min:1', 'required_if:has_warranty,1,true'],
+            'warranty_months'   => ['nullable', 'integer', 'min:1'],
             'ringkasan'         => ['required', 'string', 'max:500'],
             'target_pengguna'   => ['required', 'string', 'max:1000'],
             'deadline'          => ['required', 'date', 'after_or_equal:' . now()->addDays(30)->toDateString()],
@@ -388,8 +388,8 @@ Route::middleware('auth.api')->group(function () {
             ->all();
 
         $deliveryType = $validated['delivery_type'] ?? 'source_code';
-        $hasWarranty = filter_var($validated['has_warranty'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $warrantyMonths = $hasWarranty ? (int) ($validated['warranty_months'] ?? 3) : null;
+        $hasWarranty = true;
+        $warrantyMonths = max(1, (int) ($validated['warranty_months'] ?? 3));
 
         $user = session('user', []);
         $response = $api->post('proposals', [
@@ -740,7 +740,7 @@ Route::middleware('auth.api')->group(function () {
                 'kategori_id'       => ['required', 'integer', 'min:1'],
                 'delivery_type'     => ['nullable', 'in:source_code,tefa_managed'],
                 'has_warranty'      => ['nullable', 'in:0,1,true,false'],
-                'warranty_months'   => ['nullable', 'integer', 'min:1', 'required_if:has_warranty,1,true'],
+                'warranty_months'   => ['nullable', 'integer', 'min:1'],
                 'ringkasan'         => ['required', 'string', 'min:100', 'max:500'],
                 'target_pengguna'   => ['required', 'string', 'max:1000'],
                 'deadline'          => ['required', 'date'],
@@ -763,8 +763,8 @@ Route::middleware('auth.api')->group(function () {
                 ->all();
 
             $deliveryType = $validated['delivery_type'] ?? 'source_code';
-            $hasWarranty = filter_var($validated['has_warranty'] ?? false, FILTER_VALIDATE_BOOLEAN);
-            $warrantyMonths = $hasWarranty ? (int) ($validated['warranty_months'] ?? 3) : null;
+            $hasWarranty = true;
+            $warrantyMonths = max(1, (int) ($validated['warranty_months'] ?? 3));
 
             $payload = [
                 'title'            => $validated['judul_proyek'],
