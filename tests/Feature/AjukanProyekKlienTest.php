@@ -407,7 +407,46 @@ class AjukanProyekKlienTest extends TestCase
         $response->assertSee('Garansi Pemeliharaan');
         $response->assertSee('Diserahkan ke Klien (Source Code)');
         $response->assertSee('Dikelola Penuh oleh TEVARA');
-        $response->assertSee('Ya, Butuh Garansi Pemeliharaan');
-        $response->assertSee('Tanpa Garansi Pemeliharaan');
+        $response->assertSee('Durasi Garansi Pemeliharaan');
+        $response->assertDontSee('Tanpa Garansi Pemeliharaan');
+    }
+
+    public function test_pengajuan_default_menyertakan_garansi_mandatory_3_bulan(): void
+    {
+        Http::fake([
+            '*/api/v1/proposals' => Http::response([
+                'proposal_code' => 'PRSL-2026-0100',
+                'id'            => 100,
+            ], 201),
+        ]);
+
+        $deadline = now()->addDays(45)->toDateString();
+
+        $response = $this->withSession($this->sessionKlien())->post('/klien/ajukan-proyek', [
+            '_token'          => 'x',
+            'nama_instansi'   => 'PT. Inovasi Solusi Digital',
+            'pic_nama'        => 'Budi Santoso',
+            'kontak_email'    => 'budi@inovasidigital.id',
+            'judul_proyek'    => 'Portal Monitoring Operasional',
+            'kategori_id'     => 1,
+            'delivery_type'   => 'source_code',
+            'ringkasan'       => 'Sistem portal web terpadu untuk monitoring inventaris dan operasional pabrik.',
+            'target_pengguna' => 'Manajemen dan operator pabrik',
+            'deadline'        => $deadline,
+            'anggaran'        => 35000000,
+            'modul'           => json_encode([
+                ['judul' => 'Modul Dashboard', 'deskripsi' => 'Monitoring real-time'],
+            ]),
+        ]);
+
+        $response->assertRedirect('/klien/ajukan-proyek');
+        $response->assertSessionHas('success');
+
+        Http::assertSent(function ($request) {
+            return $request->url() === 'http://127.0.0.1:8000/api/v1/proposals'
+                && $request['delivery_type'] === 'source_code'
+                && $request['has_warranty'] === true
+                && $request['warranty_months'] === 3;
+        });
     }
 }

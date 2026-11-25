@@ -68,7 +68,7 @@
               x-data="{
                   ringkasan: @js(old('ringkasan') ?: ''),
                   deliveryType: @js(old('delivery_type', 'source_code')),
-                  hasWarranty: @js((string) old('has_warranty', '0')),
+                  hasWarranty: '1',
                   warrantyMonths: @js((string) old('warranty_months', '3')),
                   modules: @js($modulesDefault),
                   addModule() { this.modules.push({ judul: '', deskripsi: '' }) },
@@ -253,7 +253,7 @@
                                         <div class="min-w-0">
                                             <p class="text-sm font-bold text-[#1E293B]">Diserahkan ke Klien (Source Code)</p>
                                             <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-                                                Seluruh source code, aset, dan hak operasional diserahkan mandiri kepada pihak klien/instansi Anda.
+                                                Seluruh source code, aset, dan hak operasional diserahkan mandiri kepada pihak klien. Tim TEVARA tetap bertanggung jawab memberikan garansi pemeliharaan &amp; perbaikan bug selama masa garansi.
                                             </p>
                                         </div>
                                     </label>
@@ -273,62 +273,42 @@
                                 @error('delivery_type') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                             </div>
 
-                            {{-- Pertanyaan 1 & 2: Warranty / Maintenance --}}
+                            {{-- Garansi Pemeliharaan (Maintenance) - Mandatory --}}
                             <div class="pt-5 border-t border-slate-100 space-y-4">
                                 <div>
-                                    <label class="{{ $label }}">Garansi Pemeliharaan (Maintenance) <span class="text-red-500">*</span></label>
-                                    <p class="text-[11px] text-slate-400 mb-3">Dukungan perbaikan bug, asistensi teknis, dan pemeliharaan berkala setelah serah terima proyek.</p>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {{-- Opsi 1: Ya --}}
-                                        <label class="relative flex items-start gap-3.5 p-4 rounded-xl border cursor-pointer transition"
-                                               :class="hasWarranty === '1' ? 'border-[#0B3B82] bg-[#EAF3FF]/40 shadow-xs' : 'border-slate-200 hover:border-slate-300 bg-white'">
-                                            <input type="radio" name="has_warranty" value="1" x-model="hasWarranty" class="mt-1 text-[#0B3B82] focus:ring-[#0B3B82]">
-                                            <div class="min-w-0">
-                                                <p class="text-sm font-bold text-[#1E293B]">Ya, Butuh Garansi Pemeliharaan</p>
-                                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-                                                    Mendapatkan garansi perbaikan bug dan tiket pemeliharaan sesuai durasi yang dipilih (tetap berlaku walau sistem diserahkan ke klien).
-                                                </p>
-                                            </div>
-                                        </label>
-
-                                        {{-- Opsi 2: Tidak --}}
-                                        <label class="relative flex items-start gap-3.5 p-4 rounded-xl border cursor-pointer transition"
-                                               :class="hasWarranty === '0' ? 'border-[#0B3B82] bg-[#EAF3FF]/40 shadow-xs' : 'border-slate-200 hover:border-slate-300 bg-white'">
-                                            <input type="radio" name="has_warranty" value="0" x-model="hasWarranty" class="mt-1 text-[#0B3B82] focus:ring-[#0B3B82]">
-                                            <div class="min-w-0">
-                                                <p class="text-sm font-bold text-[#1E293B]">Tanpa Garansi Pemeliharaan</p>
-                                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-                                                    Proyek berakhir tuntas saat serah terima BAST selesai tanpa kontrak pemeliharaan berkala.
-                                                </p>
-                                            </div>
-                                        </label>
+                                    <div class="flex items-center justify-between gap-2 mb-1">
+                                        <label for="warranty_months" class="{{ $label }}">Garansi Pemeliharaan (Maintenance) <span class="text-red-500">*</span></label>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-[#EAF3FF] text-[#0B3B82] border border-[#0B3B82]/20">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                                            Wajib Disertakan
+                                        </span>
                                     </div>
-                                    @error('has_warranty') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
+                                    <p class="text-[11px] text-slate-400 mb-3">Dukungan perbaikan bug, asistensi teknis, dan pemeliharaan berkala setelah serah terima proyek (BAST) untuk seluruh skema.</p>
 
-                                {{-- Durasi Garansi (Kondisional jika hasWarranty == '1') --}}
-                                <div x-show="hasWarranty === '1'" x-transition class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                                    <label for="warranty_months" class="{{ $label }}">Durasi Garansi Pemeliharaan <span class="text-red-500">*</span></label>
-                                    <div class="relative max-w-md">
-                                        <select id="warranty_months" name="warranty_months"
-                                                x-model="warrantyMonths"
-                                                :required="hasWarranty === '1'"
-                                                class="{{ $errors->has('warranty_months') ? $inputErr : $inputOk }} appearance-none pr-10 cursor-pointer">
-                                            <option value="1">1 Bulan</option>
-                                            <option value="3">3 Bulan (Standar Rekomendasi)</option>
-                                            <option value="6">6 Bulan</option>
-                                            <option value="12">12 Bulan (1 Tahun)</option>
-                                        </select>
-                                        <svg class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
-                                             fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-                                        </svg>
+                                    <input type="hidden" name="has_warranty" value="1">
+
+                                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
+                                        <label for="warranty_months" class="block text-xs font-bold text-[#1E293B]">Durasi Garansi Pemeliharaan <span class="text-red-500">*</span></label>
+                                        <div class="relative max-w-md">
+                                            <select id="warranty_months" name="warranty_months"
+                                                    x-model="warrantyMonths"
+                                                    required
+                                                    class="{{ $errors->has('warranty_months') ? $inputErr : $inputOk }} appearance-none pr-10 cursor-pointer bg-white">
+                                                <option value="1">1 Bulan</option>
+                                                <option value="3">3 Bulan (Standar Rekomendasi)</option>
+                                                <option value="6">6 Bulan</option>
+                                                <option value="12">12 Bulan (1 Tahun)</option>
+                                            </select>
+                                            <svg class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                                                 fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                                            </svg>
+                                        </div>
+                                        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                                            Masa garansi pemeliharaan aktif otomatis setelah Berita Acara Serah Terima (BAST) disetujui bersama. Tim TEVARA tetap bertanggung jawab memberikan perbaikan bug dan stabilitas sistem selama periode garansi berlangsung.
+                                        </p>
+                                        @error('warranty_months') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                     </div>
-                                    <p class="text-[11px] text-slate-500 mt-1">
-                                        Masa garansi pemeliharaan akan aktif otomatis setelah Berita Acara Serah Terima (BAST) disetujui bersama.
-                                    </p>
-                                    @error('warranty_months') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
                             </div>
                         </div>
