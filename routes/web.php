@@ -1788,9 +1788,7 @@ Route::middleware('auth.api')->group(function () {
 
             $rules = [
                 'documentation_file' => ['nullable', 'file', 'mimes:pdf,docx,zip,doc', 'max:10240'],
-                'user_manual_url' => ['nullable', 'url', 'max:255'],
                 'user_manual_file' => ['nullable', 'file', 'mimes:pdf,docx,doc,zip', 'max:10240'],
-                'has_existing_user_manual' => ['nullable', 'in:0,1'],
                 'handover_notes' => ['nullable', 'string'],
                 'handover_deliverables' => ['required', 'json'],
                 'maintenance_warranty_months' => ['required', 'integer', 'min:0'],
@@ -1814,19 +1812,9 @@ Route::middleware('auth.api')->group(function () {
                 'user_manual_file.max' => 'Ukuran berkas panduan pengguna maksimal 10 MB.',
             ]);
 
-            if (
-                !$request->hasFile('user_manual_file')
-                && blank($validated['user_manual_url'] ?? null)
-                && ($validated['has_existing_user_manual'] ?? '0') !== '1'
-            ) {
-                return back()->withInput()->withErrors([
-                    'user_manual_url' => 'Panduan pengguna wajib diisi (berupa tautan URL atau file dokumen).',
-                ]);
-            }
-
             try {
                 $payload = $validated;
-                unset($payload['documentation_file'], $payload['user_manual_file'], $payload['has_existing_user_manual']);
+                unset($payload['documentation_file'], $payload['user_manual_file']);
 
                 $files = [];
                 if ($request->hasFile('documentation_file')) {
