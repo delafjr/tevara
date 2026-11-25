@@ -138,18 +138,31 @@
                     </div>
                 @endif
                 @if(!empty($uat['client_notes']))
-                    <p class="mt-4 whitespace-pre-line text-sm text-slate-600">{{ $uat['client_notes'] }}</p>
+                    <div class="mt-4">
+                        <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Catatan Umum</p>
+                        <p class="whitespace-pre-line text-sm text-slate-600 bg-slate-50 rounded-lg px-4 py-3 border border-slate-100">{{ $uat['client_notes'] }}</p>
+                    </div>
                 @endif
 
                 <div class="mt-5 space-y-3">
                     @foreach($items as $item)
                         <article class="rounded-xl border border-slate-200 p-4">
-                            <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex flex-wrap items-start justify-between gap-2">
                                 <h3 class="font-semibold text-slate-900">{{ $item['feature_name'] }}</h3>
-                                <span class="text-xs font-bold text-slate-600">{{ ['PASSED' => 'Sesuai', 'FAILED' => 'Belum sesuai', 'BUG_FOUND' => 'Ada kendala'][$item['result'] ?? ''] ?? 'Belum dinilai' }}</span>
+                                <div class="text-right flex-shrink-0">
+                                    <p class="text-[9.5px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Hasil Pengujian</p>
+                                    @php
+                                        $resultMap = ['PASSED' => ['label' => 'Sesuai', 'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200'], 'FAILED' => ['label' => 'Belum sesuai', 'class' => 'bg-rose-50 text-rose-700 border-rose-200'], 'BUG_FOUND' => ['label' => 'Ada kendala', 'class' => 'bg-amber-50 text-amber-700 border-amber-200']];
+                                        $res = $resultMap[$item['result'] ?? ''] ?? ['label' => 'Belum dinilai', 'class' => 'bg-slate-50 text-slate-600 border-slate-200'];
+                                    @endphp
+                                    <span class="inline-block text-xs font-bold px-2.5 py-0.5 rounded-full border {{ $res['class'] }}">{{ $res['label'] }}</span>
+                                </div>
                             </div>
                             @if(!empty($item['client_feedback']) || !empty($item['bug_description']))
-                                <p class="mt-2 text-sm text-slate-600">{{ $item['bug_description'] ?? $item['client_feedback'] }}</p>
+                                <div class="mt-3">
+                                    <p class="text-[9.5px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Catatan</p>
+                                    <p class="text-sm text-slate-600">{{ $item['bug_description'] ?? $item['client_feedback'] }}</p>
+                                </div>
                             @endif
                             @if(!empty($item['review_notes']))
                                 <p class="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900"><strong>Tindak lanjut:</strong> {{ $item['review_notes'] }}</p>

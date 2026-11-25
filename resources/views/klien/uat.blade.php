@@ -316,6 +316,7 @@
                                         </td>
                                         <td class="px-4 py-3.5 text-xs text-slate-600 max-w-xs">{{ $it['test_scenario'] ?: '-' }}</td>
                                         <td class="px-4 py-3.5 whitespace-nowrap">
+                                            <p class="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5">Hasil Pengujian</p>
                                             @if($it['result'] === 'PASSED')
                                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                     ✓ PASSED
@@ -345,6 +346,7 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-3.5 text-xs text-slate-600 leading-snug max-w-xs">
+                                            <p class="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">Catatan</p>
                                             {{ $it['client_feedback'] ?: '-' }}
                                         </td>
                                     </tr>
