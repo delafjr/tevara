@@ -52,15 +52,8 @@
                 </div>
 
                 @php
-                    $existingManualUrl = $project['user_manual_url'] ?? '';
-                    if ($existingManualUrl && !filter_var($existingManualUrl, FILTER_VALIDATE_URL)) {
-                        $existingManualUrl = '';
-                    }
-                    $existingManualFile = $project['user_manual_file_url'] ?? '';
-                    if (!$existingManualFile && !empty($project['user_manual_url']) && !filter_var($project['user_manual_url'], FILTER_VALIDATE_URL)) {
-                        $existingManualFile = $project['user_manual_url'];
-                    }
-                    $hasAnyManual = !empty($existingManualUrl) || !empty($existingManualFile);
+                    $existingManualFile = $project['user_manual_file_url'] ?? $project['user_manual_url'] ?? '';
+                    $hasManualFile = !empty($existingManualFile);
                 @endphp
                 <form method="POST" enctype="multipart/form-data" action="{{ route('pengurus-tefa.bast.prepare', $project['id']) }}" class="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2" x-data="{ items: {{ \Illuminate\Support\Js::from($deliverables) }}, addItem() { this.items.push({ name: '', type: 'digital', quantity: 1, unit: 'unit', condition: 'not_applicable', notes: '' }) }, removeItem(index) { if (this.items.length > 1) this.items.splice(index, 1) } }">
                     @csrf
@@ -108,32 +101,21 @@
                             <a href="{{ route('pengurus-tefa.bast.documentation', $project['id']) }}" class="mt-1 inline-block text-xs font-semibold text-blue-700 underline">Lihat lampiran saat ini</a>
                         @endif
                     </div>
-                    <div class="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-                        <div class="mb-3">
-                            <h3 class="text-xs font-bold text-slate-800">Panduan Pengguna <span class="text-rose-500">*</span></h3>
-                            <p class="mt-0.5 text-[11px] text-slate-500">Anda dapat menyertakan tautan URL, mengunggah berkas dokumen, atau keduanya sekaligus.</p>
-                        </div>
-                        <input type="hidden" name="has_existing_user_manual" value="{{ $hasAnyManual ? '1' : '0' }}">
-                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div>
-                                <label class="mb-1 block text-xs font-semibold text-slate-700">Tautan URL Panduan</label>
-                                <input type="url" name="user_manual_url" maxlength="255" value="{{ old('user_manual_url', $existingManualUrl) }}" placeholder="https://..." class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700">
-                                <p class="mt-1 text-[11px] text-slate-400">Tautan dokumentasi online / web user manual.</p>
-                            </div>
-                            <div>
-                                <label class="mb-1 block text-xs font-semibold text-slate-700">Upload Dokumen Panduan</label>
-                                <input type="file" name="user_manual_file" accept=".pdf,.doc,.docx,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700">
-                                <p class="mt-1 text-[11px] text-slate-400">Upload Dok. (PDF, DOC, DOCX, ZIP maks 10 MB).</p>
-                                @if(!empty($existingManualFile))
-                                    <a href="{{ route('pengurus-tefa.bast.user-manual', $project['id']) }}" class="mt-1.5 inline-block text-xs font-semibold text-blue-700 underline">Lihat dokumen saat ini</a>
-                                @endif
-                            </div>
-                        </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-semibold text-slate-700">Panduan Pengguna <span class="text-rose-500">*</span></label>
+                        <input type="file" name="user_manual_file" accept=".pdf,.docx,.doc,.zip" @required(!$hasManualFile) class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                        <p class="mt-1 text-[11px] text-slate-400">{{ $hasManualFile ? 'Opsional: unggah jika ingin mengganti berkas panduan pengguna (PDF, DOCX, ZIP maks 10 MB).' : 'Wajib diisi: berkas dokumen panduan pengguna (PDF, DOCX, atau ZIP maks 10 MB).' }}</p>
+                        @if($hasManualFile)
+                            <a href="{{ route('pengurus-tefa.bast.user-manual', $project['id']) }}" class="mt-1.5 inline-block text-xs font-semibold text-blue-700 underline">Lihat panduan pengguna saat ini</a>
+                        @endif
                     </div>
                     <div>
                         <label class="mb-1 block text-xs font-semibold text-slate-700">Masa garansi (bulan)</label>
-                        <input type="number" name="maintenance_warranty_months" min="0" required value="{{ old('maintenance_warranty_months', $project['warranty_months'] ?? $project['maintenance']['maintenance_warranty_months'] ?? $project['warranty']['warranty_months'] ?? 3) }}" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
-                        <p class="mt-1 text-[11px] text-slate-400">Durasi masa garansi pemeliharaan proyek yang disepakati.</p>
+                        @php
+                            $warrantyMonthsVal = $project['warranty_months'] ?? $project['maintenance']['maintenance_warranty_months'] ?? $project['warranty']['warranty_months'] ?? 3;
+                        @endphp
+                        <input type="number" name="maintenance_warranty_months" value="{{ $warrantyMonthsVal }}" readonly class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm text-slate-500 cursor-not-allowed">
+                        <p class="mt-1 text-[11px] text-slate-400">Durasi masa garansi tetap sesuai kesepakatan kontrak awal.</p>
                     </div>
                     <div class="md:col-span-2">
                         <label class="mb-1 block text-xs font-semibold text-slate-700">Catatan serah terima</label>

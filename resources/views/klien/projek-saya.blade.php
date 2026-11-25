@@ -718,11 +718,8 @@
                                         @else
                                             <p class="mt-2 text-xs text-slate-500">Dokumentasi API: Belum terlampir</p>
                                         @endif
-                                        @if($proj['user_manual_url'] && filter_var($proj['user_manual_url'], FILTER_VALIDATE_URL))
-                                            <a href="{{ $proj['user_manual_url'] }}" target="_blank" rel="noopener noreferrer" class="mt-2 block text-xs text-blue-700 underline">Panduan pengguna (Web)</a>
-                                        @endif
-                                        @if(!empty($proj['user_manual_file_url']) || (!empty($proj['user_manual_url']) && !filter_var($proj['user_manual_url'], FILTER_VALIDATE_URL)))
-                                            <a href="{{ route('klien.projek-saya.bast.user-manual', $proj['proposal_id']) }}" class="mt-2 block text-xs text-blue-700 underline">Unduh panduan pengguna (Dokumen)</a>
+                                        @if(!empty($proj['user_manual_file_url']) || !empty($proj['user_manual_url']))
+                                            <a href="{{ route('klien.projek-saya.bast.user-manual', $proj['proposal_id']) }}" class="mt-2 block text-xs text-blue-700 underline">Unduh panduan pengguna</a>
                                         @endif
                                         @if($proj['client_signoff_name'])
                                             <p class="mt-2 text-xs text-slate-500">Disetujui oleh: {{ $proj['client_signoff_name'] }}</p>
