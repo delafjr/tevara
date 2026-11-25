@@ -1791,7 +1791,7 @@ Route::middleware('auth.api')->group(function () {
                 'user_manual_file' => ['nullable', 'file', 'mimes:pdf,docx,doc,zip', 'max:10240'],
                 'handover_notes' => ['nullable', 'string'],
                 'handover_deliverables' => ['required', 'json'],
-                'maintenance_warranty_months' => ['required', 'integer', 'min:0'],
+                'maintenance_warranty_months' => ['nullable', 'integer', 'min:0'],
                 'maintenance_notes' => ['nullable', 'string'],
                 'repository_url' => ['nullable', 'url', 'max:255'],
                 'access_email' => ['nullable', 'string', 'max:255'],
