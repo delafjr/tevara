@@ -2444,17 +2444,24 @@ Route::middleware('auth.api')->group(function () {
             $allProposals = [];
             $error = null;
 
+            $normalizeProofUrl = static function (?string $url): ?string {
+                if (!$url) {
+                    return null;
+                }
+                if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
+                    return $url;
+                }
+                $baseUrl = rtrim(config('services.backend_api.url') ?? env('BACKEND_API_URL', 'http://127.0.0.1:8000/api/v1'), '/');
+                $baseHost = preg_replace('#/api/v1$#', '', $baseUrl);
+                return $baseHost . '/storage/' . ltrim($url, '/');
+            };
+
             try {
                 $resPending = $api->getPendingPayments();
                 if ($resPending->successful() && is_array($resPending->json('data'))) {
                     $pendingPayments = $resPending->json('data');
                     foreach ($pendingPayments as &$p) {
-                        $proofUrl = $p['proof_url'] ?? null;
-                        if ($proofUrl && !str_starts_with($proofUrl, 'http')) {
-                            $baseUrl = rtrim(config('services.backend_api.url') ?? env('BACKEND_API_URL', 'http://127.0.0.1:8000/api/v1'), '/');
-                            $baseHost = preg_replace('#/api/v1$#', '', $baseUrl);
-                            $p['proof_url'] = $baseHost . '/storage/' . ltrim($proofUrl, '/');
-                        }
+                        $p['proof_url'] = $normalizeProofUrl($p['proof_url'] ?? null);
                     }
                     unset($p);
                 }
@@ -2463,16 +2470,20 @@ Route::middleware('auth.api')->group(function () {
             }
 
             try {
-                $resPayments = $api->get('payments');
+                $resPayments = $api->getAllPayments();
                 if ($resPayments->successful() && is_array($resPayments->json('data'))) {
                     $allPayments = $resPayments->json('data');
+                    foreach ($allPayments as &$p) {
+                        $p['proof_url'] = $normalizeProofUrl($p['proof_url'] ?? null);
+                    }
+                    unset($p);
                 }
             } catch (\Throwable) {
                 $allPayments = [];
             }
 
             try {
-                $resAll = $api->get('proposals');
+                $resAll = $api->getProposals();
                 if ($resAll->successful() && is_array($resAll->json())) {
                     $allProposals = $resAll->json();
                 }

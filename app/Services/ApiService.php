@@ -281,6 +281,22 @@ class ApiService
     }
 
     /**
+     * List seluruh riwayat pembayaran (pengurus_tefa / dosen).
+     */
+    public function getAllPayments(): Response
+    {
+        return $this->get('payments');
+    }
+
+    /**
+     * List seluruh proposal proyek (pengurus_tefa / dosen).
+     */
+    public function getProposals(array $params = []): Response
+    {
+        return $this->get('proposals', $params);
+    }
+
+    /**
      * Extract allowed roles from user payload.
      * Include PM access when assigned explicitly or indicated by is_pm.
      */
