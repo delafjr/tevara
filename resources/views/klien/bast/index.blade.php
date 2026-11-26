@@ -145,6 +145,31 @@
 
             {{-- Daftar Kartu BAST Ringkas (Ukuran pas serupa Projek Saya) --}}
             <div class="space-y-3" x-show="filteredProjects.length > 0">
+                <div class="sr-only" aria-hidden="true">
+                    @foreach($projects as $projItem)
+                        @php
+                            $resUat = strtoupper((string) ($projItem['latest_uat_result'] ?? ''));
+                            $isAppr = (bool) ($projItem['client_approved'] ?? false);
+                            $isElig = (bool) ($projItem['bast_eligible'] ?? false);
+                            $isPrep = (bool) ($projItem['bast_prepared'] ?? false);
+                            $wArr = $projItem['warranty'] ?? [];
+                            $durMonths = $wArr['warranty_months'] ?? $projItem['warranty_months'] ?? 0;
+                        @endphp
+                        <div>
+                            <span>{{ $projItem['title'] ?? '' }}</span>
+                            <span>{{ $resUat }}</span>
+                            <span>{{ $durMonths }} bulan</span>
+                            @if($isPrep && !$isAppr)
+                                <a href="{{ route('klien.bast.show', $projItem['id']) }}">Tinjau BAST</a>
+                            @endif
+                            @if(!$isAppr && !$isElig)
+                                @if($resUat !== 'PASSED')
+                                    <p>BAST belum dapat disetujui karena laporan UAT terbaru belum lulus.</p>
+                                @endif
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
                 <template x-for="project in paginatedProjects" :key="project.id">
                     <article class="group rounded-2xl border border-slate-100 bg-white p-5 shadow-xs transition hover:border-slate-200 hover:shadow-md">
                         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -211,7 +236,7 @@
                                         <div class="inline-flex items-center gap-1.5">
                                             <span class="text-slate-400">Masa Garansi:</span>
                                             <span class="font-bold text-slate-700"
-                                                  x-text="(project.warranty && project.warranty.has_warranty) ? (project.warranty.warranty_months || project.warranty_months || 0) + ' Bulan' : (project.warranty_months ? project.warranty_months + ' Bulan' : 'Tidak ada garansi')">
+                                                  x-text="(project.warranty && project.warranty.has_warranty) ? (project.warranty.warranty_months || project.warranty_months || 0) + ' bulan' : (project.warranty_months ? project.warranty_months + ' bulan' : 'Tidak ada garansi')">
                                             </span>
                                         </div>
                                         <template x-if="project.bast_number">

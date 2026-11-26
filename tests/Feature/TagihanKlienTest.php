@@ -108,4 +108,48 @@ class TagihanKlienTest extends TestCase
             ->get('/klien/pembayaran')
             ->assertRedirect('/klien/tagihan');
     }
+
+    public function test_klien_dapat_mengunggah_bukti_pembayaran_dan_diteruskan_ke_api(): void
+    {
+        Http::fake([
+            '*/proposals/501/payments/601/proof' => Http::response([
+                'success' => true,
+                'message' => 'Bukti pembayaran berhasil diupload.',
+                'data' => [
+                    'id' => 601,
+                    'proof_url' => 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+                    'status' => 'PENDING',
+                ],
+            ], 200),
+        ]);
+
+        $file = \Illuminate\Http\UploadedFile::fake()->image('bukti.jpg');
+
+        $response = $this->withSession($this->sessionKlien())
+            ->post(route('klien.tagihan.upload-proof', ['proposal' => 501, 'payment' => 601]), [
+                'payment_date' => '2026-11-26',
+                'payment_method' => 'BANK_TRANSFER',
+                'transfer_reference' => 'TRF-123456',
+                'proof' => $file,
+            ]);
+
+        $response->assertRedirect(route('klien.tagihan'));
+        $response->assertSessionHas('success', 'Bukti pembayaran berhasil diunggah! Pembayaran sedang dalam antrean verifikasi Pengurus TEFA.');
+
+        Http::assertSent(function (\Illuminate\Http\Client\Request $request) {
+            return str_contains($request->url(), 'proposals/501/payments/601/proof')
+                && $request->isMultipart();
+        });
+    }
+
+    public function test_validasi_unggah_bukti_pembayaran(): void
+    {
+        $response = $this->withSession($this->sessionKlien())
+            ->post(route('klien.tagihan.upload-proof', ['proposal' => 501, 'payment' => 601]), [
+                'payment_date' => '',
+                'payment_method' => 'INVALID_METHOD',
+            ]);
+
+        $response->assertSessionHasErrors(['payment_date', 'payment_method', 'proof']);
+    }
 }
