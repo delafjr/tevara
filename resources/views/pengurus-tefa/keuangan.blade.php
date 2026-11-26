@@ -379,62 +379,7 @@
             {{-- TABEL RIWAYAT TRANSAKSI KEUANGAN (REDESIGNED: CLEAN, PROFESSIONAL, SENIOR LEVEL) --}}
             <div id="tabel-riwayat-transaksi"
                  class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
-                 x-data="{
-                     searchQuery: '',
-                     statusFilter: 'all',
-                     currentPage: 1,
-                     perPage: 10,
-                     transactions: @js(array_values($allPayments)),
-                     get filteredTransactions() {
-                         const q = this.searchQuery.toLowerCase().trim();
-                         const filter = this.statusFilter.toUpperCase();
-
-                         return this.transactions.filter(t => {
-                             const status = (t.status || '').toUpperCase();
-                             if (filter !== 'ALL' && status !== filter) return false;
-
-                             if (!q) return true;
-
-                             const invoice = (t.invoice_number || '').toLowerCase();
-                             const ref = (t.transfer_reference || '').toLowerCase();
-                             const method = (t.payment_method || '').toLowerCase();
-                             const projectCode = (t.proposal && (t.proposal.project_code || t.proposal.proposal_code) ? (t.proposal.project_code || t.proposal.proposal_code) : '').toLowerCase();
-                             const projectTitle = (t.proposal && t.proposal.title ? t.proposal.title : '').toLowerCase();
-                             const clientName = (t.proposal && t.proposal.client && t.proposal.client.name ? t.proposal.client.name : '').toLowerCase();
-                             const companyName = (t.proposal && t.proposal.client && t.proposal.client.company_name ? t.proposal.client.company_name : '').toLowerCase();
-
-                             return invoice.includes(q)
-                                 || ref.includes(q)
-                                 || method.includes(q)
-                                 || projectCode.includes(q)
-                                 || projectTitle.includes(q)
-                                 || clientName.includes(q)
-                                 || companyName.includes(q);
-                         });
-                     },
-                     get totalPages() {
-                         return Math.ceil(this.filteredTransactions.length / this.perPage) || 1;
-                     },
-                     get paginatedTransactions() {
-                         const start = (this.currentPage - 1) * this.perPage;
-                         return this.filteredTransactions.slice(start, start + this.perPage);
-                     },
-                     resetPagination() {
-                         this.currentPage = 1;
-                     },
-                     formatRupiah(num) {
-                         return 'Rp ' + (new Intl.NumberFormat('id-ID').format(num || 0));
-                     },
-                     formatDate(dateStr) {
-                         if (!dateStr) return '—';
-                         try {
-                             const d = new Date(dateStr);
-                             return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-                         } catch (e) {
-                             return dateStr;
-                         }
-                     }
-                 }">
+                 x-data="keuanganTable(@js(array_values($allPayments)))">
 
                 {{-- Toolbar Header: Search & Filter Status --}}
                 <div class="px-6 py-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -618,18 +563,17 @@
                                                 </a>
                                             </template>
 
-                                            {{-- Tombol Lihat Bukti --}}
+                                            {{-- Tombol Lihat Bukti (Modal Preview) --}}
                                             <template x-if="t.proof_url">
-                                                <a :href="t.proof_url"
-                                                   target="_blank"
-                                                   rel="noopener noreferrer"
-                                                   class="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 text-xs font-bold transition"
-                                                   title="Lihat Berkas Bukti Transfer">
+                                                <button type="button"
+                                                        @click="openModal(t)"
+                                                        class="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 text-xs font-bold transition cursor-pointer"
+                                                        title="Lihat Berkas Bukti Transfer">
                                                     <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                                     </svg>
                                                     <span>Bukti</span>
-                                                </a>
+                                                </button>
                                             </template>
 
                                             <template x-if="!t.proof_url && (t.status || '').toUpperCase() !== 'PENDING'">
@@ -680,6 +624,138 @@
                     </div>
                 </div>
 
+                {{-- MODAL PREVIEW & DOWNLOAD BUKTI PEMBAYARAN --}}
+                <div x-show="modalOpen"
+                     x-cloak
+                     @keydown.escape.window="closeModal()"
+                     class="fixed inset-0 z-50 overflow-y-auto"
+                     aria-labelledby="modal-title"
+                     role="dialog"
+                     aria-modal="true">
+
+                    {{-- Backdrop --}}
+                    <div x-show="modalOpen"
+                         x-transition:enter="ease-out duration-200"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100"
+                         x-transition:leave="ease-in duration-150"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0"
+                         @click="closeModal()"
+                         class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+
+                    {{-- Modal Box Centered --}}
+                    <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
+                        <div x-show="modalOpen"
+                             x-transition:enter="ease-out duration-200"
+                             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                             x-transition:leave="ease-in duration-150"
+                             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                             @click.stop
+                             class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 w-full max-w-2xl border border-slate-100 flex flex-col max-h-[90vh]">
+
+                            {{-- Modal Header --}}
+                            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-lg bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <h3 class="text-sm font-bold text-slate-800" id="modal-title">Bukti Transfer Pembayaran</h3>
+                                            <template x-if="modalData">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#EAF3FF] text-[#0B3B82]"
+                                                      x-text="'Termin ' + (modalData.term_sequence || 1)">
+                                                </span>
+                                            </template>
+                                        </div>
+                                        <p class="text-xs text-slate-400 mt-0.5 font-mono"
+                                           x-text="modalData?.invoice_number || 'Pratinjau Berkas Bukti Transfer'">
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <button type="button"
+                                        @click="closeModal()"
+                                        class="rounded-xl p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+
+                            {{-- Modal Body: Media Preview --}}
+                            <div class="p-6 bg-slate-900/5 overflow-y-auto flex-1 flex items-center justify-center min-h-[320px]">
+                                <template x-if="modalData && modalData.proof_url">
+                                    <div class="w-full flex items-center justify-center">
+                                        {{-- JIKA FILE FORMAT PDF --}}
+                                        <template x-if="isPdf(modalData.proof_url)">
+                                            <div class="p-8 bg-white rounded-2xl border border-slate-200 shadow-xs text-center max-w-md w-full">
+                                                <div class="w-16 h-16 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4">
+                                                    <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                                                    </svg>
+                                                </div>
+                                                <h4 class="text-sm font-bold text-slate-800">Dokumen Slip Bukti Transfer (PDF)</h4>
+                                                <p class="text-xs text-slate-500 mt-1 mb-5">Dokumen berformat PDF dapat diunduh ke perangkat Anda atau dibuka langsung.</p>
+                                                <a :href="modalData.proof_url"
+                                                   target="_blank"
+                                                   rel="noopener noreferrer"
+                                                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+                                                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                                    Buka di Tab Baru
+                                                </a>
+                                            </div>
+                                        </template>
+
+                                        {{-- JIKA FILE GAMBAR (JPG/PNG/WEBP/dsb) --}}
+                                        <template x-if="!isPdf(modalData.proof_url)">
+                                            <div class="relative group max-h-[60vh] flex items-center justify-center">
+                                                <img :src="modalData.proof_url"
+                                                     alt="Bukti Transfer Pembayaran"
+                                                     class="max-h-[58vh] max-w-full w-auto rounded-xl object-contain shadow-sm border border-slate-200 bg-white" />
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+
+                            {{-- Modal Footer --}}
+                            <div class="px-6 py-4 border-t border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
+                                <div class="text-xs text-slate-500 w-full sm:w-auto text-left">
+                                    <template x-if="modalData">
+                                        <div class="flex items-center gap-3">
+                                            <span class="font-mono font-bold text-emerald-600 text-sm" x-text="formatRupiah(modalData.amount)"></span>
+                                            <span class="text-slate-300">|</span>
+                                            <span class="truncate max-w-[200px]" x-text="modalData.proposal?.title || 'Projek'"></span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                                    <button type="button"
+                                            @click="closeModal()"
+                                            class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                                        Tutup
+                                    </button>
+
+                                    <button type="button"
+                                            @click="downloadProof()"
+                                            class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-[#0B3B82] hover:bg-[#082a5c] text-white shadow-xs transition cursor-pointer">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                                        </svg>
+                                        Unduh Bukti
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </main>
@@ -690,5 +766,111 @@
     </div>
 
 </div>
+
+<script>
+function keuanganTable(initialTransactions) {
+    return {
+        searchQuery: '',
+        statusFilter: 'all',
+        currentPage: 1,
+        perPage: 10,
+        transactions: Array.isArray(initialTransactions) ? initialTransactions : [],
+        get filteredTransactions() {
+            const q = this.searchQuery.toLowerCase().trim();
+            const filter = this.statusFilter.toUpperCase();
+
+            return this.transactions.filter(t => {
+                const status = (t.status || '').toUpperCase();
+                if (filter !== 'ALL' && status !== filter) return false;
+
+                if (!q) return true;
+
+                const invoice = (t.invoice_number || '').toLowerCase();
+                const ref = (t.transfer_reference || '').toLowerCase();
+                const method = (t.payment_method || '').toLowerCase();
+                const projectCode = (t.proposal && (t.proposal.project_code || t.proposal.proposal_code) ? (t.proposal.project_code || t.proposal.proposal_code) : '').toLowerCase();
+                const projectTitle = (t.proposal && t.proposal.title ? t.proposal.title : '').toLowerCase();
+                const clientName = (t.proposal && t.proposal.client && t.proposal.client.name ? t.proposal.client.name : '').toLowerCase();
+                const companyName = (t.proposal && t.proposal.client && t.proposal.client.company_name ? t.proposal.client.company_name : '').toLowerCase();
+
+                return invoice.includes(q)
+                    || ref.includes(q)
+                    || method.includes(q)
+                    || projectCode.includes(q)
+                    || projectTitle.includes(q)
+                    || clientName.includes(q)
+                    || companyName.includes(q);
+            });
+        },
+        get totalPages() {
+            return Math.ceil(this.filteredTransactions.length / this.perPage) || 1;
+        },
+        get paginatedTransactions() {
+            const start = (this.currentPage - 1) * this.perPage;
+            return this.filteredTransactions.slice(start, start + this.perPage);
+        },
+        resetPagination() {
+            this.currentPage = 1;
+        },
+        formatRupiah(num) {
+            return 'Rp ' + (new Intl.NumberFormat('id-ID').format(num || 0));
+        },
+        formatDate(dateStr) {
+            if (!dateStr) return '—';
+            try {
+                const d = new Date(dateStr);
+                return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            } catch (e) {
+                return dateStr;
+            }
+        },
+        modalOpen: false,
+        modalData: null,
+        openModal(t) {
+            this.modalData = t;
+            this.modalOpen = true;
+        },
+        closeModal() {
+            this.modalOpen = false;
+            this.modalData = null;
+        },
+        isPdf(url) {
+            if (!url) return false;
+            return url.toLowerCase().includes('.pdf');
+        },
+        async downloadProof() {
+            if (!this.modalData || !this.modalData.proof_url) return;
+            const url = this.modalData.proof_url;
+            const isDocPdf = this.isPdf(url);
+            const ext = isDocPdf ? '.pdf' : '.jpg';
+            const rawInv = this.modalData.invoice_number || ('bukti-transfer-' + this.modalData.id);
+            const safeInv = rawInv.replace(/[^a-zA-Z0-9_-]/g, '-');
+            const filename = safeInv + ext;
+
+            try {
+                const res = await fetch(url, { mode: 'cors' });
+                if (!res.ok) throw new Error('Fetch failed');
+                const blob = await res.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            } catch (err) {
+                const fallbackLink = document.createElement('a');
+                fallbackLink.href = url;
+                fallbackLink.setAttribute('download', filename);
+                fallbackLink.setAttribute('target', '_blank');
+                document.body.appendChild(fallbackLink);
+                fallbackLink.click();
+                document.body.removeChild(fallbackLink);
+            }
+        }
+    };
+}
+</script>
 </body>
 </html>
