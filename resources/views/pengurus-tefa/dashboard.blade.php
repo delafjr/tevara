@@ -248,7 +248,6 @@
                                     <th class="px-3 py-3.5">Status</th>
                                     <th class="px-3 py-3.5 w-32">Progress</th>
                                     <th class="px-3 py-3.5">Deadline</th>
-                                    <th class="px-3 py-3.5 w-10"></th>
                                 </tr>
                             </thead>
                             <tbody id="tefa-project-tbody" class="divide-y divide-slate-50">
@@ -293,15 +292,11 @@
                                     <td class="px-3 py-3.5">
                                         <span class="text-[12px] text-slate-500 font-medium">{{ $projectDeadline }}</span>
                                     </td>
-                                    <td class="px-3 py-3.5">
-                                        <button class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer" title="Opsi project">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
-                                        </button>
-                                    </td>
+
                                 </tr>
                                 @empty
                                 <tr id="empty-state-row">
-                                    <td colspan="7" class="px-6 py-14 text-center">
+                                    <td colspan="6" class="px-6 py-14 text-center">
                                         <div class="flex flex-col items-center justify-center max-w-sm mx-auto">
                                             <div class="w-12 h-12 rounded-2xl bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center mb-3 shadow-2xs">
                                                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
@@ -321,7 +316,7 @@
                                 </tr>
                                 @endforelse
                                 <tr id="no-search-match-row" class="hidden">
-                                    <td colspan="7" class="px-6 py-12 text-center">
+                                    <td colspan="6" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center justify-center">
                                             <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-2.5">
                                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
