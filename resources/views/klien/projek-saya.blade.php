@@ -114,12 +114,12 @@
         })
         ->values()
         ->all();
-    $totalProjectCount = count($projectsData);
-    $activeProjectCount = count(array_filter($projectsData, fn ($project) => $project['status_type'] === 'running'));
+    $totalProjectCount = count($proposals);
+    $activeProjectCount = count(array_filter($proposals, fn ($p) => in_array(strtolower($p['status'] ?? ''), ['active', 'berjalan', 'testing', 'handover'])));
     $averageProjectProgress = $totalProjectCount > 0
-        ? round(array_sum(array_column($projectsData, 'progress')) / $totalProjectCount, 1)
+        ? round(array_sum(array_column($proposals, 'overall_progress')) / $totalProjectCount, 1)
         : 0;
-    $totalModuleCount = array_sum(array_map(fn ($project) => count($project['modules']), $projectsData));
+    $totalModuleCount = array_sum(array_map(fn ($p) => count($p['modules'] ?? []), $proposals));
 @endphp
 
 <div class="flex min-h-screen">
@@ -340,405 +340,136 @@
             </section>
             @endif
 
-            {{-- == ( Proposal & Pengajuan Proyek Klien dari Backend ) == --}}
-            @if(!empty($proposals))
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-[#0B3B82]"></span>
-                            <h2 class="text-sm font-bold text-slate-800">Proposal &amp; Pengajuan Proyek Anda</h2>
-                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#EAF3FF] text-[#0B3B82]">{{ count($proposals) }}</span>
-                        </div>
-                        <a href="{{ route($routePrefix . '.ajukan-proyek') }}" class="text-xs font-semibold text-[#0B3B82] hover:underline inline-flex items-center gap-1">
-                            + Ajukan Proyek Baru
+            {{-- == ( Filter + Tabel Projek Klien - Desain Mirip Pengurus TeFa ) == --}}
+            @php
+            $ss = [
+                'active'      => 'bg-blue-50 text-blue-700',
+                'berjalan'    => 'bg-blue-50 text-blue-700',
+                'testing'     => 'bg-purple-50 text-purple-700',
+                'review'      => 'bg-amber-50 text-amber-700',
+                'handover'    => 'bg-emerald-50 text-emerald-700',
+                'selesai'     => 'bg-green-50 text-green-700',
+                'completed'   => 'bg-green-50 text-green-700',
+                'proposal'    => 'bg-purple-50 text-purple-700',
+                'improvement' => 'bg-amber-100 text-amber-800 border border-amber-300',
+                'revisi'      => 'bg-amber-100 text-amber-800 border border-amber-300',
+            ];
+            $pc = fn($p) => $p >= 100 ? '#16A34A' : ($p >= 60 ? '#0B3B82' : ($p >= 30 ? '#F59E0B' : '#DC2626'));
+            @endphp
+            <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden" x-data="{ search: '', statusFilter: 'Semua Status' }">
+                <div class="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <p class="font-semibold text-[#1E293B] text-[15px]">Daftar Projek</p>
+                        <p class="text-xs text-slate-400 mt-0.5">Semua projek yang terdaftar di database</p>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <input type="text" x-model="search" placeholder="Cari projek..." class="text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0B3B82] w-48">
+                        <select x-model="statusFilter" class="text-xs border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0B3B82]">
+                            <option>Semua Status</option>
+                            <option>Active</option>
+                            <option>Testing</option>
+                            <option>Handover</option>
+                            <option>Completed</option>
+                        </select>
+                        <a href="{{ route($routePrefix . '.ajukan-proyek') }}" class="flex items-center gap-1.5 bg-[#0B3B82] text-white font-semibold text-xs px-3.5 py-2 rounded-lg hover:bg-[#082a5c] transition-colors shadow-xs ml-1">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                            <span>Ajukan Projek</span>
                         </a>
                     </div>
-
-                    @foreach($proposals as $prop)
-                        @php
-                            $propStatus = (string) ($prop['status'] ?? '-');
-                            $propStatusId = (int) ($prop['status_id'] ?? 0);
-                            $isPropRevision = $propStatusId === 4 || str_contains(strtolower($propStatus), 'revision') || str_contains(strtolower($propStatus), 'improvement');
-                            $formatBudget = fn ($v) => 'Rp ' . number_format((float) $v, 0, ',', '.');
-                        @endphp
-                        <div class="bg-white rounded-2xl border {{ $isPropRevision ? 'border-amber-300 ring-2 ring-amber-200/50' : 'border-slate-100' }} shadow-xs p-6 space-y-4">
-                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div class="space-y-1 flex-1">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="text-xs font-bold text-[#0B3B82] bg-[#EAF3FF] px-2.5 py-0.5 rounded-md font-mono">
-                                            {{ $prop['proposal_code'] ?? 'PRSL-' . $prop['id'] }}
-                                        </span>
-                                        <span class="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-md">
-                                            {{ $prop['category'] ?? 'Web' }}
-                                        </span>
-                                        @if($isPropRevision)
-                                            <span class="text-xs font-bold text-amber-800 bg-amber-100 px-3 py-0.5 rounded-full border border-amber-300 inline-flex items-center gap-1.5 animate-pulse">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
-                                                Improvement (Revisi)
-                                            </span>
-                                        @else
-                                            <span class="text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
-                                                {{ $propStatus }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <h3 class="text-base font-bold text-slate-800 leading-snug">
-                                        {{ $prop['title'] ?? '-' }}
-                                    </h3>
-                                    <div class="flex items-center gap-4 text-xs text-slate-400 pt-1 flex-wrap">
-                                        <span>Estimasi Anggaran: <strong class="text-slate-700">{{ $formatBudget($prop['estimated_budget'] ?? 0) }}</strong></span>
-                                        <span>&bull;</span>
-                                        <span>Deadline: <strong class="text-slate-700">{{ $prop['desired_deadline'] ?? '-' }}</strong></span>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-3 flex-shrink-0">
-                                    @if(!empty($prop['contract_file_url']))
-                                        <a href="{{ route('dokumen.spk', $prop['id']) }}"
-                                           class="inline-flex items-center gap-2 rounded-xl border border-[#0B3B82]/20 bg-[#EAF3FF] px-4 py-2.5 text-xs font-bold text-[#0B3B82] hover:bg-[#DBEAFE] transition"
-                                           title="Unduh dokumen SPK/kontrak proyek">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
-                                            </svg>
-                                            Unduh SPK
-                                        </a>
-                                    @endif
-                                    <a href="{{ route('klien.projek-saya.detail', $prop['id']) }}"
-                                       class="inline-flex items-center gap-2 rounded-xl {{ $isPropRevision ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-sm shadow-amber-600/30' : 'bg-[#0B3B82] hover:bg-[#082a5c] text-white' }} px-5 py-2.5 text-xs font-bold transition cursor-pointer">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                                        </svg>
-                                        Detail Projek Saya {{ $isPropRevision ? '(Perlu Revisi)' : '' }}
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-100">
+                                <th class="text-left text-[11px] font-semibold text-slate-400 px-6 py-3">Nama Projek</th>
+                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">PM / Dosen</th>
+                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Mahasiswa</th>
+                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Status</th>
+                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3 w-32">Progress</th>
+                                <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Deadline</th>
+                                <th class="text-center text-[11px] font-semibold text-slate-400 px-3 py-3 w-28">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            @forelse($proposals as $p)
+                            @php
+                                $statusStr = (string) ($p['status'] ?? '-');
+                                $statusKey = strtolower($statusStr);
+                                $statusId = (int) ($p['status_id'] ?? 0);
+                                $isRevision = $statusId === 4 || str_contains($statusKey, 'revision') || str_contains($statusKey, 'improvement');
+                                $badgeClass = $isRevision
+                                    ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                    : ($ss[$statusKey] ?? 'bg-slate-100 text-slate-600');
+                                $displayStatus = $isRevision ? 'Improvement (Revisi)' : $statusStr;
+                                $prog = (int) ($p['overall_progress'] ?? 0);
+                                $code = $p['project_code'] ?? $p['proposal_code'] ?? ('PRSL-' . $p['id']);
+                                $category = $p['category'] ?? 'Web';
+                                $pmName = $p['pm']['name'] ?? '—';
+                                $studentCount = count($p['team_members'] ?? []);
+                                $deadline = $p['target_completion_date'] ?? $p['desired_deadline'] ?? '—';
+                            @endphp
+                            <tr class="hover:bg-slate-50/60 transition-colors"
+                                x-show="(statusFilter === 'Semua Status' || statusFilter.toLowerCase() === '{{ $statusKey }}' || (statusFilter === 'Improvement' && {{ $isRevision ? 'true' : 'false' }})) && (!search || '{{ strtolower(addslashes($p['title'] ?? '')) }}'.includes(search.toLowerCase()) || '{{ strtolower(addslashes($code)) }}'.includes(search.toLowerCase()))">
+                                <td class="px-6 py-3.5">
+                                    <a href="{{ route('klien.projek-saya.detail', $p['id']) }}" class="font-semibold text-[#1E293B] hover:text-[#0B3B82] text-[13px] leading-tight block transition-colors">
+                                        {{ $p['title'] ?? 'Proyek Tanpa Judul' }}
                                     </a>
-                                </div>
-                            </div>
-
-                            @if($isPropRevision && !empty($prop['review_notes']))
-                                <div class="bg-amber-50/90 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-950 flex items-start gap-3">
-                                    <svg class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/>
-                                    </svg>
-                                    <div class="space-y-1 flex-1">
-                                        <p class="font-bold text-amber-900">Catatan Revisi dari Pengurus TEFA:</p>
-                                        <p class="leading-relaxed text-slate-800">{{ $prop['review_notes'] }}</p>
-                                        <p class="text-[11px] text-amber-800/80 pt-1 font-medium">Klik tombol <strong>Detail Projek Saya</strong> di atas untuk mengubah harga/data yang diminta.</p>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-            @endif
-
-            {{-- == ( daftar kartu proyek aktif ) == --}}
-            <div class="space-y-4">
-
-                @forelse($projectsData as $proj)
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-xs transition hover:shadow-md overflow-hidden">
-
-                    {{-- == CARD HEADER (COLLAPSED / EXPANDED TOP BAR) == --}}
-                    <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-5">
-
-                        <div class="flex items-start gap-4 flex-1">
-                            {{-- Project Icon --}}
-                            <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-xs
-                                        bg-[#EAF3FF] text-[#0B3B82]">
-                                @if($proj['icon_type'] === 'iot')
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
-                                        <path d="M4.93 19.07a10 10 0 0 1 0-14.14M19.07 4.93a10 10 0 0 1 0 14.14M7.76 16.24a6 6 0 0 1 0-8.48M16.24 7.76a6 6 0 0 1 0 8.48"/>
-                                        <circle cx="12" cy="12" r="2"/>
-                                    </svg>
-                                @elseif($proj['icon_type'] === 'mobile')
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
-                                        <rect width="14" height="20" x="5" y="2" rx="3"/>
-                                        <path d="M12 18h.01"/>
-                                    </svg>
-                                @else
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
-                                        <path d="M4 20h16M7 20v-2a2 2 0 0 1 2-2h1.5a2 2 0 0 0 1.8-1.1l2.4-4.8A2 2 0 0 1 16.5 9h1.5M18 6l2 3-2 3M15 9h5"/>
-                                    </svg>
-                                @endif
-                            </div>
-
-                            {{-- Project Basic Info --}}
-                            <div class="space-y-1.5 flex-1 min-w-0">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-xs font-bold text-[#0B3B82] bg-[#EAF3FF] px-2.5 py-0.5 rounded-md font-mono">
-                                        {{ $proj['id'] }}
-                                    </span>
-                                    @if($proj['status_type'] === 'uat')
-                                        <span class="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                            {{ $proj['status'] }}
-                                        </span>
-                                    @else
-                                        <span class="text-xs font-semibold text-[#0B3B82] bg-[#EAF3FF] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                                            {{ $proj['status'] }}
-                                        </span>
-                                    @endif
-                                </div>
-
-                                <h2 class="text-base md:text-[17px] font-bold text-slate-800 leading-snug">
-                                    {{ $proj['title'] }}
-                                </h2>
-
-                                {{-- If collapsed, show Dosen PM line --}}
-                                <div x-show="!expanded['{{ $proj['id'] }}']" class="pt-0.5">
-                                    <p class="text-xs text-slate-500">
-                                        Dosen PM: <span class="font-medium text-slate-700">{{ $proj['dosen']['name'] }}</span>
+                                    <p class="text-[11px] text-slate-400 mt-0.5 capitalize">
+                                        {{ $category }} <span class="font-mono text-slate-300">·</span> <span class="font-mono text-[10.5px] font-semibold text-[#0B3B82]">{{ $code }}</span>
                                     </p>
-                                </div>
-
-                                {{-- If expanded, show date & countdown badge --}}
-                                <div x-show="expanded['{{ $proj['id'] }}']" class="flex items-center gap-3 pt-1 flex-wrap">
-                                    <span class="text-xs text-slate-500 font-medium inline-flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5"/>
-                                        </svg>
-                                        {{ $proj['dates'] }}
-                                    </span>
-                                    <span class="text-[11px] font-semibold text-[#0B3B82] bg-[#EAF3FF] px-2.5 py-0.5 rounded-md inline-flex items-center gap-1.5">
-                                        <svg class="w-3 h-3 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                        </svg>
-                                        {{ $proj['days_left'] }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Right Side Actions & Progress --}}
-                        <div class="flex items-center justify-between md:justify-end gap-6 flex-shrink-0">
-
-                            {{-- Mini Progress (Shown when collapsed) --}}
-                            <div x-show="!expanded['{{ $proj['id'] }}']" class="space-y-1 text-right">
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-xs text-slate-400">Progres Proyek</span>
-                                    <span class="text-sm font-bold text-slate-800">{{ $proj['progress'] }}%</span>
-                                </div>
-                                <div class="w-32 md:w-36 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#0B3B82] rounded-full" style="width: {{ $proj['progress'] }}%"></div>
-                                </div>
-                            </div>
-
-                            @if($routePrefix === 'klien')
-                                <a href="{{ route('klien.projek-saya.uat', $proj['proposal_id']) }}"
-                                   class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold px-3.5 py-2 rounded-xl inline-flex items-center gap-1.5 transition flex-shrink-0 shadow-2xs">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.5 2h7M7 16h10"/>
-                                    </svg>
-                                    Lembar UAT
-                                </a>
-                            @endif
-
-                            {{-- Accordion Toggle Button --}}
-                            <button type="button"
-                                    @click="toggle('{{ $proj['id'] }}')"
-                                    class="bg-[#EAF3FF] hover:bg-[#D9E9FF] text-[#0B3B82] text-xs font-semibold px-4 py-2 rounded-xl inline-flex items-center gap-1.5 transition cursor-pointer flex-shrink-0">
-                                <span x-text="expanded['{{ $proj['id'] }}'] ? 'Tutup Detail' : 'Lihat Detail'"></span>
-                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
-                                     :class="expanded['{{ $proj['id'] }}'] ? 'rotate-180' : ''"
-                                     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-                                </svg>
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    {{-- == CARD EXPANDED BODY (DETAILED SPECS & TIM) == --}}
-                    <div x-show="expanded['{{ $proj['id'] }}']"
-                         x-collapse
-                         class="px-6 pb-6 pt-2 border-t border-slate-100/80 space-y-6">
-
-                        {{-- 1. Progres Eksekusi Keseluruhan --}}
-                        <div class="space-y-2 pt-2">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                                    <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"/>
-                                    </svg>
-                                    <span>Progres Eksekusi Keseluruhan</span>
-                                </div>
-                                <span class="text-base font-bold text-[#0B3B82]">{{ $proj['progress'] }}%</span>
-                            </div>
-                            <div class="h-2.5 w-full bg-[#DDE9FA] rounded-full overflow-hidden">
-                                <div class="h-full bg-[#0B3B82] rounded-full transition-all duration-500"
-                                     style="width: {{ $proj['progress'] }}%"></div>
-                            </div>
-                        </div>
-
-                        {{-- 2. Catatan & Spesifikasi Modul Proyek --}}
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2 text-sm font-bold text-slate-800">
-                                    <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <rect width="18" height="18" x="3" y="3" rx="2"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
-                                    </svg>
-                                    <span>Catatan & Spesifikasi Modul Proyek</span>
-                                </div>
-                                <span class="text-xs text-slate-400 font-medium">
-                                    {{ count($proj['modules']) }} Modul Terdaftar dalam TOR
-                                </span>
-                            </div>
-
-                            <div class="space-y-3">
-                                @foreach($proj['modules'] as $mod)
-                                <div class="bg-[#F8FAFD] rounded-xl border border-slate-100 p-4 space-y-1 hover:bg-[#F2F6FC] transition">
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-[#0B3B82] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
-                                        </svg>
-                                        <h3 class="text-xs md:text-sm font-bold text-slate-800">
-                                            {{ $mod['title'] }}
-                                        </h3>
-                                    </div>
-                                    <p class="text-xs text-slate-500 leading-relaxed pl-6">
-                                        {{ $mod['desc'] }}
-                                    </p>
-                                </div>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        {{-- 3. Tim Pengembang Mahasiswa & Dosen Pembimbing --}}
-                        <div class="bg-[#F0F5FD] rounded-2xl border border-blue-100/70 p-5 space-y-4">
-                            <h4 class="text-[10.5px] font-bold uppercase tracking-wider text-slate-400">
-                                TIM PENGEMBANG MAHASISWA &amp; DOSEN PEMBIMBING
-                            </h4>
-
-                            {{-- Dosen Pembimbing Card --}}
-                            <div class="bg-white rounded-xl border border-blue-100/60 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
-                                <div class="flex items-center gap-3.5">
-                                    <div class="w-11 h-11 rounded-full bg-[#0E1F40] text-white font-bold text-sm flex items-center justify-center flex-shrink-0 shadow-xs">
-                                        {{ $proj['dosen']['initials'] }}
-                                    </div>
-                                    <div class="space-y-0.5">
-                                        <p class="text-[10px] font-bold text-[#0B3B82] uppercase tracking-wide">
-                                            {{ $proj['dosen']['tag'] }}
-                                        </p>
-                                        <h5 class="text-sm font-bold text-slate-800">
-                                            {{ $proj['dosen']['name'] }}
-                                        </h5>
-                                        <p class="text-xs text-slate-400 font-mono">
-                                            {{ $proj['dosen']['nidn'] }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="flex-shrink-0">
-                                    <span class="bg-white border border-blue-200/80 text-[#0B3B82] text-xs font-semibold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 shadow-xs">
-                                        <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
-                                        </svg>
-                                        {{ $proj['dosen']['role_badge'] }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {{-- Students Grid (2x2) --}}
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                @foreach($proj['students'] as $stu)
-                                <div class="bg-white rounded-xl border border-blue-100/50 p-3.5 flex items-center gap-3.5 shadow-xs">
-                                    <div class="w-8 h-8 rounded-lg bg-[#EAF3FF] text-[#0B3B82] flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-4 h-4 text-[#0B3B82]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/>
-                                        </svg>
-                                    </div>
-                                    <div class="space-y-0.5 min-w-0">
-                                        <h6 class="text-xs font-bold text-slate-800 truncate">{{ $stu['name'] }}</h6>
-                                        <p class="text-[11px] text-slate-400 font-medium truncate">{{ $stu['role'] }}</p>
-                                    </div>
-                                </div>
-                                @endforeach
-                            </div>
-
-                        </div>
-
-                        @if($proj['status_type'] === 'uat' && $routePrefix === 'klien')
-                        <section class="border-t border-slate-100 pt-5 space-y-4" aria-labelledby="bast-title-{{ $proj['id'] }}">
-                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                                <div>
-                                    <h3 id="bast-title-{{ $proj['id'] }}" class="text-sm font-bold text-slate-800">Berita Acara Serah Terima (BAST)</h3>
-                                    <p class="text-xs text-slate-500 mt-1">UAT telah lulus. BAST akan disiapkan oleh Pengurus TeFa dan muncul di bagian Persetujuan BAST.</p>
-                                </div>
-                                <span class="inline-flex w-fit items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-                                    UAT Lulus
-                                </span>
-                            </div>
-                        </section>
-                        @endif
-                        @if($proj['status_type'] === 'complete')
-                            <section class="border-t border-slate-100 pt-5 space-y-3">
-                                <h3 class="text-sm font-bold text-slate-800">Berita Acara Serah Terima</h3>
-                                        <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                                            <h4 class="text-xs font-bold text-slate-800">Hasil/barang yang diserahterimakan</h4>
-                                            @if(!empty($proj['handover_deliverables']))
-                                                <ul class="mt-2 divide-y divide-slate-200">
-                                                    @foreach($proj['handover_deliverables'] as $deliverable)
-                                                        <li class="py-2 text-xs">
-                                                            <p class="font-semibold text-slate-800">{{ $deliverable['name'] ?? 'Hasil/barang' }} <span class="font-normal text-slate-500">· {{ $deliverable['quantity'] ?? 1 }} {{ $deliverable['unit'] ?? 'unit' }}</span></p>
-                                                            <p class="mt-0.5 text-slate-500">{{ ['physical' => 'Barang fisik', 'digital' => 'Produk digital', 'document' => 'Dokumen', 'other' => 'Lainnya'][$deliverable['type'] ?? 'other'] ?? 'Lainnya' }} · Kondisi: {{ ['new' => 'Baru', 'good' => 'Baik', 'needs_repair' => 'Perlu perbaikan', 'not_applicable' => 'Tidak berlaku'][$deliverable['condition'] ?? 'not_applicable'] ?? 'Tidak berlaku' }}</p>
-                                                            @if(!empty($deliverable['notes']))<p class="mt-1 text-slate-600">{{ $deliverable['notes'] }}</p>@endif
-                                                        </li>
-                                                    @endforeach
-                                                </ul>
-                                            @else
-                                                <p class="mt-1 text-xs text-amber-800">BAST ini sudah disetujui sebelum daftar hasil/barang dicatat. Data persetujuan tidak diubah; hubungi Pengurus TeFa untuk koreksi resmi.</p>
-                                            @endif
+                                    @if($isRevision && !empty($p['review_notes']))
+                                        <div class="mt-2 text-[11px] text-amber-900 bg-amber-50 rounded-lg p-2 border border-amber-200 flex items-start gap-1.5 max-w-md">
+                                            <svg class="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>
+                                            <p class="leading-snug"><strong>Catatan TeFa:</strong> {{ $p['review_notes'] }}</p>
                                         </div>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="mb-1 block text-xs font-semibold text-slate-700">Nomor BAST</label>
-                                        <input type="text" value="{{ $proj['bast_number'] ?? '—' }}" readonly class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-slate-600" aria-readonly="true">
+                                    @endif
+                                </td>
+                                <td class="px-3 py-3.5 text-[12px] text-slate-600 font-medium whitespace-nowrap">{{ $pmName }}</td>
+                                <td class="px-3 py-3.5 whitespace-nowrap"><span class="text-[12px] font-semibold text-[#0B3B82]">{{ $studentCount }} mhs</span></td>
+                                <td class="px-3 py-3.5 whitespace-nowrap"><span class="text-[11px] font-semibold px-2.5 py-1 rounded-full {{ $badgeClass }}">{{ $displayStatus }}</span></td>
+                                <td class="px-3 py-3.5 w-32">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                            <div class="h-full rounded-full" style="width:{{ $prog }}%;background:{{ $pc($prog) }}"></div>
+                                        </div>
+                                        <span class="text-[11px] font-semibold text-slate-500 w-7 text-right">{{ $prog }}%</span>
                                     </div>
-                                    <div>
-                                        <label class="mb-1 block text-xs font-semibold text-slate-700">Tanggal serah terima resmi</label>
-                                        <input type="date" value="{{ $proj['handover_date'] ?? '' }}" readonly disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs text-slate-600 cursor-not-allowed" aria-readonly="true">
+                                </td>
+                                <td class="px-3 py-3.5 text-[12px] text-slate-500 whitespace-nowrap">{{ $deadline }}</td>
+                                <td class="px-3 py-3.5 text-center whitespace-nowrap">
+                                    <div class="inline-flex items-center gap-1.5 justify-center">
+                                        @if(!empty($p['contract_file_url']))
+                                            <a href="{{ route('dokumen.spk', $p['id']) }}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px] font-bold transition-all" title="Unduh SPK">
+                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                                <span>SPK</span>
+                                            </a>
+                                        @endif
+                                        @if(in_array(strtolower($statusStr), ['testing', 'uat']) || !empty($p['bast_eligible']))
+                                            <a href="{{ route('klien.projek-saya.uat', $p['id']) }}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 text-[11px] font-bold transition-all" title="Buka Lembar UAT">
+                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                                <span>UAT</span>
+                                            </a>
+                                        @endif
+                                        <a href="{{ route('klien.projek-saya.detail', $p['id']) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#EAF3FF] text-[#0B3B82] hover:bg-[#0B3B82] hover:text-white text-[11px] font-bold transition-all" title="Lihat Detail Projek">
+                                            <span>Detail</span>
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                                        </a>
                                     </div>
-                                    <div>
-                                        <p class="text-xs font-semibold text-slate-700">Masa garansi</p>
-                                        <p class="mt-1 text-xs text-slate-500">{{ $proj['maintenance']['maintenance_warranty_months'] ?? 0 }} bulan · mulai {{ $proj['maintenance']['maintenance_start_date'] ?? '—' }} · berakhir {{ $proj['maintenance']['maintenance_end_date'] ?? '—' }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-semibold text-slate-700">Repository source code</p>
-                                        @if($proj['repository_url'])
-                                            <a href="{{ $proj['repository_url'] }}" target="_blank" rel="noopener noreferrer" class="mt-1 block truncate text-xs text-blue-700 underline">{{ $proj['repository_url'] }}</a>
-                                        @else
-                                            <p class="mt-1 text-xs text-slate-500">Belum tercatat</p>
-                                        @endif
-                                        @if($proj['documentation_url'])
-                                            <a href="{{ route('klien.projek-saya.bast.documentation', $proj['proposal_id']) }}" class="mt-2 block text-xs text-blue-700 underline">Unduh dokumentasi API · {{ basename($proj['documentation_url']) }}</a>
-                                        @else
-                                            <p class="mt-2 text-xs text-slate-500">Dokumentasi API: Belum terlampir</p>
-                                        @endif
-                                        @if(!empty($proj['user_manual_file_url']) || !empty($proj['user_manual_url']))
-                                            <a href="{{ route('klien.projek-saya.bast.user-manual', $proj['proposal_id']) }}" class="mt-2 block text-xs text-blue-700 underline">Unduh panduan pengguna</a>
-                                        @endif
-                                        @if($proj['client_signoff_name'])
-                                            <p class="mt-2 text-xs text-slate-500">Disetujui oleh: {{ $proj['client_signoff_name'] }}</p>
-                                        @endif
-                                    </div>
-                                </div>
-                            </section>
-                        @endif
-
-                    </div>
-
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="px-6 py-12 text-center text-slate-400 text-xs">
+                                    Belum ada projek yang terdaftar di database.
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
-                @empty
-                    <div class="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center">
-                        <p class="text-sm font-semibold text-slate-700">Belum ada proyek aktif.</p>
-                        <p class="mt-1 text-xs text-slate-500">Proyek akan muncul di sini setelah proposal disetujui.</p>
-                    </div>
-                @endforelse
-
+                <div class="px-6 py-3.5 border-t border-slate-100 flex items-center justify-between">
+                    <p class="text-xs text-slate-400">Menampilkan {{ count($proposals) }} projek</p>
+                </div>
             </div>
 
         </main>
