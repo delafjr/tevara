@@ -1216,7 +1216,7 @@ Route::middleware('auth.api')->group(function () {
         Route::post('/maintenance/{proposal}/extend', function (Request $request, ApiService $api, int $proposal) {
             $validated = $request->validate([
                 'type'   => ['required', 'in:warranty,maintenance'],
-                'months' => ['required', 'integer', 'in:1,3,6,12'],
+                'months' => ['required', 'integer', 'in:1,3,6,12,24,36'],
                 'notes'  => ['nullable', 'string', 'max:1000'],
             ]);
 

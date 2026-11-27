@@ -48,8 +48,8 @@
 <div class="flex min-h-screen" x-data="{
     reportModal: false,
     extModal: false,
-    extType: 'warranty',
-    extMonths: 3,
+    extType: 'maintenance',
+    extMonths: 6,
     extNotes: '',
     submittingReport: false,
     submittingExt: false,
@@ -135,32 +135,18 @@
                         </button>
                     @endif
 
-                    {{-- Extend warranty --}}
-                    @if(!$hasPendingWarranty)
-                        <button @click="extType = 'warranty'; extModal = true"
-                            class="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold px-5 py-2.5 rounded-xl hover:border-[#0B3B82] hover:text-[#0B3B82] transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                            Perpanjang Garansi
+                    {{-- Extend maintenance (Available for both source_code and tefa_managed) --}}
+                    @if(!$hasPendingMaintenance)
+                        <button @click="extModal = true"
+                            class="inline-flex items-center gap-2 bg-[#0B3B82] text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-[#082d64] shadow-xs transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                            Perpanjang Masa Maintenance
                         </button>
                     @else
                         <span class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm font-semibold px-5 py-2.5 rounded-xl cursor-not-allowed">
-                            Perpanjangan Garansi Menggantung
+                            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            Pengajuan Maintenance Menggantung (Menunggu TeFa)
                         </span>
-                    @endif
-
-                    {{-- Extend maintenance (tefa_managed only) --}}
-                    @if($canMaintenance)
-                        @if(!$hasPendingMaintenance)
-                            <button @click="extType = 'maintenance'; extModal = true"
-                                class="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold px-5 py-2.5 rounded-xl hover:border-[#0B3B82] hover:text-[#0B3B82] transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-                                Perpanjang Maintenance
-                            </button>
-                        @else
-                            <span class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm font-semibold px-5 py-2.5 rounded-xl cursor-not-allowed">
-                                Perpanjangan Maintenance Menggantung
-                            </span>
-                        @endif
                     @endif
                 </div>
             </div>
@@ -330,7 +316,7 @@
              x-transition:enter="transition ease-out duration-200" x-transition:enter-start="scale-95 opacity-0" x-transition:enter-end="scale-100 opacity-100">
             <div class="flex items-center justify-between mb-5">
                 <h3 class="text-base font-bold text-slate-800">
-                    Ajukan Perpanjangan <span x-text="extType === 'warranty' ? 'Garansi' : 'Maintenance'" class="capitalize text-[#0B3B82]"></span>
+                    Ajukan Perpanjangan <span class="text-[#0B3B82]">Maintenance</span>
                 </h3>
                 <button @click="extModal = false" class="text-slate-400 hover:text-slate-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -338,15 +324,15 @@
             </div>
             <form action="{{ route('klien.maintenance.extend', $p['id'] ?? 0) }}" method="POST" @submit="submittingExt = true">
                 @csrf
-                <input type="hidden" name="type" :value="extType">
+                <input type="hidden" name="type" value="maintenance">
                 <div class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-2">Durasi Perpanjangan <span class="text-red-500">*</span></label>
-                        <div class="grid grid-cols-4 gap-2">
-                            @foreach([1, 3, 6, 12] as $mo)
+                        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                            @foreach([1, 3, 6, 12, 24, 36] as $mo)
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="months" value="{{ $mo }}" x-model="extMonths" class="sr-only peer" {{ $mo === 3 ? 'checked' : '' }}>
-                                    <div class="text-center border-2 rounded-xl py-3 text-sm font-bold transition peer-checked:border-[#0B3B82] peer-checked:bg-[#EAF3FF] peer-checked:text-[#0B3B82] border-slate-200 text-slate-500 hover:border-slate-300">
+                                    <input type="radio" name="months" value="{{ $mo }}" x-model="extMonths" class="sr-only peer" {{ $mo === 6 ? 'checked' : '' }}>
+                                    <div class="text-center border-2 rounded-xl py-2.5 text-sm font-bold transition peer-checked:border-[#0B3B82] peer-checked:bg-[#EAF3FF] peer-checked:text-[#0B3B82] border-slate-200 text-slate-500 hover:border-slate-300">
                                         {{ $mo }}<br><span class="text-[10px] font-normal">bln</span>
                                     </div>
                                 </label>
@@ -354,12 +340,12 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan (opsional)</label>
-                        <textarea name="notes" rows="3" x-model="extNotes" placeholder="Alasan perpanjangan..."
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan / Kebutuhan SLA (opsional)</label>
+                        <textarea name="notes" rows="3" x-model="extNotes" placeholder="Rincian kebutuhan pemantauan, backup, atau penyesuaian sistem..."
                                   class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82] resize-none"></textarea>
                     </div>
-                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
-                        Permintaan ini akan direview oleh Pengurus TeFa. Perpanjangan berlaku setelah disetujui.
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 leading-relaxed">
+                        Permintaan akan berstatus <strong>Menunggu (Pending)</strong> dan dikirim ke Pengurus TeFa. Kesepakatan biaya / SLA akan dikonfirmasi sebelum masa maintenance aktif.
                     </div>
                 </div>
                 <div class="flex gap-3 mt-6">
