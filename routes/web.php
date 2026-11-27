@@ -1149,15 +1149,31 @@ Route::middleware('auth.api')->group(function () {
                             $endDateStr  = $warranty['warranty_end_date'] ?? $p['warranty_end_date'] ?? null;
                             $hasWarranty = $warranty['has_warranty'] ?? $p['has_warranty'] ?? false;
                             $warrantyEnd = !empty($endDateStr) ? \Carbon\Carbon::parse($endDateStr) : null;
-                            $isActive    = $hasWarranty && $warrantyEnd && $warrantyEnd->gte(\Carbon\Carbon::today());
-                            $daysLeft    = $warrantyEnd ? (int) \Carbon\Carbon::today()->diffInDays($warrantyEnd, false) : null;
+                            $isWarrantyActive = $hasWarranty && $warrantyEnd && $warrantyEnd->gte(\Carbon\Carbon::today());
+
+                            // Check active paid maintenance
+                            $maintenances = collect($p['project_maintenances'] ?? []);
+                            $activeMaintenance = $maintenances
+                                ->where('type', 'maintenance')
+                                ->where('status', 'active')
+                                ->filter(fn ($m) => !empty($m['end_date']) && \Carbon\Carbon::parse($m['end_date'])->gte(\Carbon\Carbon::today()))
+                                ->sortByDesc('end_date')
+                                ->first();
+
+                            $hasActiveMaintenance = !empty($activeMaintenance);
+                            $effectiveEnd = $hasActiveMaintenance ? \Carbon\Carbon::parse($activeMaintenance['end_date']) : $warrantyEnd;
+                            $isActive = $isWarrantyActive || $hasActiveMaintenance;
+                            $daysLeft = $effectiveEnd ? (int) \Carbon\Carbon::today()->diffInDays($effectiveEnd, false) : null;
+
                             return array_merge($p, [
-                                'has_warranty'       => $hasWarranty,
-                                'warranty_end_date'  => $endDateStr,
-                                'warranty_start_date'=> $warranty['warranty_start_date'] ?? $p['warranty_start_date'] ?? null,
-                                'warranty_months'    => $warranty['warranty_months'] ?? $p['warranty_months'] ?? null,
-                                'warranty_active'    => $isActive,
-                                'warranty_days_left' => $daysLeft,
+                                'has_warranty'           => $hasWarranty,
+                                'warranty_end_date'      => $endDateStr,
+                                'warranty_start_date'    => $warranty['warranty_start_date'] ?? $p['warranty_start_date'] ?? null,
+                                'warranty_months'        => $warranty['warranty_months'] ?? $p['warranty_months'] ?? null,
+                                'warranty_active'        => $isActive,
+                                'warranty_days_left'     => $daysLeft,
+                                'has_active_maintenance' => $hasActiveMaintenance,
+                                'maintenance_end_date'   => $activeMaintenance['end_date'] ?? null,
                             ]);
                         })
                         ->values()
