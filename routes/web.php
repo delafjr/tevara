@@ -366,10 +366,11 @@ Route::middleware('auth.api')->group(function () {
             'judul_proyek'      => ['required', 'string', 'max:255'],
             // ID kategori mengikuti master data /categories; validitas akhir dicek backend.
             'kategori_id'       => ['required', 'integer', 'min:1'],
-            'delivery_type'     => ['nullable', 'in:source_code,tefa_managed'],
-            'has_warranty'      => ['nullable', 'in:0,1,true,false'],
-            'warranty_months'   => ['nullable', 'integer', 'min:1'],
-            'ringkasan'         => ['required', 'string', 'max:500'],
+            'delivery_type'      => ['nullable', 'in:source_code,tefa_managed'],
+            'has_warranty'       => ['nullable', 'in:0,1,true,false'],
+            'warranty_months'    => ['nullable', 'integer', 'min:1', 'max:36'],
+            'maintenance_months' => ['nullable', 'integer', 'min:0', 'max:36'],
+            'ringkasan'          => ['required', 'string', 'max:500'],
             'target_pengguna'   => ['required', 'string', 'max:1000'],
             'deadline'          => ['required', 'date', 'after_or_equal:' . now()->addDays(30)->toDateString()],
             'anggaran'          => ['required', 'numeric', 'min:0'],
@@ -390,20 +391,22 @@ Route::middleware('auth.api')->group(function () {
         $deliveryType = $validated['delivery_type'] ?? 'source_code';
         $hasWarranty = true;
         $warrantyMonths = max(1, (int) ($validated['warranty_months'] ?? 3));
+        $maintenanceMonths = max(0, min(36, (int) ($validated['maintenance_months'] ?? 0)));
 
         $user = session('user', []);
         $response = $api->post('proposals', [
-            'client_id'        => (int) ($user['id'] ?? 0),
-            'title'            => $validated['judul_proyek'],
-            'background'       => $validated['ringkasan'],
-            'target_audience'  => $validated['target_pengguna'],
-            'category_id'      => (int) $validated['kategori_id'],
-            'delivery_type'    => $deliveryType,
-            'has_warranty'     => $hasWarranty,
-            'warranty_months'  => $warrantyMonths,
-            'desired_deadline' => $validated['deadline'],
-            'estimated_budget' => (int) $validated['anggaran'],
-            'modules'          => $modules,
+            'client_id'          => (int) ($user['id'] ?? 0),
+            'title'              => $validated['judul_proyek'],
+            'background'         => $validated['ringkasan'],
+            'target_audience'    => $validated['target_pengguna'],
+            'category_id'        => (int) $validated['kategori_id'],
+            'delivery_type'      => $deliveryType,
+            'has_warranty'       => $hasWarranty,
+            'warranty_months'    => $warrantyMonths,
+            'maintenance_months' => $maintenanceMonths,
+            'desired_deadline'   => $validated['deadline'],
+            'estimated_budget'   => (int) $validated['anggaran'],
+            'modules'            => $modules,
         ]);
 
         if ($response->successful()) {

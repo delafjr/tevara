@@ -70,6 +70,7 @@
                   deliveryType: @js(old('delivery_type', 'source_code')),
                   hasWarranty: '1',
                   warrantyMonths: @js((string) old('warranty_months', '3')),
+                  maintenanceMonths: @js((string) old('maintenance_months', '0')),
                   modules: @js($modulesDefault),
                   addModule() { this.modules.push({ judul: '', deskripsi: '' }) },
                   removeModule(i) { if (this.modules.length > 1) this.modules.splice(i, 1) }
@@ -229,18 +230,18 @@
                         </div>
                     </section>
 
-                    {{-- == ( STEP 3 : skema pengelolaan & garansi pemeliharaan ) == --}}
+                    {{-- == ( STEP 3 : skema pengelolaan, garansi, & layanan pemeliharaan ) == --}}
                     <section class="bg-white rounded-2xl border border-slate-100 shadow-sm px-7 py-6">
                         <div class="flex items-start gap-3.5 mb-6">
                             <span class="w-8 h-8 rounded-xl bg-[#0B3B82] text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm">3</span>
                             <div>
-                                <h2 class="text-[15px] font-bold text-[#1E293B] leading-tight">Skema Pengelolaan &amp; Garansi Pemeliharaan</h2>
-                                <p class="text-xs text-slate-400 mt-0.5">Tentukan kepemilikan operasional dan layanan pemeliharaan (maintenance) pasca serah terima</p>
+                                <h2 class="text-[15px] font-bold text-[#1E293B] leading-tight">Skema Pengelolaan, Garansi, &amp; Layanan Pemeliharaan</h2>
+                                <p class="text-xs text-slate-400 mt-0.5">Tentukan kepemilikan source code, masa garansi perbaikan bug, dan paket pemeliharaan berkala</p>
                             </div>
                         </div>
 
                         <div class="space-y-6">
-                            {{-- Pertanyaan 3: Skema Pengelolaan (Delivery Type) --}}
+                            {{-- Pertanyaan 3A: Skema Penyerahan (Delivery Type) --}}
                             <div>
                                 <label class="{{ $label }}">Skema Penyerahan &amp; Pengelolaan Produk <span class="text-red-500">*</span></label>
                                 <p class="text-[11px] text-slate-400 mb-3">Pilih apakah sistem akan diserahkan mandiri ke klien atau dikelola penuh oleh infrastruktur TEVARA.</p>
@@ -253,7 +254,7 @@
                                         <div class="min-w-0">
                                             <p class="text-sm font-bold text-[#1E293B]">Diserahkan ke Klien (Source Code)</p>
                                             <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-                                                Seluruh source code, aset, dan hak operasional diserahkan mandiri kepada pihak klien. Tim TEVARA tetap bertanggung jawab memberikan garansi pemeliharaan &amp; perbaikan bug selama masa garansi.
+                                                Seluruh source code, aset, dan hak operasional diserahkan mandiri kepada pihak klien. Tim TEVARA tetap bertanggung jawab memberikan garansi perbaikan bug dan layanan maintenance selama masa aktif.
                                             </p>
                                         </div>
                                     </label>
@@ -273,22 +274,22 @@
                                 @error('delivery_type') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                             </div>
 
-                            {{-- Garansi Pemeliharaan (Maintenance) - Mandatory --}}
+                            {{-- Pertanyaan 3B: Garansi Sistem (Warranty) - Mandatory & Free --}}
                             <div class="pt-5 border-t border-slate-100 space-y-4">
                                 <div>
                                     <div class="flex items-center justify-between gap-2 mb-1">
-                                        <label for="warranty_months" class="{{ $label }}">Garansi Pemeliharaan (Maintenance) <span class="text-red-500">*</span></label>
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-[#EAF3FF] text-[#0B3B82] border border-[#0B3B82]/20">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
-                                            Wajib Disertakan
+                                        <label for="warranty_months" class="{{ $label }}">1. Garansi Cacat Produk<span class="text-red-500">*</span></label>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                            Wajib Bawaan Proyek (Gratis)
                                         </span>
                                     </div>
-                                    <p class="text-[11px] text-slate-400 mb-3">Dukungan perbaikan bug, asistensi teknis, dan pemeliharaan berkala setelah serah terima proyek (BAST) untuk seluruh skema.</p>
+                                    <p class="text-[11px] text-slate-400 mb-3">Jaminan perbaikan bug bawaan, cacat kode, atau ketidaksesuaian fungsi sistem pasca serah terima (BAST) tanpa biaya tambahan.</p>
 
                                     <input type="hidden" name="has_warranty" value="1">
 
                                     <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
-                                        <label for="warranty_months" class="block text-xs font-bold text-[#1E293B]">Durasi Garansi Pemeliharaan <span class="text-red-500">*</span></label>
+                                        <label for="warranty_months" class="block text-xs font-bold text-[#1E293B]">Durasi Garansi Cacat Produk <span class="text-red-500">*</span></label>
                                         <div class="relative max-w-md">
                                             <select id="warranty_months" name="warranty_months"
                                                     x-model="warrantyMonths"
@@ -305,9 +306,47 @@
                                             </svg>
                                         </div>
                                         <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                                            Masa garansi pemeliharaan aktif otomatis setelah Berita Acara Serah Terima (BAST) disetujui bersama. Tim TEVARA tetap bertanggung jawab memberikan perbaikan bug dan stabilitas sistem selama periode garansi berlangsung.
+                                            Masa garansi aktif otomatis setelah Berita Acara Serah Terima (BAST) disetujui. Berlaku untuk seluruh skema penyerahan produk.
                                         </p>
                                         @error('warranty_months') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Pertanyaan 3C: Layanan Pemeliharaan (Maintenance) - Dihitung Bulanan, Maks 3 Tahun --}}
+                            <div class="pt-5 border-t border-slate-100 space-y-4">
+                                <div>
+                                    <div class="flex items-center justify-between gap-2 mb-1">
+                                        <label for="maintenance_months" class="{{ $label }}">2. Layanan Pemeliharaan Sistem <span class="text-slate-400 normal-case font-medium">(Opsional)</span></label>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-[#EAF3FF] text-[#0B3B82] border border-[#0B3B82]/20">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-[#0B3B82]"></span>
+                                            Bulanan (Maks. 3 Tahun)
+                                        </span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mb-3">Layanan operasional lanjutan: pemantauan server, update keamanan, backup berkala, dan penyesuaian minor di luar garansi bug.</p>
+
+                                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
+                                        <label for="maintenance_months" class="block text-xs font-bold text-[#1E293B]">Durasi Pemeliharaan yang Diajukan</label>
+                                        <div class="relative max-w-md">
+                                            <select id="maintenance_months" name="maintenance_months"
+                                                    x-model="maintenanceMonths"
+                                                    class="{{ $errors->has('maintenance_months') ? $inputErr : $inputOk }} appearance-none pr-10 cursor-pointer bg-white">
+                                                <option value="0">Tidak Ada Tambahan Maintenance (Hanya Garansi)</option>
+                                                <option value="3">3 Bulan</option>
+                                                <option value="6">6 Bulan</option>
+                                                <option value="12">12 Bulan (1 Tahun)</option>
+                                                <option value="24">24 Bulan (2 Tahun)</option>
+                                                <option value="36">36 Bulan (3 Tahun - Maksimal)</option>
+                                            </select>
+                                            <svg class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                                                 fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                                            </svg>
+                                        </div>
+                                        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                                            Kontrak pemeliharaan dihitung dalam satuan bulan (maksimal 36 bulan). Kebutuhan SLA dan rincian biaya dapat disepakati bersama Pengurus TeFa pada tahap penyusunan SPK.
+                                        </p>
+                                        @error('maintenance_months') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                     </div>
                                 </div>
                             </div>
