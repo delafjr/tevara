@@ -190,9 +190,15 @@
                                             <p class="text-[11px] text-slate-400 mt-0.5 truncate max-w-[170px]" title="{{ $p['proposal']['client']['email'] ?? '' }}">{{ $p['proposal']['client']['email'] ?? '' }}</p>
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#EAF3FF] text-[#0B3B82]">
-                                                Termin {{ $p['term_sequence'] ?? 1 }}
-                                            </span>
+                                            @if(($p['payment_type'] ?? '') === 'maintenance')
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700">
+                                                    Maintenance
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#EAF3FF] text-[#0B3B82]">
+                                                    Termin {{ $p['term_sequence'] ?? 1 }}
+                                                </span>
+                                            @endif
                                         </td>
                                         <td class="px-4 py-4 font-bold text-emerald-600 whitespace-nowrap text-sm font-mono">
                                             Rp {{ number_format((float) ($p['amount'] ?? 0), 0, ',', '.') }}

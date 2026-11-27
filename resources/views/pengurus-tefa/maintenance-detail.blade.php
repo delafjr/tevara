@@ -221,7 +221,7 @@
                             @csrf
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Judul <span class="text-red-500">*</span></label>
-                                <input type="text" name="title" required maxlength="255" placeholder="Contoh: Pembaruan dependensi library"
+                                <input type="text" name="title" required maxlength="255" placeholder="Pembaruan dependensi library"
                                        class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82]">
                             </div>
                             <div>
@@ -286,9 +286,11 @@
                         @php
                             $allExt = collect($extReqs)->all();
                             $extStatusColors = [
-                                'pending'  => ['bg' => 'bg-amber-50',   'text' => 'text-amber-700',  'label' => 'Menggantung'],
-                                'approved' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-700','label' => 'Disetujui'],
-                                'rejected' => ['bg' => 'bg-red-50',     'text' => 'text-red-600',    'label' => 'Ditolak'],
+                                'pending'         => ['bg' => 'bg-amber-50',   'text' => 'text-amber-700',  'label' => 'Menggantung'],
+                                'offered'         => ['bg' => 'bg-blue-50',    'text' => 'text-blue-700',   'label' => 'Menunggu Klien'],
+                                'waiting_payment' => ['bg' => 'bg-purple-50',  'text' => 'text-purple-700', 'label' => 'Menunggu Pembayaran'],
+                                'approved'        => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-700','label' => 'Disetujui'],
+                                'rejected'        => ['bg' => 'bg-red-50',     'text' => 'text-red-600',    'label' => 'Ditolak'],
                             ];
                         @endphp
                         @forelse($allExt as $req)
@@ -301,6 +303,9 @@
                                     </div>
                                     <span class="text-[11px] font-bold {{ $esc['bg'] }} {{ $esc['text'] }} rounded-full px-2 py-0.5">{{ $esc['label'] }}</span>
                                 </div>
+                                @if(!empty($req['price']))
+                                    <p class="text-xs font-bold text-slate-800 mt-1">Rp {{ number_format((float)$req['price'], 0, ',', '.') }}</p>
+                                @endif
                                 @if(!empty($req['reviewer_notes']))
                                     <p class="text-[11px] text-slate-500 mt-1 italic">{{ $req['reviewer_notes'] }}</p>
                                 @endif
@@ -378,10 +383,9 @@
              x-transition:enter="transition ease-out duration-200" x-transition:enter-start="scale-95 opacity-0" x-transition:enter-end="scale-100 opacity-100">
             <div class="flex items-center justify-between mb-5">
                 <div>
-                    <h3 class="text-base font-bold text-slate-800">Review Perpanjangan</h3>
+                    <h3 class="text-base font-bold text-slate-800">Review & Tentukan Biaya</h3>
                     <p class="text-xs text-slate-500 mt-0.5">
-                        Perpanjangan <span x-text="extReviewType === 'warranty' ? 'Garansi' : 'Maintenance'" class="font-semibold"></span>
-                        +<span x-text="extReviewMonths"></span> bulan
+                        Perpanjangan Layanan Maintenance +<span x-text="extReviewMonths" class="font-semibold text-slate-700"></span> Bulan
                     </p>
                 </div>
                 <button @click="extReviewModal = false" class="text-slate-400 hover:text-slate-600">
@@ -389,7 +393,7 @@
                 </button>
             </div>
 
-            {{-- Approve form --}}
+            {{-- Form Penawaran Harga --}}
             <form :action="`{{ route('pengurus-tefa.maintenance.ext.review', [$p['id'] ?? 0, '__ID__']) }}`.replace('__ID__', extReviewId)"
                   method="POST" @submit="submitting = true" x-ref="approveForm">
                 @csrf
@@ -397,20 +401,51 @@
                 <input type="hidden" name="decision" value="approved">
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan (opsional)</label>
-                        <textarea name="reviewer_notes" rows="3" placeholder="Catatan untuk klien..."
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">
+                            Nominal Biaya Maintenance <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-xs font-bold text-slate-400">Rp</span>
+                            <input type="number" name="price" min="0" step="1000" required placeholder="3000000"
+                                   class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82] font-semibold text-slate-800">
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">Nominal yang akan ditawarkan dan ditagihkan ke klien.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">
+                            Batas Waktu Pembayaran (Deadline) <span class="text-red-500">*</span>
+                        </label>
+                        <select name="payment_deadline_hours" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82]">
+                            <option value="24" selected>24 Jam (1 Hari)</option>
+                            <option value="48">48 Jam (2 Hari)</option>
+                            <option value="72">72 Jam (3 Hari)</option>
+                            <option value="168">7 Hari (1 Minggu)</option>
+                        </select>
+                        <p class="text-[11px] text-slate-400 mt-1">Batas waktu bagi klien untuk menyetujui & menyelesaikan penawaran.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan Penawaran (Opsional)</label>
+                        <textarea name="reviewer_notes" rows="2" placeholder="Catatan SLA atau lingkup perbaikan..."
                                   class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82] resize-none" x-ref="approveNotes"></textarea>
                     </div>
-                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800">
-                        Menyetujui akan memperpanjang masa berakhir garansi proyek ini secara otomatis.
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800">
+                        <p class="font-semibold text-blue-900 mb-0.5">Alur Persetujuan & Penagihan:</p>
+                        <p class="text-[11px] leading-relaxed text-blue-700">
+                            Penawaran harga ini akan dikirim ke klien. Begitu klien menyetujui, sistem otomatis menerbitkan invoice tagihan di menu Keuangan/Tagihan. Masa maintenance aktif setelah pembayaran lunas.
+                        </p>
                     </div>
                 </div>
+
                 <div class="flex gap-3 mt-5">
                     <button type="button" @click="extReviewModal = false"
                             class="flex-1 border border-slate-200 text-slate-700 text-sm font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition">Batal</button>
                     <button type="button" :disabled="submitting"
                             @click="
                                 $refs.approveForm.querySelector('[name=decision]').value = 'rejected';
+                                $refs.approveForm.querySelector('[name=price]').removeAttribute('required');
                                 $refs.approveForm.querySelector('[name=reviewer_notes]').value = $refs.approveNotes.value;
                                 submitting = true;
                                 $refs.approveForm.submit();
@@ -419,9 +454,9 @@
                         Tolak
                     </button>
                     <button type="submit" :disabled="submitting"
-                            class="flex-1 bg-emerald-600 text-white text-sm font-semibold py-2.5 rounded-xl hover:bg-emerald-700 transition disabled:opacity-60">
-                        <span x-show="!submitting">Setujui</span>
-                        <span x-show="submitting">Memproses...</span>
+                            class="flex-1 bg-[#0B3B82] text-white text-sm font-semibold py-2.5 rounded-xl hover:bg-[#082d64] transition disabled:opacity-60">
+                        <span x-show="!submitting">Kirim Penawaran</span>
+                        <span x-show="submitting">Mengirim...</span>
                     </button>
                 </div>
             </form>
