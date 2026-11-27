@@ -26,7 +26,10 @@
     $canMaintenance = $deliveryType === 'tefa_managed';
 
     $hasPendingWarranty     = collect($extReqs)->where('type', 'warranty')->where('status', 'pending')->isNotEmpty();
-    $hasPendingMaintenance  = collect($extReqs)->where('type', 'maintenance')->where('status', 'pending')->isNotEmpty();
+    $hasPendingMaintenance  = collect($extReqs)->where('type', 'maintenance')->whereIn('status', ['pending', 'offered', 'waiting_payment'])->isNotEmpty();
+
+    $offeredExt        = collect($extReqs)->firstWhere('status', 'offered');
+    $waitingPaymentExt = collect($extReqs)->firstWhere('status', 'waiting_payment');
 
     $statusColors = [
         'open'        => ['bg' => 'bg-amber-50',   'text' => 'text-amber-700',  'border' => 'border-amber-200',  'label' => 'Terbuka'],
@@ -39,9 +42,11 @@
         'high'   => 'text-red-600',
     ];
     $extStatusColors = [
-        'pending'  => ['bg' => 'bg-amber-50',   'text' => 'text-amber-700',  'label' => 'Menunggu'],
-        'approved' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-700','label' => 'Disetujui'],
-        'rejected' => ['bg' => 'bg-red-50',     'text' => 'text-red-600',    'label' => 'Ditolak'],
+        'pending'         => ['bg' => 'bg-amber-50',   'text' => 'text-amber-700',  'label' => 'Menunggu Review TeFa'],
+        'offered'         => ['bg' => 'bg-blue-50',    'text' => 'text-blue-700',   'label' => 'Menunggu Persetujuan Anda'],
+        'waiting_payment' => ['bg' => 'bg-purple-50',  'text' => 'text-purple-700', 'label' => 'Menunggu Pembayaran'],
+        'approved'        => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-700','label' => 'Disetujui'],
+        'rejected'        => ['bg' => 'bg-red-50',     'text' => 'text-red-600',    'label' => 'Ditolak'],
     ];
 @endphp
 
@@ -142,6 +147,16 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
                             Perpanjang Masa Maintenance
                         </button>
+                    @elseif($offeredExt)
+                        <span class="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-semibold px-5 py-2.5 rounded-xl">
+                            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                            Penawaran Harga Maintenance Tersedia (Perlu Tindakan)
+                        </span>
+                    @elseif($waitingPaymentExt)
+                        <a href="{{ route('klien.tagihan') }}" class="inline-flex items-center gap-2 bg-purple-50 border border-purple-200 text-purple-700 text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-purple-100 transition">
+                            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                            Menunggu Pembayaran Maintenance &rarr;
+                        </a>
                     @else
                         <span class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm font-semibold px-5 py-2.5 rounded-xl cursor-not-allowed">
                             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
@@ -150,6 +165,93 @@
                     @endif
                 </div>
             </div>
+
+            {{-- Banner Penawaran Harga Maintenance --}}
+            @if($offeredExt)
+                @php
+                    $isExpired = !empty($offeredExt['payment_deadline']) && \Carbon\Carbon::parse($offeredExt['payment_deadline'])->isPast();
+                    $deadlineFormatted = !empty($offeredExt['payment_deadline']) ? \Carbon\Carbon::parse($offeredExt['payment_deadline'])->translatedFormat('d M Y, H:i') : null;
+                @endphp
+                <div class="rounded-2xl border-2 {{ $isExpired ? 'border-red-200 bg-red-50/50' : 'border-blue-200 bg-blue-50/60' }} p-6 shadow-sm">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full {{ $isExpired ? 'bg-red-500' : 'bg-blue-600 animate-pulse' }}"></span>
+                                <h3 class="text-base font-bold text-slate-800">
+                                    {{ $isExpired ? 'Penawaran Maintenance Kadaluarsa' : 'Penawaran Harga Maintenance dari Pengurus TeFa' }}
+                                </h3>
+                            </div>
+                            <p class="text-xs text-slate-600">
+                                Pengurus TeFa telah menetapkan biaya layanan untuk perpanjangan maintenance selama <strong>+{{ $offeredExt['months'] }} Bulan</strong>.
+                            </p>
+                            @if(!empty($offeredExt['reviewer_notes']))
+                                <p class="text-xs text-slate-500 italic mt-1 bg-white/70 rounded-lg px-3 py-1.5 border border-slate-200/60">
+                                    Catatan: "{{ $offeredExt['reviewer_notes'] }}"
+                                </p>
+                            @endif
+                        </div>
+
+                        <div class="bg-white rounded-xl border border-blue-100 p-4 min-w-[220px] text-center md:text-right shadow-2xs">
+                            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Total Biaya</span>
+                            <span class="text-2xl font-black text-[#0B3B82] block">Rp {{ number_format((float)$offeredExt['price'], 0, ',', '.') }}</span>
+                            @if($deadlineFormatted)
+                                <span class="text-[11px] font-medium {{ $isExpired ? 'text-red-600 font-bold' : 'text-slate-500' }} block mt-1">
+                                    {{ $isExpired ? 'Kadaluarsa pada:' : 'Batas bayar:' }} {{ $deadlineFormatted }}
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    @if(!$isExpired)
+                        <div class="flex flex-wrap items-center justify-end gap-3 mt-4 pt-4 border-t border-blue-100/80">
+                            {{-- Form Tolak --}}
+                            <form action="{{ route('klien.maintenance.respond', [$p['id'] ?? 0, $offeredExt['id']]) }}" method="POST"
+                                  onsubmit="return confirm('Apakah Anda yakin ingin menolak penawaran harga ini?')">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="response" value="reject">
+                                <button type="submit" class="px-4 py-2 text-xs font-semibold text-red-600 hover:text-red-700 bg-white border border-red-200 rounded-xl hover:bg-red-50 transition">
+                                    Tolak Penawaran
+                                </button>
+                            </form>
+
+                            {{-- Form Setujui & Bayar --}}
+                            <form action="{{ route('klien.maintenance.respond', [$p['id'] ?? 0, $offeredExt['id']]) }}" method="POST">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="response" value="accept">
+                                <button type="submit" class="inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    Setujui & Terbitkan Tagihan
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <div class="mt-3 text-xs text-red-600 font-medium">
+                            Penawaran ini telah melewati batas waktu pembayaran. Silakan hubungi pengurus TeFa atau ajukan perpanjangan baru.
+                        </div>
+                    @endif
+                </div>
+            @endif
+
+            {{-- Banner Menunggu Pembayaran Maintenance --}}
+            @if($waitingPaymentExt)
+                <div class="rounded-2xl border border-purple-200 bg-purple-50 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
+                            <h3 class="text-sm font-bold text-purple-900">Tagihan Maintenance Menunggu Pembayaran</h3>
+                        </div>
+                        <p class="text-xs text-purple-700">
+                            Penawaran perpanjangan +{{ $waitingPaymentExt['months'] }} bulan telah disetujui. Tagihan sebesar <strong>Rp {{ number_format((float)$waitingPaymentExt['price'], 0, ',', '.') }}</strong> telah diterbitkan.
+                        </p>
+                    </div>
+                    <a href="{{ route('klien.tagihan') }}" class="inline-flex items-center justify-center gap-2 bg-purple-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-purple-700 transition whitespace-nowrap shadow-xs">
+                        Buka Tagihan & Unggah Bukti
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+            @endif
 
             {{-- Main grid --}}
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -237,11 +339,14 @@
                             <div class="border border-slate-100 rounded-xl p-3 mb-2 last:mb-0">
                                 <div class="flex items-center justify-between gap-2">
                                     <div>
-                                        <p class="text-xs font-semibold text-slate-700">{{ ucfirst($req['type']) }} +{{ $req['months'] }} bln</p>
+                                        <p class="text-xs font-semibold text-slate-700">{{ $req['type'] === 'warranty' ? 'Garansi' : 'Maintenance' }} +{{ $req['months'] }} bln</p>
                                         <p class="text-[11px] text-slate-400">{{ \Carbon\Carbon::parse($req['created_at'])->translatedFormat('d M Y') }}</p>
                                     </div>
                                     <span class="text-[11px] font-bold {{ $esc['bg'] }} {{ $esc['text'] }} rounded-full px-2 py-0.5">{{ $esc['label'] }}</span>
                                 </div>
+                                @if(!empty($req['price']))
+                                    <p class="text-xs font-bold text-slate-800 mt-1">Rp {{ number_format((float)$req['price'], 0, ',', '.') }}</p>
+                                @endif
                                 @if(!empty($req['reviewer_notes']))
                                     <p class="text-[11px] text-slate-500 mt-1 italic">{{ $req['reviewer_notes'] }}</p>
                                 @endif

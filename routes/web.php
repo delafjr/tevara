@@ -486,17 +486,21 @@ Route::middleware('auth.api')->group(function () {
                                     : (!empty($pay['id'])
                                         ? sprintf('INV/%s/%06d', !empty($pay['created_at']) ? \Carbon\Carbon::parse($pay['created_at'])->format('Y') : date('Y'), (int) $pay['id'])
                                         : 'Belum diterbitkan');
-                                $termDesc = (!empty($pay['verification_notes']) && $status !== 'REJECTED')
-                                    ? $pay['verification_notes']
-                                    : 'Pembayaran Termin ' . ($pay['term_sequence'] ?? 1);
+                                $isMaintenance = ($pay['payment_type'] ?? '') === 'maintenance';
+                                $termName = $isMaintenance ? 'Layanan Maintenance' : ('Termin ' . ($pay['term_sequence'] ?? 1));
+                                $termDesc = $pay['description']
+                                    ?? ((!empty($pay['verification_notes']) && $status !== 'REJECTED')
+                                        ? $pay['verification_notes']
+                                        : 'Pembayaran ' . $termName);
 
                                 $termins[] = [
                                     'id'                 => $pay['id'],
                                     'proposal_id'        => $pId,
                                     'invoice_number'     => $invoiceNumber,
                                     'term_sequence'      => $pay['term_sequence'] ?? 1,
-                                    'name'               => 'Termin ' . ($pay['term_sequence'] ?? 1),
+                                    'name'               => $termName,
                                     'desc'               => $termDesc,
+                                    'payment_type'       => $pay['payment_type'] ?? 'project',
                                     'nominal'            => 'Rp ' . number_format($amount, 0, ',', '.'),
                                     'amount'             => $amount,
                                     'channel'            => match ($pay['payment_method'] ?? null) {
@@ -1234,6 +1238,31 @@ Route::middleware('auth.api')->group(function () {
                 return back()->withInput()->with('error', 'Tidak dapat terhubung ke server: ' . $e->getMessage());
             }
         })->whereNumber('proposal')->name('maintenance.extend');
+
+        Route::patch('/maintenance/{proposal}/extensions/{extReq}/respond', function (Request $request, ApiService $api, int $proposal, int $extReq) {
+            $validated = $request->validate([
+                'response' => ['required', 'in:accept,reject'],
+            ]);
+
+            try {
+                $res = $api->patch("proposals/{$proposal}/warranty-extensions/{$extReq}/respond", $validated);
+
+                if ($res->successful()) {
+                    if ($validated['response'] === 'accept') {
+                        return redirect()
+                            ->route('klien.tagihan')
+                            ->with('success', 'Penawaran disetujui! Tagihan maintenance telah terbit. Silakan lakukan pembayaran.');
+                    }
+                    return redirect()
+                        ->route('klien.maintenance.detail', $proposal)
+                        ->with('success', 'Penawaran harga maintenance telah ditolak.');
+                }
+
+                return back()->with('error', $res->json('message') ?? 'Gagal merespons penawaran.');
+            } catch (\Throwable $e) {
+                return back()->with('error', 'Tidak dapat terhubung ke server: ' . $e->getMessage());
+            }
+        })->whereNumber('proposal')->whereNumber('extReq')->name('maintenance.respond');
     });
 
     // Role-specific dashboard direct URLs
@@ -2993,8 +3022,10 @@ Route::middleware('auth.api')->group(function () {
         // Review extension request
         Route::patch('/maintenance/{proposal}/extensions/{extReq}/review', function (Request $request, ApiService $api, int $proposal, int $extReq) {
             $validated = $request->validate([
-                'decision'       => ['required', 'in:approved,rejected'],
-                'reviewer_notes' => ['nullable', 'string', 'max:1000'],
+                'decision'               => ['required', 'in:approved,rejected'],
+                'price'                  => ['nullable', 'numeric', 'min:0'],
+                'payment_deadline_hours' => ['nullable', 'integer', 'min:1'],
+                'reviewer_notes'         => ['nullable', 'string', 'max:1000'],
             ]);
 
             try {
@@ -3002,7 +3033,7 @@ Route::middleware('auth.api')->group(function () {
 
                 if ($response->successful()) {
                     $msg = $validated['decision'] === 'approved'
-                        ? 'Perpanjangan disetujui. Masa garansi proyek telah diperbarui dan klien telah dinotifikasi.'
+                        ? 'Penawaran harga maintenance berhasil dikirim ke klien. Menunggu persetujuan & pembayaran klien.'
                         : 'Permintaan perpanjangan ditolak. Klien telah dinotifikasi.';
                     return redirect()
                         ->route('pengurus-tefa.maintenance.detail', $proposal)
