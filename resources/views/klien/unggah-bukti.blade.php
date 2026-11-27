@@ -17,7 +17,9 @@
     $userName = $user['name'] ?? 'Budi Santoso';
     $proposalCode = $proposal['proposal_code'] ?? ('PRJ-' . ($proposal['id'] ?? '-'));
     $proposalTitle = $proposal['title'] ?? 'Proyek';
+    $isMaintenance = ($payment['payment_type'] ?? '') === 'maintenance';
     $termSequence = $payment['term_sequence'] ?? 1;
+    $paymentLabel = $isMaintenance ? 'Layanan Maintenance' : ('Termin ' . $termSequence);
     $amount = (float) ($payment['amount'] ?? 0);
     $formatRupiah = fn ($val) => 'Rp ' . number_format((float) $val, 0, ',', '.');
     $dueDate = !empty($payment['due_date']) ? \Carbon\Carbon::parse($payment['due_date'])->translatedFormat('d F Y') : '-';
@@ -84,8 +86,8 @@
                     <span class="text-[11px] font-mono font-semibold text-slate-400 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-2xs">
                         {{ $proposalCode }}
                     </span>
-                    <span class="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-blue-50 text-[#0B3B82] border border-blue-200">
-                        Termin {{ $termSequence }}
+                    <span class="text-[11px] font-bold px-3 py-1.5 rounded-lg {{ $isMaintenance ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-blue-50 text-[#0B3B82] border border-blue-200' }}">
+                        {{ $paymentLabel }}
                     </span>
                 </div>
             </div>
@@ -146,7 +148,7 @@
                 </div>
 
                 <div class="relative z-10 flex flex-col items-start md:items-end gap-1 bg-white/80 backdrop-blur-xs p-4 rounded-2xl border border-blue-100/60 shadow-2xs flex-shrink-0">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Nominal Tagihan Termin {{ $termSequence }}</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Nominal Tagihan {{ $paymentLabel }}</span>
                     <span class="text-2xl font-extrabold text-emerald-600 font-mono">{{ $formatRupiah($amount) }}</span>
                     <span class="text-[11px] text-slate-400">Jatuh Tempo: {{ $dueDate }}</span>
                 </div>
@@ -161,9 +163,9 @@
                     {{-- Card Ringkasan Proyek --}}
                     <div class="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 space-y-4">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
-                            <h3 class="text-sm font-bold text-slate-800">Rincian Tagihan Proyek</h3>
-                            <span class="text-[11px] font-bold text-[#0B3B82] bg-blue-50 px-2.5 py-0.5 rounded-md">
-                                Termin {{ $termSequence }}
+                            <h3 class="text-sm font-bold text-slate-800">{{ $isMaintenance ? 'Rincian Tagihan Maintenance' : 'Rincian Tagihan Proyek' }}</h3>
+                            <span class="text-[11px] font-bold {{ $isMaintenance ? 'text-purple-700 bg-purple-50' : 'text-[#0B3B82] bg-blue-50' }} px-2.5 py-0.5 rounded-md">
+                                {{ $paymentLabel }}
                             </span>
                         </div>
 
