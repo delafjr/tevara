@@ -20,8 +20,27 @@
 
     $today        = Carbon::today();
     $warrantyEnd  = !empty($p['warranty_end_date']) ? Carbon::parse($p['warranty_end_date']) : null;
-    $isActive     = ($p['has_warranty'] ?? false) && $warrantyEnd && $warrantyEnd->gte($today);
-    $daysLeft     = $warrantyEnd ? (int) $today->diffInDays($warrantyEnd, false) : null;
+    $isWarrantyActive = ($p['has_warranty'] ?? false) && $warrantyEnd && $warrantyEnd->gte($today);
+
+    // Cari perpanjangan maintenance berbayar yang aktif
+    $projectMaintenances = collect($p['project_maintenances'] ?? []);
+    $activePaidMaintenance = $projectMaintenances
+        ->where('type', 'maintenance')
+        ->where('status', 'active')
+        ->filter(fn ($m) => !empty($m['end_date']) && Carbon::parse($m['end_date'])->gte($today))
+        ->sortByDesc('end_date')
+        ->first();
+
+    $hasActiveMaintenance = !empty($activePaidMaintenance);
+    $maintenanceEnd = $hasActiveMaintenance ? Carbon::parse($activePaidMaintenance['end_date']) : null;
+
+    // Layanan aktif jika garansi cacat masih berlaku ATAU maintenance berbayar aktif
+    $isActive = $isWarrantyActive || $hasActiveMaintenance;
+
+    // Tentukan tanggal akhir efektif & sisa hari
+    $effectiveEndDate = $maintenanceEnd ?? $warrantyEnd;
+    $daysLeft = $effectiveEndDate ? (int) $today->diffInDays($effectiveEndDate, false) : null;
+
     $deliveryType = $p['delivery_type'] ?? 'source_code';
     $canMaintenance = $deliveryType === 'tefa_managed';
 
@@ -94,7 +113,11 @@
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div>
                         <div class="flex flex-wrap gap-2 mb-2">
-                            @if($isActive)
+                            @if($hasActiveMaintenance)
+                                <span class="inline-flex items-center gap-1 text-[11px] font-bold bg-purple-100 text-purple-700 rounded-full px-3 py-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-purple-600 animate-pulse"></span> Maintenance Aktif
+                                </span>
+                            @elseif($isWarrantyActive)
                                 <span class="inline-flex items-center gap-1 text-[11px] font-bold bg-emerald-100 text-emerald-700 rounded-full px-3 py-1">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Garansi Aktif
                                 </span>
@@ -114,17 +137,17 @@
                         <p class="text-xs text-slate-500 mt-1 font-mono">{{ $p['project_code'] ?? $p['proposal_code'] ?? '' }}</p>
                     </div>
 
-                    {{-- Warranty countdown --}}
-                    @if($p['has_warranty'] ?? false)
-                    <div class="bg-{{ $isActive ? 'emerald' : 'red' }}-50 border border-{{ $isActive ? 'emerald' : 'red' }}-200 rounded-2xl px-6 py-4 text-center min-w-[180px]">
+                    {{-- Warranty / Maintenance countdown --}}
+                    @if(($p['has_warranty'] ?? false) || $hasActiveMaintenance)
+                    <div class="bg-{{ $isActive ? ($hasActiveMaintenance ? 'purple' : 'emerald') : 'red' }}-50 border border-{{ $isActive ? ($hasActiveMaintenance ? 'purple' : 'emerald') : 'red' }}-200 rounded-2xl px-6 py-4 text-center min-w-[180px]">
                         @if($isActive && $daysLeft !== null)
-                            <p class="text-3xl font-black text-emerald-600">{{ $daysLeft }}</p>
-                            <p class="text-xs text-emerald-700 font-semibold mt-0.5">hari tersisa</p>
+                            <p class="text-3xl font-black {{ $hasActiveMaintenance ? 'text-purple-600' : 'text-emerald-600' }}">{{ $daysLeft }}</p>
+                            <p class="text-xs {{ $hasActiveMaintenance ? 'text-purple-700' : 'text-emerald-700' }} font-semibold mt-0.5">hari tersisa</p>
                         @else
                             <p class="text-sm font-bold text-red-600">Masa Berakhir</p>
                         @endif
-                        @if($warrantyEnd)
-                            <p class="text-[11px] text-slate-500 mt-1">s/d {{ $warrantyEnd->translatedFormat('d M Y') }}</p>
+                        @if($effectiveEndDate)
+                            <p class="text-[11px] text-slate-500 mt-1">s/d {{ $effectiveEndDate->translatedFormat('d M Y') }}</p>
                         @endif
                     </div>
                     @endif
@@ -315,22 +338,30 @@
 
                     {{-- Info card --}}
                     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-3">
-                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Info Garansi</h3>
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Info Garansi & Maintenance</h3>
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Durasi</span>
-                                <span class="font-semibold text-slate-800">{{ $p['warranty_months'] ?? '-' }} bulan</span>
+                                <span class="text-slate-500">Garansi Bawaan</span>
+                                <span class="font-semibold {{ $isWarrantyActive ? 'text-emerald-700' : 'text-slate-500' }}">
+                                    {{ $p['warranty_months'] ?? '-' }} bln ({{ $isWarrantyActive ? 'Aktif' : 'Berakhir' }})
+                                </span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Mulai</span>
-                                <span class="font-semibold text-slate-800">{{ !empty($p['warranty_start_date']) ? \Carbon\Carbon::parse($p['warranty_start_date'])->translatedFormat('d M Y') : '-' }}</span>
+                                <span class="text-slate-500">Berakhir Garansi</span>
+                                <span class="font-semibold {{ $isWarrantyActive ? 'text-emerald-700' : 'text-red-600' }}">{{ $warrantyEnd?->translatedFormat('d M Y') ?? '-' }}</span>
+                            </div>
+                            @if($hasActiveMaintenance)
+                            <div class="flex justify-between border-t border-slate-100 pt-2">
+                                <span class="text-purple-700 font-medium">Layanan Maintenance</span>
+                                <span class="font-bold text-purple-700">Aktif (+{{ $activePaidMaintenance['duration_months'] }} bln)</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Berakhir</span>
-                                <span class="font-semibold {{ $isActive ? 'text-emerald-700' : 'text-red-600' }}">{{ $warrantyEnd?->translatedFormat('d M Y') ?? '-' }}</span>
+                                <span class="text-slate-500">Berakhir Maintenance</span>
+                                <span class="font-bold text-purple-800">{{ $maintenanceEnd?->translatedFormat('d M Y') ?? '-' }}</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-slate-500">Skema</span>
+                            @endif
+                            <div class="flex justify-between border-t border-slate-100 pt-2">
+                                <span class="text-slate-500">Skema Serah Terima</span>
                                 <span class="font-semibold text-slate-800">{{ $deliveryType === 'source_code' ? 'Source Diserahkan' : 'Kelola TEVARA' }}</span>
                             </div>
                         </div>
