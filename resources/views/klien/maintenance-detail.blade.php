@@ -246,8 +246,13 @@
                             Penawaran perpanjangan +{{ $waitingPaymentExt['months'] }} bulan telah disetujui. Tagihan sebesar <strong>Rp {{ number_format((float)$waitingPaymentExt['price'], 0, ',', '.') }}</strong> telah diterbitkan.
                         </p>
                     </div>
-                    <a href="{{ route('klien.tagihan') }}" class="inline-flex items-center justify-center gap-2 bg-purple-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-purple-700 transition whitespace-nowrap shadow-xs">
-                        Buka Tagihan & Unggah Bukti
+                    @php
+                        $directUploadUrl = !empty($waitingPaymentExt['payment_id'])
+                            ? route('klien.tagihan.unggah', ['proposal' => $proposal['id'], 'payment' => $waitingPaymentExt['payment_id']])
+                            : route('klien.tagihan');
+                    @endphp
+                    <a href="{{ $directUploadUrl }}" class="inline-flex items-center justify-center gap-2 bg-purple-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-purple-700 transition whitespace-nowrap shadow-xs">
+                        Unggah Bukti Pembayaran
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                     </a>
                 </div>

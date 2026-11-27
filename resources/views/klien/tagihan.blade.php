@@ -16,6 +16,11 @@
     $user = $user ?? session('user', []);
     $projectsBilling = is_array($projectsBilling ?? null) ? $projectsBilling : [];
     $billingTerms = collect($projectsBilling)->flatMap(fn ($project) => $project['termins'] ?? [])->values();
+
+    // Pisahkan termin kontrak proyek (SPK) dengan tagihan perpanjangan maintenance
+    $maintenanceTerms = $billingTerms->filter(fn ($term) => !empty($term['is_maintenance']))->values();
+    $projectTerms = $billingTerms->filter(fn ($term) => empty($term['is_maintenance']))->values();
+
     $totalBilled = $billingTerms->sum(fn ($term) => (float) ($term['amount'] ?? 0));
     $totalVerified = $billingTerms->filter(fn ($term) => ($term['status'] ?? '') === 'verified')->sum(fn ($term) => (float) ($term['amount'] ?? 0));
     $totalVerifying = $billingTerms->filter(fn ($term) => ($term['status'] ?? '') === 'verifying')->sum(fn ($term) => (float) ($term['amount'] ?? 0));
@@ -23,16 +28,22 @@
     $verifiedPercent = $totalBilled > 0 ? round($totalVerified / $totalBilled * 100, 1) : 0;
     $verifyingPercent = $totalBilled > 0 ? round($totalVerifying / $totalBilled * 100, 1) : 0;
     $openPercent = $totalBilled > 0 ? max(0, 100 - $verifiedPercent - $verifyingPercent) : 0;
-    $urgentTerm = $billingTerms->first(fn ($term) => !empty($term['can_upload']));
-    $urgentProposalId = $urgentTerm['proposal_id'] ?? null;
-    $urgentPaymentId = $urgentTerm['id'] ?? null;
-    $urgentProject = collect($projectsBilling)->first(
-        fn ($project) => (int) ($project['proposal_id'] ?? 0) === (int) $urgentProposalId
-    );
+
+    // Tagihan Maintenance urgent yang menunggu upload bukti
+    $urgentMaintenance = $maintenanceTerms->first(fn ($term) => !empty($term['can_upload']));
+
+    // Termin Proyek SPK urgent yang menunggu upload bukti
+    $urgentProjectTerm = $projectTerms->first(fn ($term) => !empty($term['can_upload']));
+    $urgentProjectProposalId = $urgentProjectTerm['proposal_id'] ?? null;
+    $urgentProjectPaymentId = $urgentProjectTerm['id'] ?? null;
+    $urgentProject = $urgentProjectProposalId ? collect($projectsBilling)->first(
+        fn ($project) => (int) ($project['proposal_id'] ?? 0) === (int) $urgentProjectProposalId
+    ) : null;
+
     $statusCounts = [
-        'Menunggu Bayar' => $billingTerms->whereIn('status', ['unpaid', 'rejected', 'pending'])->count(),
+        'Menunggu Bayar'   => $billingTerms->whereIn('status', ['unpaid', 'rejected', 'pending'])->count(),
         'Dalam Verifikasi' => $billingTerms->where('status', 'verifying')->count(),
-        'Lunas' => $billingTerms->where('status', 'verified')->count(),
+        'Lunas'            => $billingTerms->where('status', 'verified')->count(),
     ];
 @endphp
 
@@ -71,7 +82,7 @@
 
              if (this.activeStatusFilter === 'Semua') return true;
              if (this.activeStatusFilter === 'Menunggu Bayar') {
-                 return p.termins.some(t => ['unpaid', 'rejected'].includes(t.status));
+                 return p.termins.some(t => ['unpaid', 'rejected', 'pending'].includes(t.status));
              }
              if (this.activeStatusFilter === 'Dalam Verifikasi') {
                  return p.termins.some(t => t.status === 'verifying');
@@ -80,7 +91,9 @@
                  return p.termins.some(t => t.status === 'verified');
              }
              return true;
-         }
+         },
+
+
      }">
 
     {{-- == ( sidebar komponen DRY ) == --}}
@@ -152,8 +165,60 @@
                 <x-stat-card label="Menunggu Pembayaran" :value="'Rp ' . number_format($totalOpen, 0, ',', '.')" :sub="$statusCounts['Menunggu Bayar'] . ' Termin'" color="#6366F1" icon="calendar" />
             </section>
 
-            {{-- == ( banner peringatan tindakan : unggah bukti pembayaran termin berjalan ) == --}}
-            @if($urgentTerm && $urgentProject)
+            {{-- == ( BANNER 1: TAGIHAN PERPANJANGAN MAINTENANCE MENUNGGU PEMBAYARAN ) == --}}
+            @if($urgentMaintenance)
+            <div class="bg-gradient-to-r from-purple-50 via-indigo-50/60 to-white border-2 border-purple-200 rounded-2xl p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
+
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.07a4.5 4.5 0 004.486-6.32l-3.27 3.27-2.652-2.652 3.27-3.27a4.5 4.5 0 00-6.32 4.486c.118.58.094 1.193-.07 1.743"/>
+                        </svg>
+                    </div>
+
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="bg-purple-100 text-purple-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide">
+                                PERPANJANGAN MAINTENANCE
+                            </span>
+                            <span class="bg-red-50 text-red-600 text-[10.5px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 border border-red-100">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                Jatuh Tempo: {{ $urgentMaintenance['due_date'] ?? '24 Jam' }}
+                            </span>
+                        </div>
+
+                        <h2 class="text-base font-bold text-slate-800 leading-snug">
+                            Unggah Bukti Pembayaran {{ $urgentMaintenance['name'] }}
+                        </h2>
+
+                        <p class="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                            Proyek <strong class="text-slate-800">{{ $urgentMaintenance['project_title'] }}</strong> memiliki tagihan perpanjangan maintenance <strong class="text-purple-700 font-mono">{{ $urgentMaintenance['invoice_number'] }}</strong> sebesar <strong class="text-purple-700 font-mono">{{ $urgentMaintenance['nominal'] }}</strong> yang menunggu pembayaran.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex-shrink-0 flex items-center gap-2 flex-wrap">
+                    <a href="{{ route('klien.tagihan.invoice', $urgentMaintenance['id']) }}"
+                       class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-4 py-3 rounded-xl flex items-center gap-2 shadow-2xs transition">
+                        <svg class="w-4 h-4 flex-shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                        </svg>
+                        <span>Unduh Invoice</span>
+                    </a>
+                    <a href="{{ route('klien.tagihan.unggah', ['proposal' => $urgentMaintenance['proposal_id'], 'payment' => $urgentMaintenance['id']]) }}"
+                       class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-5 py-3 rounded-xl flex items-center gap-2 shadow-sm transition">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                        </svg>
+                        <span>Unggah Bukti Transfer Maintenance</span>
+                    </a>
+                </div>
+
+            </div>
+            @endif
+
+            {{-- == ( BANNER 2: TAGIHAN TERMIN PROYEK SPK MENUNGGU PEMBAYARAN ) == --}}
+            @if($urgentProjectTerm && $urgentProject)
             <div class="bg-gradient-to-r from-[#EFF5FF] to-[#FAF5E8] border border-blue-100/90 rounded-2xl p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
 
                 <div class="flex items-start gap-4">
@@ -167,32 +232,32 @@
                     <div class="space-y-1">
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="bg-amber-100 text-amber-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide">
-                                PERLU TINDAKAN KLIEN
+                                TERMIN PROYEK AKTIF
                             </span>
                             <span class="bg-red-50 text-red-600 text-[10.5px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
                                 <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                                {{ $urgentTerm['due_date'] ?? 'Jatuh tempo belum ditetapkan' }}
+                                {{ $urgentProjectTerm['due_date'] ?? 'Jatuh tempo belum ditetapkan' }}
                             </span>
                         </div>
 
                         <h2 class="text-base font-bold text-slate-800 leading-snug">
-                            Unggah Bukti Pembayaran {{ $urgentTerm['name'] ?? 'Termin' }}
+                            Unggah Bukti Pembayaran {{ $urgentProjectTerm['name'] ?? 'Termin' }}
                         </h2>
 
                         <p class="text-xs text-slate-500 leading-relaxed max-w-2xl">
-                            Proyek <strong class="text-slate-700">{{ $urgentProject['title'] }}</strong> memiliki tagihan {{ $urgentTerm['invoice_number'] ?? '' }} sebesar {{ $urgentTerm['nominal'] ?? '—' }} yang menunggu pembayaran.
+                            Proyek <strong class="text-slate-700">{{ $urgentProject['title'] }}</strong> memiliki tagihan {{ $urgentProjectTerm['invoice_number'] ?? '' }} sebesar {{ $urgentProjectTerm['nominal'] ?? '—' }} yang menunggu pembayaran.
                         </p>
                     </div>
                 </div>
 
                 <div class="flex-shrink-0">
-                    <a href="{{ route('klien.tagihan.unggah', ['proposal' => $urgentProposalId, 'payment' => $urgentPaymentId]) }}"
+                    <a href="{{ route('klien.tagihan.unggah', ['proposal' => $urgentProjectProposalId, 'payment' => $urgentProjectPaymentId]) }}"
                        class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-5 py-3 rounded-xl flex items-center gap-2 shadow-sm transition">
                         {{-- Document Upload Icon --}}
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
                         </svg>
-                        <span>Unggah Bukti Pembayaran Termin Berjalan</span>
+                        <span>Unggah Bukti Pembayaran Termin</span>
                     </a>
                 </div>
 
@@ -246,6 +311,10 @@
             <div class="space-y-4">
 
                 @forelse($projectsBilling as $proj)
+                @php
+                    $openMaintenance = collect($proj['termins'])->first(fn($t) => !empty($t['is_maintenance']) && !empty($t['can_upload']));
+                    $openProjectTerm = collect($proj['termins'])->first(fn($t) => empty($t['is_maintenance']) && !empty($t['can_upload']));
+                @endphp
                 <div x-show="matches(@js($proj))"
                      x-transition:enter="transition ease-out duration-200"
                      x-transition:enter-start="opacity-0 translate-y-1"
@@ -269,7 +338,13 @@
                                     </svg>
                                     {{ $proj['spk_status'] }}
                                 </span>
-                                @if(!empty($proj['has_open']) && !empty($proj['open_badge']))
+                                @if(!empty($proj['has_open_maintenance']))
+                                    <span class="text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-purple-600 animate-pulse"></span>
+                                        Tagihan Maintenance Menunggu Bayar
+                                    </span>
+                                @endif
+                                @if(!empty($proj['has_open_project']) && !empty($proj['open_badge']))
                                     <span class="text-xs font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
                                         {{ $proj['open_badge'] }}
                                     </span>
@@ -290,29 +365,35 @@
 
                             <div class="space-y-1 text-left md:text-right">
                                 <div class="flex items-center gap-3">
-                                    <span class="text-xs text-slate-500 font-medium">{{ $proj['total_value'] }}</span>
-                                    <span class="text-xs font-bold {{ $proj['has_open'] ? 'text-amber-700' : 'text-[#0B3B82]' }}">
+                                    <span class="text-xs text-slate-500 font-medium">Nilai Kontrak: {{ $proj['total_value'] }}</span>
+                                    <span class="text-xs font-bold {{ !empty($proj['has_open_project']) ? 'text-amber-700' : 'text-[#0B3B82]' }}">
                                         {{ $proj['paid_status'] }}
                                     </span>
                                 </div>
                                 <div class="w-32 md:w-36 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                    <div class="h-full {{ $proj['has_open'] ? 'bg-[#FFB800]' : 'bg-[#0B3B82]' }} rounded-full"
+                                    <div class="h-full {{ !empty($proj['has_open_project']) ? 'bg-[#FFB800]' : 'bg-[#0B3B82]' }} rounded-full"
                                          style="width: {{ $proj['paid_percent'] }}%"></div>
                                 </div>
                             </div>
 
-                            {{-- Tombol Aksi Khusus (seperti Bayar Termin 2) jika ada --}}
+                            {{-- Tombol Aksi Cepat Bayar --}}
                             <div class="flex items-center gap-2">
-                                @if(!empty($proj['active_action']))
-                                    <button type="button"
-                                            @click="openUploadModal('{{ $proj['active_action'] }} ({{ $proj['id'] }})')"
-                                            class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-4 py-2 rounded-xl inline-flex items-center gap-1.5 shadow-sm transition cursor-pointer">
+                                @if($openMaintenance)
+                                    <a href="{{ route('klien.tagihan.unggah', ['proposal' => $proj['proposal_id'], 'payment' => $openMaintenance['id']]) }}"
+                                       class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-4 py-2 rounded-xl inline-flex items-center gap-1.5 shadow-sm transition">
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <rect width="20" height="14" x="2" y="5" rx="2"/>
-                                            <line x1="2" x2="22" y1="10" y2="10"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
                                         </svg>
-                                        <span>{{ $proj['active_action'] }}</span>
-                                    </button>
+                                        <span>Bayar Maintenance</span>
+                                    </a>
+                                @elseif($openProjectTerm)
+                                    <a href="{{ route('klien.tagihan.unggah', ['proposal' => $proj['proposal_id'], 'payment' => $openProjectTerm['id']]) }}"
+                                       class="bg-[#0B3B82] hover:bg-[#082d64] text-white text-xs font-semibold px-4 py-2 rounded-xl inline-flex items-center gap-1.5 shadow-sm transition">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                                        </svg>
+                                        <span>Bayar {{ $openProjectTerm['name'] }}</span>
+                                    </a>
                                 @endif
 
                                 {{-- Accordion Toggle Button --}}
@@ -331,6 +412,24 @@
                         </div>
 
                     </div>
+
+                    {{-- Strip Notifikasi Maintenance di Dalam Kartu --}}
+                    @if($openMaintenance)
+                    <div class="mx-6 mb-4 p-3.5 rounded-xl bg-purple-50/80 border border-purple-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-purple-600 animate-pulse flex-shrink-0"></span>
+                            <div class="text-xs">
+                                <span class="font-bold text-purple-900">Tagihan Maintenance Menunggu Pembayaran:</span>
+                                <span class="text-purple-700">{{ $openMaintenance['desc'] ?? 'Perpanjangan Maintenance' }} — <strong class="font-mono text-purple-900">{{ $openMaintenance['nominal'] }}</strong> ({{ $openMaintenance['invoice_number'] }})</span>
+                                <span class="text-slate-400 ml-1">• Jatuh tempo: {{ $openMaintenance['due_date'] ?? '-' }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <a href="{{ route('klien.tagihan.invoice', $openMaintenance['id']) }}" class="text-xs font-semibold text-purple-700 hover:underline">Unduh Invoice</a>
+                            <a href="{{ route('klien.tagihan.unggah', ['proposal' => $proj['proposal_id'], 'payment' => $openMaintenance['id']]) }}" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xs transition">Unggah Bukti</a>
+                        </div>
+                    </div>
+                    @endif
 
                     {{-- == TABEL EXPANDED RINCIAN TERMIN PROYEK == --}}
                     <div x-show="expanded['{{ $proj['id'] }}']"
@@ -404,7 +503,11 @@
                                                 <span class="font-bold text-slate-800 text-[13px] leading-snug">
                                                     {{ $termin['name'] }}
                                                 </span>
-                                                @if(!empty($termin['is_urgent']))
+                                                @if(!empty($termin['is_maintenance']))
+                                                    <span class="bg-purple-100 text-purple-700 text-[9.5px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                                        Maintenance
+                                                    </span>
+                                                @elseif(!empty($termin['is_urgent']))
                                                     <span class="bg-amber-100 text-amber-900 text-[9.5px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
                                                         URGENT
                                                     </span>
@@ -415,7 +518,9 @@
                                             </p>
                                             <p class="mt-2 text-[11px] text-slate-500">
                                                 Invoice: <span class="font-semibold text-slate-700">{{ $termin['invoice_number'] ?? 'Belum diterbitkan' }}</span>
-                                                <span class="mx-1">•</span> Termin {{ $termin['term_sequence'] ?? ($loop->iteration ?? 1) }}
+                                                @if(empty($termin['is_maintenance']))
+                                                    <span class="mx-1">•</span> Termin {{ $termin['term_sequence'] ?? ($loop->iteration ?? 1) }}
+                                                @endif
                                             </p>
                                             <p class="mt-1 text-[11px] text-slate-500">
                                                 Jatuh tempo: <span class="font-medium text-slate-700">{{ $termin['due_date'] ?? 'Belum ditetapkan' }}</span>

@@ -442,10 +442,13 @@ Route::middleware('auth.api')->group(function () {
                             $totalPaid = 0;
                             $termins = [];
                             $hasOpen = false;
+                            $hasOpenMaintenance = false;
+                            $hasOpenProject = false;
 
                             foreach ($payments as $pay) {
                                 $amount = (float) ($pay['amount'] ?? 0);
                                 $status = strtoupper($pay['status'] ?? 'PENDING');
+                                $isMaintenance = ($pay['payment_type'] ?? '') === 'maintenance';
                                 $proofUrl = $pay['proof_url'] ?? null;
                                 if ($proofUrl && !str_starts_with($proofUrl, 'http')) {
                                     $baseUrl = rtrim(config('services.backend_api.url') ?? env('BACKEND_API_URL', 'http://127.0.0.1:8000/api/v1'), '/');
@@ -463,18 +466,30 @@ Route::middleware('auth.api')->group(function () {
                                     $statusType = 'verified';
                                     $canUpload = false;
                                     $canDownload = true;
-                                    $totalPaid += $amount;
+                                    if (!$isMaintenance) {
+                                        $totalPaid += $amount;
+                                    }
                                 } elseif ($status === 'REJECTED') {
                                     $statusLabel = 'DITOLAK (Upload Ulang)';
                                     $statusType = 'rejected';
                                     $canUpload = true;
                                     $hasOpen = true;
+                                    if ($isMaintenance) {
+                                        $hasOpenMaintenance = true;
+                                    } else {
+                                        $hasOpenProject = true;
+                                    }
                                 } elseif ($proofUrl) {
                                     $statusLabel = 'DALAM VERIFIKASI';
                                     $statusType = 'verifying';
                                     $canUpload = false;
                                 } else {
                                     $hasOpen = true;
+                                    if ($isMaintenance) {
+                                        $hasOpenMaintenance = true;
+                                    } else {
+                                        $hasOpenProject = true;
+                                    }
                                 }
 
                                 $rawDueDate = $pay['due_date'] ?? $pay['payment_date'] ?? null;
@@ -501,6 +516,10 @@ Route::middleware('auth.api')->group(function () {
                                     'name'               => $termName,
                                     'desc'               => $termDesc,
                                     'payment_type'       => $pay['payment_type'] ?? 'project',
+                                    'is_maintenance'     => $isMaintenance,
+                                    'project_title'      => $detail['title'] ?? 'Proyek Tanpa Judul',
+                                    'project_code'       => $detail['project_code'] ?? ($detail['proposal_code'] ?? ('PRJ-' . $pId)),
+                                    'spk_number'         => $detail['spk_number'] ?? '-',
                                     'nominal'            => 'Rp ' . number_format($amount, 0, ',', '.'),
                                     'amount'             => $amount,
                                     'channel'            => match ($pay['payment_method'] ?? null) {
@@ -525,18 +544,20 @@ Route::middleware('auth.api')->group(function () {
                             $paidPercent = $totalBudget > 0 ? round(($totalPaid / $totalBudget) * 100, 1) : 0;
 
                             $projectsBilling[] = [
-                                'id'              => $detail['proposal_code'] ?? ('PRJ-' . $pId),
-                                'proposal_id'     => $pId,
-                                'spk'             => $detail['spk_number'] ?? 'SPK belum tercatat',
-                                'spk_status'      => $detail['status']['name'] ?? $detail['status'] ?? 'Aktif',
-                                'spk_status_type' => 'success',
-                                'title'           => $detail['title'] ?? 'Proyek Tanpa Judul',
-                                'period'          => 'Target: ' . (!empty($detail['desired_deadline']) ? \Carbon\Carbon::parse($detail['desired_deadline'])->translatedFormat('d M Y') : '-'),
-                                'total_value'     => 'Rp ' . number_format($totalBudget, 0, ',', '.'),
-                                'paid_percent'    => $paidPercent,
-                                'paid_status'     => $paidPercent . '% Terbayar',
-                                'has_open'        => $hasOpen,
-                                'termins'         => $termins,
+                                'id'                   => $detail['proposal_code'] ?? ('PRJ-' . $pId),
+                                'proposal_id'          => $pId,
+                                'spk'                  => $detail['spk_number'] ?? 'SPK belum tercatat',
+                                'spk_status'           => $detail['status']['name'] ?? $detail['status'] ?? 'Aktif',
+                                'spk_status_type'      => 'success',
+                                'title'                => $detail['title'] ?? 'Proyek Tanpa Judul',
+                                'period'               => 'Target: ' . (!empty($detail['desired_deadline']) ? \Carbon\Carbon::parse($detail['desired_deadline'])->translatedFormat('d M Y') : '-'),
+                                'total_value'          => 'Rp ' . number_format($totalBudget, 0, ',', '.'),
+                                'paid_percent'         => $paidPercent,
+                                'paid_status'          => $paidPercent . '% Terbayar',
+                                'has_open'             => $hasOpen,
+                                'has_open_maintenance' => $hasOpenMaintenance,
+                                'has_open_project'     => $hasOpenProject,
+                                'termins'              => $termins,
                             ];
                         }
                     }
