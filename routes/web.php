@@ -1681,11 +1681,45 @@ Route::middleware('auth.api')->group(function () {
                 abort($uatResponse->status(), $uatResponse->json('message') ?? 'Data UAT tidak dapat dimuat.');
             }
 
+            $members = [];
+            $teamRes = $api->get("proposals/{$proposal}/team");
+            if ($teamRes->successful() && is_array($teamRes->json())) {
+                $members = $teamRes->json();
+            }
+
             return view('pm.uat-show', [
                 'proposal' => $projectResponse->json(),
                 'uat' => $uatResponse->successful() ? $uatResponse->json('data') : null,
+                'members' => $members,
             ]);
         })->whereNumber('proposal')->name('uat.detail');
+
+        Route::post('/proposals/{proposal}/uat/{uat}/review', function (Request $request, ApiService $api, int $proposal, int $uat) {
+            $validated = $request->validate([
+                'decision' => ['required', 'in:APPROVED,NEEDS_IMPROVEMENT'],
+                'review_notes' => ['nullable', 'string'],
+                'corrections' => ['required_if:decision,NEEDS_IMPROVEMENT', 'array', 'min:1'],
+                'corrections.*.item_id' => ['required', 'integer', 'distinct'],
+                'corrections.*.note' => ['required', 'string', 'max:5000'],
+                'corrections.*.assigned_student_id' => ['required', 'integer'],
+                'corrections.*.due_date' => ['nullable', 'date'],
+            ]);
+
+            try {
+                $response = $api->reviewUat($proposal, $uat, $validated);
+                if ($response->successful()) {
+                    return redirect()
+                        ->route('pm.uat.detail', $proposal)
+                        ->with('success', $validated['decision'] === 'APPROVED'
+                            ? 'Hasil UAT disetujui. Klien dapat mengesahkan hasilnya.'
+                            : 'Checklist perbaikan telah dibuat menjadi task baru untuk mahasiswa.');
+                }
+
+                return back()->withInput()->with('error', $response->json('message') ?? 'Pemeriksaan UAT gagal disimpan.');
+            } catch (\Throwable $e) {
+                return back()->withInput()->with('error', 'Tidak dapat terhubung ke server backend: ' . $e->getMessage());
+            }
+        })->whereNumber('proposal')->whereNumber('uat')->name('uat.review');
     });
 
     // Jurusan uses the same proposal workflow and backend master data as clients.

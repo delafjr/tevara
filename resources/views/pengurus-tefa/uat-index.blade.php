@@ -376,7 +376,7 @@
                                                 {{-- 1. Sudah ada lembar UAT --}}
                                                 <a href="{{ route('pengurus-tefa.uat.detail', $pId) }}"
                                                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#0B3B82] text-white hover:bg-[#082a5c] transition shadow-2xs">
-                                                    <span>{{ $reviewStatus === 'PENDING_REVIEW' ? 'Periksa Hasil UAT' : 'Lihat Tindak Lanjut' }}</span>
+                                                    <span>{{ $reviewStatus === 'PENDING_REVIEW' && ($latestUat['overall_result'] ?? '') === 'PASSED' ? 'Periksa Hasil UAT' : 'Lihat Hasil UAT' }}</span>
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
                                                     </svg>

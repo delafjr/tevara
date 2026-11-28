@@ -19,7 +19,7 @@
     $reviewStatus = $uat['review_status'] ?? null;
     $signedAt = $uat['signed_off_at'] ?? null;
     $isSigned = !empty($signedAt);
-    $canReview = $uat && $reviewStatus === 'PENDING_REVIEW';
+    $canReview = $uat && $reviewStatus === 'PENDING_REVIEW' && ($uat['overall_result'] ?? null) === 'PASSED';
     $failedItems = collect($items)->filter(fn ($item) => in_array($item['result'] ?? null, ['FAILED', 'BUG_FOUND'], true));
     $history = $uat['uat_history'] ?? ($uat ? [$uat] : []);
 @endphp
@@ -159,41 +159,11 @@
                         <textarea id="review_notes" name="review_notes" rows="3" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82]"></textarea>
                         <button class="mt-4 rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-emerald-800 transition">Setujui Hasil UAT</button>
                     </form>
-                @else
-                    <form action="{{ route('pengurus-tefa.uat.review', [$proposalId, $uat['id']]) }}" method="POST" class="rounded-2xl border border-amber-200 bg-white p-6 shadow-sm">
-                        @csrf
-                        <input type="hidden" name="decision" value="NEEDS_IMPROVEMENT">
-                        <h2 class="text-lg font-bold text-slate-900">Buat Checklist Perbaikan</h2>
-                        <p class="mt-1 text-sm text-slate-600">Setiap fitur yang belum sesuai harus memiliki catatan perbaikan dan mahasiswa penanggung jawab.</p>
-                        @foreach($failedItems as $index => $item)
-                            <div class="mt-5 rounded-xl border border-amber-200 bg-amber-50/50 p-4">
-                                <input type="hidden" name="corrections[{{ $index }}][item_id]" value="{{ $item['id'] }}">
-                                <h3 class="font-semibold text-slate-900">{{ $item['feature_name'] }}</h3>
-                                <label for="note-{{ $index }}" class="mt-3 block text-xs font-semibold text-slate-600">Poin Perbaikan <span class="text-red-600">*</span></label>
-                                <textarea id="note-{{ $index }}" name="corrections[{{ $index }}][note]" required rows="2" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82]" placeholder="Jelaskan apa yang perlu diperbaiki.">{{ old("corrections.$index.note") }}</textarea>
-                                <label for="student-{{ $index }}" class="mt-3 block text-xs font-semibold text-slate-600">Teruskan kepada Mahasiswa <span class="text-red-600">*</span></label>
-                                <select id="student-{{ $index }}" name="corrections[{{ $index }}][assigned_student_id]" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82]">
-                                    <option value="">Pilih mahasiswa</option>
-                                    @foreach($members as $member)
-                                        @php
-                                            $student = $member['student'] ?? [];
-                                        @endphp
-                                        <option value="{{ $student['id'] ?? '' }}">{{ $student['name'] ?? 'Mahasiswa' }}{{ !empty($student['nim']) ? ' · ' . $student['nim'] : '' }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        @endforeach
-                        <label for="general_review_notes" class="mt-5 block text-xs font-semibold text-slate-600">Catatan Tambahan untuk Klien (opsional)</label>
-                        <textarea id="general_review_notes" name="review_notes" rows="3" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82]"></textarea>
-                        @if($failedItems->count() === 0)
-                            <p class="mt-4 text-sm text-red-700">Tidak ada fitur gagal yang dapat dijadikan checklist perbaikan.</p>
-                        @elseif(count($members) === 0)
-                            <p class="mt-4 text-sm text-red-700">Belum ada mahasiswa pada tim proyek ini. Lengkapi tim sebelum meneruskan perbaikan.</p>
-                        @else
-                            <button class="mt-5 rounded-xl bg-amber-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-amber-800 transition">Kirim Checklist ke Mahasiswa</button>
-                        @endif
-                    </form>
                 @endif
+            @elseif($reviewStatus === 'PENDING_REVIEW')
+                <section class="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm text-blue-900">
+                    Klien telah mengirim hasil pengujian UAT. Tinjauan dan penerusan tindak lanjut perbaikan kepada mahasiswa dilakukan oleh Project Manager (PM).
+                </section>
             @elseif($reviewStatus === 'NEEDS_IMPROVEMENT')
                 <section class="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
                     Checklist perbaikan sedang dikerjakan. UAT ulang belum dibuka sampai seluruh tugas diselesaikan dan diverifikasi.
