@@ -448,7 +448,9 @@
                                             $rawStatusLower = strtolower($statusStr);
                                             $canAccessUat = in_array($rawStatusLower, ['testing', 'handover', 'completed'], true) 
                                                 || ($rawStatusLower === 'active' && $prog >= 100)
-                                                || !empty($p['bast_eligible']);
+                                                || !empty($p['bast_eligible'])
+                                                || !empty($p['has_uat'])
+                                                || !empty($p['uat_latest_id']);
                                         @endphp
                                         @if($canAccessUat)
                                             <a href="{{ route('klien.projek-saya.uat', $p['id']) }}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 text-[11px] font-bold transition-all" title="Buka Lembar UAT">

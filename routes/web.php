@@ -1053,14 +1053,6 @@ Route::middleware('auth.api')->group(function () {
             }
             $detail = $proposalResponse->json();
 
-            $rawStatus = strtolower((string) ($detail['status']['name'] ?? ($detail['status'] ?? '')));
-            $prog = (float) ($detail['overall_progress'] ?? 0);
-            $canAccessUat = in_array($rawStatus, ['testing', 'handover', 'completed'], true)
-                || ($rawStatus === 'active' && $prog >= 100)
-                || !empty($detail['bast_eligible']);
-
-            abort_unless($canAccessUat, 403, 'Lembar UAT hanya dapat diakses saat proyek telah mencapai progress 100% atau memasuki tahap testing.');
-
             $uat = null;
             $error = null;
 
@@ -1074,6 +1066,17 @@ Route::middleware('auth.api')->group(function () {
             } catch (\Throwable $e) {
                 $error = 'Tidak dapat terhubung ke server: ' . $e->getMessage();
             }
+
+            $rawStatus = strtolower((string) ($detail['status']['name'] ?? ($detail['status'] ?? '')));
+            $prog = (float) ($detail['overall_progress'] ?? 0);
+            $hasUatRecord = !empty($uat) || !empty($detail['has_uat']) || !empty($detail['uat_latest_id']);
+
+            $canAccessUat = in_array($rawStatus, ['testing', 'handover', 'completed'], true)
+                || ($rawStatus === 'active' && $prog >= 100)
+                || !empty($detail['bast_eligible'])
+                || $hasUatRecord;
+
+            abort_unless($canAccessUat, 403, 'Lembar UAT hanya dapat diakses saat proyek telah mencapai progress 100% atau memasuki tahap testing.');
 
             return view('klien.uat-workflow', [
                 'user'     => session('user'),
