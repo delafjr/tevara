@@ -444,7 +444,13 @@
                                                 <span>SPK</span>
                                             </a>
                                         @endif
-                                        @if(in_array(strtolower($statusStr), ['testing', 'uat']) || !empty($p['bast_eligible']))
+                                        @php
+                                            $rawStatusLower = strtolower($statusStr);
+                                            $canAccessUat = in_array($rawStatusLower, ['testing', 'handover', 'completed'], true) 
+                                                || ($rawStatusLower === 'active' && $prog >= 100)
+                                                || !empty($p['bast_eligible']);
+                                        @endphp
+                                        @if($canAccessUat)
                                             <a href="{{ route('klien.projek-saya.uat', $p['id']) }}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 text-[11px] font-bold transition-all" title="Buka Lembar UAT">
                                                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
                                                 <span>UAT</span>
