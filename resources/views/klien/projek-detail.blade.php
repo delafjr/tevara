@@ -712,7 +712,9 @@
                                 $rawStatusLower = strtolower($rawStatus);
                                 $canAccessUat = in_array($rawStatusLower, ['testing', 'handover', 'completed'], true) 
                                     || ($rawStatusLower === 'active' && $overallProgress >= 100)
-                                    || !empty($proposal['bast_eligible']);
+                                    || !empty($proposal['bast_eligible'])
+                                    || !empty($proposal['has_uat'])
+                                    || !empty($proposal['uat_latest_id']);
                             @endphp
                             @if($canAccessUat)
                             <div class="p-3.5 rounded-xl bg-[#EAF3FF] border border-blue-200 space-y-2.5">
