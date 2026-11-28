@@ -302,28 +302,28 @@
                                     </td>
 
                                     {{-- Hasil UAT --}}
-                                    <td class="px-4 py-4">
+                                    <td class="px-4 py-4 whitespace-nowrap">
                                         @if($hasUat)
                                             @if($overallResult === 'PASSED')
-                                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                                    PASSED ({{ $itemsCount }} Item)
-                                                </div>
+                                                    Sesuai
+                                                </span>
                                             @elseif($overallResult === 'PARTIAL')
-                                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
-                                                    PARTIAL ({{ $itemsCount }} Item)
-                                                </div>
+                                                    Sebagian
+                                                </span>
                                             @elseif($overallResult === 'FAILED')
-                                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
-                                                    FAILED ({{ $itemsCount }} Item)
-                                                </div>
+                                                    Perbaikan
+                                                </span>
                                             @else
                                                 <span class="text-xs text-slate-500">{{ $overallResult }}</span>
                                             @endif
                                             @if($sessionDate)
-                                                <p class="text-[10px] text-slate-400 mt-0.5">Sesi: {{ \Carbon\Carbon::parse($sessionDate)->translatedFormat('d M Y') }}</p>
+                                                <p class="text-[10px] text-slate-400 mt-0.5">{{ \Carbon\Carbon::parse($sessionDate)->translatedFormat('d M Y') }}</p>
                                             @endif
                                         @else
                                             <span class="inline-flex items-center text-xs font-medium text-slate-400">
@@ -335,24 +335,34 @@
                                     {{-- Status pemeriksaan --}}
                                     <td class="px-4 py-4">
                                         @if($reviewStatus === 'APPROVED')
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold">✓</span>
-                                                <div>
-                                                    <p class="text-xs font-bold text-emerald-800">Disetujui Pengurus</p>
-                                                    <p class="text-[10px] text-slate-400">{{ $isSigned ? 'Telah disahkan Klien' : 'Menunggu persetujuan Klien' }}</p>
+                                            @if($isSigned)
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold">✓</span>
+                                                    <div>
+                                                        <p class="text-xs font-bold text-emerald-800">Disetujui</p>
+                                                        <p class="text-[10px] text-emerald-600 font-medium">Disahkan Klien</p>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            @else
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-[10px] font-bold">⏳</span>
+                                                    <div>
+                                                        <p class="text-xs font-bold text-slate-800">Disetujui TeFa</p>
+                                                        <p class="text-[10px] text-amber-600 font-medium">Menunggu persetujuan Klien</p>
+                                                    </div>
+                                                </div>
+                                            @endif
                                         @elseif($reviewStatus === 'NEEDS_IMPROVEMENT')
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
                                                 Checklist perbaikan
                                             </span>
                                         @elseif($reviewStatus === 'READY_FOR_RETEST')
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
                                                 Siap diuji ulang
                                             </span>
                                         @elseif($hasUat)
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                                Menunggu pemeriksaan
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                                Perlu diperiksa
                                             </span>
                                         @else
                                             <span class="text-xs text-slate-400">—</span>
