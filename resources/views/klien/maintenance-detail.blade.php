@@ -77,6 +77,21 @@
     extNotes: '',
     submittingReport: false,
     submittingExt: false,
+    previewImg: null,
+    previewModal: false,
+    previewModalUrl: '',
+    handleFileChange(event) {
+        const file = event.target.files[0];
+        if (file) {
+            this.previewImg = URL.createObjectURL(file);
+        } else {
+            this.previewImg = null;
+        }
+    },
+    openImage(url) {
+        this.previewModalUrl = url;
+        this.previewModal = true;
+    }
 }">
     <x-sidebar active="maintenance" />
 
@@ -299,16 +314,45 @@
                                     <div class="flex-1 min-w-0">
                                         <p class="font-semibold text-slate-800 text-sm truncate">{{ $ticket['title'] }}</p>
                                         @if(!empty($ticket['description']))
-                                            <p class="text-xs text-slate-500 mt-1 line-clamp-2">{{ $ticket['description'] }}</p>
+                                            <p class="text-xs text-slate-600 mt-1 whitespace-pre-line leading-relaxed">{{ $ticket['description'] }}</p>
+                                        @endif
+                                        @if(!empty($ticket['image_url']))
+                                            <div class="mt-2.5">
+                                                <button type="button" @click="openImage('{{ $ticket['image_url'] }}')"
+                                                        class="group relative inline-block rounded-xl overflow-hidden border border-slate-200 hover:border-blue-400 transition shadow-2xs">
+                                                    <img src="{{ $ticket['image_url'] }}" alt="Lampiran Error" class="h-28 w-auto max-w-xs object-cover rounded-xl group-hover:scale-105 transition duration-200">
+                                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-semibold gap-1.5 transition">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/></svg>
+                                                        <span>Lihat Gambar</span>
+                                                    </div>
+                                                </button>
+                                            </div>
                                         @endif
                                         <div class="flex flex-wrap gap-2 mt-2">
                                             <span class="text-[11px] font-semibold {{ $sc['bg'] }} {{ $sc['text'] }} border {{ $sc['border'] }} rounded-full px-2 py-0.5">{{ $sc['label'] }}</span>
                                             <span class="text-[11px] font-semibold {{ $pc }}">Prioritas: {{ ucfirst($ticket['priority'] ?? 'medium') }}</span>
                                         </div>
-                                        @if(!empty($ticket['resolution_notes']))
-                                            <div class="mt-3 bg-emerald-50 border border-emerald-100 rounded-lg p-3">
-                                                <p class="text-[11px] font-bold text-emerald-700 mb-1">Balasan dari TEVARA:</p>
-                                                <p class="text-xs text-emerald-800">{{ $ticket['resolution_notes'] }}</p>
+                                        @if(!empty($ticket['resolution_notes']) || !empty($ticket['resolution_image_url']))
+                                            <div class="mt-3 bg-emerald-50 border border-emerald-100 rounded-lg p-3.5 space-y-2">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                                                    <p class="text-[11px] font-bold text-emerald-800">Tanggapan & Penyelesaian dari TEVARA:</p>
+                                                </div>
+                                                @if(!empty($ticket['resolution_notes']))
+                                                    <p class="text-xs text-emerald-900 whitespace-pre-line leading-relaxed">{{ $ticket['resolution_notes'] }}</p>
+                                                @endif
+                                                @if(!empty($ticket['resolution_image_url']))
+                                                    <div class="pt-1">
+                                                        <button type="button" @click="openImage('{{ $ticket['resolution_image_url'] }}')"
+                                                                class="group relative inline-block rounded-lg overflow-hidden border border-emerald-200 hover:border-emerald-400 transition">
+                                                            <img src="{{ $ticket['resolution_image_url'] }}" alt="Lampiran Penyelesaian" class="h-24 w-auto max-w-xs object-cover rounded-lg group-hover:scale-105 transition duration-200">
+                                                            <div class="absolute inset-0 bg-emerald-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[11px] font-bold gap-1 transition">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                                                <span>Perbesar</span>
+                                                            </div>
+                                                        </button>
+                                                    </div>
+                                                @endif
                                             </div>
                                         @endif
                                     </div>
@@ -413,7 +457,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <form action="{{ route('klien.maintenance.report', $p['id'] ?? 0) }}" method="POST" @submit="submittingReport = true">
+            <form action="{{ route('klien.maintenance.report', $p['id'] ?? 0) }}" method="POST" enctype="multipart/form-data" @submit="submittingReport = true">
                 @csrf
                 <div class="space-y-4">
                     <div>
@@ -423,8 +467,28 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Deskripsi Detail</label>
-                        <textarea name="description" rows="4" placeholder="Jelaskan langkah-langkah yang menyebabkan error..."
-                                  class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82] resize-none"></textarea>
+                        <textarea name="description" rows="4" placeholder="Jelaskan secara lengkap langkah-langkah yang menyebabkan error atau konteks permasalahan..."
+                                  class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82]"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Foto / Tangkapan Layar Error (Opsional)</label>
+                        <div class="mt-1 flex flex-col gap-2">
+                            <label class="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-[#0B3B82] rounded-xl p-4 cursor-pointer bg-slate-50/50 hover:bg-slate-50 transition group">
+                                <svg class="w-6 h-6 text-slate-400 group-hover:text-[#0B3B82] transition mb-1" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                <span class="text-xs font-semibold text-slate-600 group-hover:text-[#0B3B82] transition">Pilih gambar atau screenshot error</span>
+                                <span class="text-[10px] text-slate-400 mt-0.5">Format JPG, PNG, WEBP (Maksimal 10MB)</span>
+                                <input type="file" name="image" accept="image/*" class="sr-only" @change="handleFileChange($event)">
+                            </label>
+                            <template x-if="previewImg">
+                                <div class="relative inline-block mt-1">
+                                    <img :src="previewImg" alt="Preview Gambar" class="h-32 w-auto max-w-full rounded-xl border border-slate-200 object-cover shadow-2xs">
+                                    <button type="button" @click="previewImg = null; $el.closest('form').querySelector('input[name=image]').value = ''"
+                                            class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700 transition">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Prioritas</label>
@@ -499,6 +563,21 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    {{-- ===== MODAL: Preview Gambar ===== --}}
+    <div x-show="previewModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"
+         @click.self="previewModal = false"
+         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div class="relative max-w-4xl max-h-[90vh] flex flex-col items-center">
+            <button @click="previewModal = false"
+                    class="absolute -top-10 right-0 text-white hover:text-slate-300 transition flex items-center gap-1 text-xs font-semibold cursor-pointer">
+                <span>Tutup</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <img :src="previewModalUrl" alt="Foto Tiket" class="rounded-xl max-h-[85vh] w-auto object-contain shadow-2xl">
         </div>
     </div>
 
