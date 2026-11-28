@@ -387,7 +387,7 @@
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Status</th>
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3 w-32">Progress</th>
                                 <th class="text-left text-[11px] font-semibold text-slate-400 px-3 py-3">Deadline</th>
-                                <th class="text-center text-[11px] font-semibold text-slate-400 px-3 py-3 w-28">Aksi</th>
+                                <th class="text-right text-[11px] font-semibold text-slate-400 px-6 py-3">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -436,15 +436,21 @@
                                     </div>
                                 </td>
                                 <td class="px-3 py-3.5 text-[12px] text-slate-500 whitespace-nowrap">{{ $deadline }}</td>
-                                <td class="px-3 py-3.5 text-center whitespace-nowrap">
-                                    <div class="inline-flex items-center gap-1.5 justify-center">
+                                <td class="px-6 py-3.5 text-right whitespace-nowrap">
+                                    <div class="inline-flex items-center justify-end gap-1.5">
                                         @if(!empty($p['contract_file_url']))
                                             <a href="{{ route('dokumen.spk', $p['id']) }}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-[11px] font-bold transition-all" title="Unduh SPK">
                                                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                                                 <span>SPK</span>
                                             </a>
                                         @endif
-                                        @if(in_array(strtolower($statusStr), ['testing', 'uat']) || !empty($p['bast_eligible']))
+                                        @php
+                                            $rawStatusLower = strtolower($statusStr);
+                                            $canAccessUat = in_array($rawStatusLower, ['testing', 'handover', 'completed'], true) 
+                                                || ($rawStatusLower === 'active' && $prog >= 100)
+                                                || !empty($p['bast_eligible']);
+                                        @endphp
+                                        @if($canAccessUat)
                                             <a href="{{ route('klien.projek-saya.uat', $p['id']) }}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 text-[11px] font-bold transition-all" title="Buka Lembar UAT">
                                                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
                                                 <span>UAT</span>

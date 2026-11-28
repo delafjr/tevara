@@ -1052,6 +1052,15 @@ Route::middleware('auth.api')->group(function () {
                 abort($proposalResponse->status() ?: 502, $proposalResponse->json('message') ?? 'Data proyek tidak dapat dimuat.');
             }
             $detail = $proposalResponse->json();
+
+            $rawStatus = strtolower((string) ($detail['status']['name'] ?? ($detail['status'] ?? '')));
+            $prog = (float) ($detail['overall_progress'] ?? 0);
+            $canAccessUat = in_array($rawStatus, ['testing', 'handover', 'completed'], true)
+                || ($rawStatus === 'active' && $prog >= 100)
+                || !empty($detail['bast_eligible']);
+
+            abort_unless($canAccessUat, 403, 'Lembar UAT hanya dapat diakses saat proyek telah mencapai progress 100% atau memasuki tahap testing.');
+
             $uat = null;
             $error = null;
 

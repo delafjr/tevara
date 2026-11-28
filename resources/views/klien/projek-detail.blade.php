@@ -708,6 +708,13 @@
                                 </p>
                             </div>
                             {{-- UAT Box --}}
+                            @php
+                                $rawStatusLower = strtolower($rawStatus);
+                                $canAccessUat = in_array($rawStatusLower, ['testing', 'handover', 'completed'], true) 
+                                    || ($rawStatusLower === 'active' && $overallProgress >= 100)
+                                    || !empty($proposal['bast_eligible']);
+                            @endphp
+                            @if($canAccessUat)
                             <div class="p-3.5 rounded-xl bg-[#EAF3FF] border border-blue-200 space-y-2.5">
                                 <div class="flex items-center gap-2 text-[#0B3B82]">
                                     <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -727,6 +734,7 @@
                                     </svg>
                                 </a>
                             </div>
+                            @endif
                             @if(!empty($proposal['client_approved']))
                                 <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2.5">
                                     <div class="flex items-center gap-2 text-emerald-800">

@@ -144,34 +144,67 @@
                     </div>
                 @endif
 
-                <div class="mt-5 space-y-3">
-                    @foreach($items as $item)
-                        <article class="rounded-xl border border-slate-200 p-4">
-                            <div class="flex flex-wrap items-start justify-between gap-2">
-                                <h3 class="font-semibold text-slate-900">{{ $item['feature_name'] }}</h3>
-                                <div class="text-right flex-shrink-0">
-                                    <p class="text-[9.5px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Hasil Pengujian</p>
+                <div class="mt-5 overflow-hidden rounded-xl border border-slate-200">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                    <th class="w-12 px-4 py-3 text-center">No</th>
+                                    <th class="w-2/5 min-w-[240px] px-4 py-3">Fitur & Skenario</th>
+                                    <th class="w-36 px-4 py-3 text-center">Hasil Pengujian</th>
+                                    <th class="px-4 py-3">Catatan / Feedback</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 bg-white">
+                                @php
+                                    $resultMap = [
+                                        'PASSED'    => ['label' => 'Sesuai', 'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200'],
+                                        'FAILED'    => ['label' => 'Belum sesuai', 'class' => 'bg-rose-50 text-rose-700 border-rose-200'],
+                                        'BUG_FOUND' => ['label' => 'Ada kendala', 'class' => 'bg-amber-50 text-amber-700 border-amber-200'],
+                                    ];
+                                @endphp
+                                @foreach($items as $index => $item)
                                     @php
-                                        $resultMap = ['PASSED' => ['label' => 'Sesuai', 'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200'], 'FAILED' => ['label' => 'Belum sesuai', 'class' => 'bg-rose-50 text-rose-700 border-rose-200'], 'BUG_FOUND' => ['label' => 'Ada kendala', 'class' => 'bg-amber-50 text-amber-700 border-amber-200']];
                                         $res = $resultMap[$item['result'] ?? ''] ?? ['label' => 'Belum dinilai', 'class' => 'bg-slate-50 text-slate-600 border-slate-200'];
+                                        $note = $item['bug_description'] ?? $item['client_feedback'] ?? null;
                                     @endphp
-                                    <span class="inline-block text-xs font-bold px-2.5 py-0.5 rounded-full border {{ $res['class'] }}">{{ $res['label'] }}</span>
-                                </div>
-                            </div>
-                            @if(!empty($item['client_feedback']) || !empty($item['bug_description']))
-                                <div class="mt-3">
-                                    <p class="text-[9.5px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Catatan</p>
-                                    <p class="text-sm text-slate-600">{{ $item['bug_description'] ?? $item['client_feedback'] }}</p>
-                                </div>
-                            @endif
-                            @if(!empty($item['review_notes']))
-                                <p class="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900"><strong>Tindak lanjut:</strong> {{ $item['review_notes'] }}</p>
-                            @endif
-                            @foreach(($item['tasks'] ?? []) as $task)
-                                <p class="mt-2 text-xs text-slate-500">Checklist mahasiswa: {{ $task['title'] }} — {{ $task['status'] === 'DONE' ? 'Selesai' : 'Belum selesai' }}</p>
-                            @endforeach
-                        </article>
-                    @endforeach
+                                    <tr class="hover:bg-slate-50/60 transition-colors align-top">
+                                        <td class="px-4 py-3.5 text-center font-semibold text-xs text-slate-400">
+                                            {{ $index + 1 }}
+                                        </td>
+                                        <td class="px-4 py-3.5">
+                                            <p class="font-bold text-slate-900 leading-snug">{{ $item['feature_name'] }}</p>
+                                            @if(!empty($item['test_scenario']))
+                                                <p class="mt-1 text-xs text-slate-500 leading-relaxed">{{ $item['test_scenario'] }}</p>
+                                            @endif
+                                            @if(!empty($item['tasks']))
+                                                <div class="mt-2 space-y-1">
+                                                    @foreach($item['tasks'] as $task)
+                                                        <div class="inline-flex items-center gap-1.5 text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                                            <span class="w-1.5 h-1.5 rounded-full {{ $task['status'] === 'DONE' ? 'bg-emerald-500' : 'bg-slate-300' }}"></span>
+                                                            <span>{{ $task['title'] }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                                            <span class="inline-block text-xs font-bold px-2.5 py-1 rounded-full border {{ $res['class'] }}">
+                                                {{ $res['label'] }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3.5">
+                                            @if(!empty($note))
+                                                <p class="text-xs text-slate-700 leading-relaxed">{{ $note }}</p>
+                                            @else
+                                                <span class="text-xs text-slate-300 italic">— Tidak ada catatan —</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
