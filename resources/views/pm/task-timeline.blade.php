@@ -101,10 +101,28 @@
             reviewOpen: true,
             taskModal: false,
             projectMenu: false,
+            previewModal: false,
+            previewUrl: '',
+            previewTitle: '',
             selectTask(task) {
                 this.selectedTask = task;
                 this.note = task.pm_notes ?? '';
                 this.reviewOpen = true;
+            },
+            openPreview(url, title = 'Bukti Pengerjaan') {
+                this.previewUrl = url;
+                this.previewTitle = title;
+                this.previewModal = true;
+            },
+            isImage(url) {
+                if (!url) return false;
+                const clean = url.split('?')[0].toLowerCase();
+                return clean.match(/\.(jpeg|jpg|png|webp|gif|svg)$/) != null || url.includes('/image/upload/');
+            },
+            isPdf(url) {
+                if (!url) return false;
+                const clean = url.split('?')[0].toLowerCase();
+                return clean.endsWith('.pdf');
             },
             formatDate(value) {
                 if (!value) return '—';
@@ -135,6 +153,9 @@
             },
             isFigma(url) {
                 return !!url && url.includes('figma.com');
+            },
+            isCanva(url) {
+                return !!url && url.includes('canva.com');
             }
           }">
 
@@ -242,6 +263,20 @@
                         <span class="w-1.5 h-1.5 rounded-full bg-[#FFB800]"></span>
                         Status: {{ $proposal['status'] ?? '—' }}
                     </span>
+                    @if(!empty($proposal['repository_url']))
+                        <span>·</span>
+                        <a href="{{ $proposal['repository_url'] }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-white hover:text-yellow-300 font-semibold underline underline-offset-2 transition-colors">
+                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                            Repository / GitHub
+                        </a>
+                    @endif
+                    @if(!empty($proposal['app_url']))
+                        <span>·</span>
+                        <a href="{{ $proposal['app_url'] }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-white hover:text-yellow-300 font-semibold underline underline-offset-2 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                            Live App / Figma / Demo
+                        </a>
+                    @endif
                 </div>
             </div>
 
@@ -481,47 +516,79 @@
 
                         {{-- Tautan Repositori / Demo / Figma (URL dari report_attachment_url atau teks capaian) --}}
                         <template x-if="getProofUrl()">
-                            <a :href="getProofUrl()" target="_blank" rel="noopener"
-                               class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all shadow-2xs group">
+                            <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 transition-all shadow-2xs group">
                                 <div class="flex items-center gap-2.5 min-w-0">
                                     <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center flex-shrink-0 group-hover:bg-[#0B254A] group-hover:text-white transition-colors">
                                         <template x-if="isGitHub(getProofUrl())">
                                             <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
                                         </template>
-                                        <template x-if="!isGitHub(getProofUrl())">
-                                            <svg class="w-4 h-4 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                        <template x-if="isGitLab(getProofUrl())">
+                                            <svg class="w-4 h-4 fill-current text-[#FC6D26]" viewBox="0 0 24 24"><path d="m23.6 9.593-1.84-5.666a.88.88 0 0 0-1.674 0l-1.84 5.666H5.754l-1.84-5.666a.88.88 0 0 0-1.674 0L.4 9.593a1.76 1.76 0 0 0 .64 1.968l10.428 7.576a.88.88 0 0 0 1.064 0l10.428-7.576a1.76 1.76 0 0 0 .64-1.968"/></svg>
+                                        </template>
+                                        <template x-if="isFigma(getProofUrl())">
+                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M8 24c2.208 0 4-1.792 4-4v-4H8c-2.208 0-4 1.792-4 4s1.792 4 4 4z" fill="#0ACF83"/><path d="M4 12c0-2.208 1.792-4 4-4h4v8H8c-2.208 0-4-1.792-4-4z" fill="#A259FF"/><path d="M4 4c0-2.208 1.792-4 4-4h4v8H8C5.792 8 4 6.208 4 4z" fill="#F24E1E"/><path d="M12 0h4c2.208 0 4 1.792 4 4s-1.792 4-4 4h-4V0z" fill="#FF7262"/><path d="M20 12c0 2.208-1.792 4-4 4s-4-1.792-4-4 1.792-4 4-4 4 1.792 4 4z" fill="#1ABCFE"/></svg>
+                                        </template>
+                                        <template x-if="isCanva(getProofUrl())">
+                                            <span class="text-xs font-black text-[#00C4CC]">C</span>
+                                        </template>
+                                        <template x-if="!isGitHub(getProofUrl()) && !isGitLab(getProofUrl()) && !isFigma(getProofUrl()) && !isCanva(getProofUrl())">
+                                            <template x-if="isImage(getProofUrl())">
+                                                <svg class="w-4 h-4 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
+                                            </template>
+                                            <template x-if="!isImage(getProofUrl())">
+                                                <svg class="w-4 h-4 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/></svg>
+                                            </template>
                                         </template>
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="text-xs font-bold text-[#0B254A] truncate" x-text="isGitHub(getProofUrl()) ? 'Repository / Pull Request GitHub' : (isFigma(getProofUrl()) ? 'Tautan Desain Figma' : 'Tautan Bukti Pengerjaan')"></p>
-                                        <p class="text-[11px] text-slate-400 truncate" x-text="getProofUrl()"></p>
+                                        <p class="text-xs font-bold text-[#0B254A] truncate"
+                                           x-text="isGitHub(getProofUrl()) ? 'Repository / PR GitHub' : (isGitLab(getProofUrl()) ? 'Repository GitLab' : (isFigma(getProofUrl()) ? 'Desain Figma' : (isCanva(getProofUrl()) ? 'Desain Canva' : (isImage(getProofUrl()) ? 'Foto / Screenshot Bukti' : 'Tautan Bukti Pengerjaan'))))"></p>
+                                        <p class="text-[11px] text-slate-400 truncate max-w-[220px]" x-text="getProofUrl()"></p>
                                     </div>
                                 </div>
-                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#2563EB] group-hover:underline flex-shrink-0">
-                                    Buka
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
-                                </span>
-                            </a>
+                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                                    <template x-if="isImage(getProofUrl()) || isPdf(getProofUrl())">
+                                        <button type="button"
+                                                @click="openPreview(getProofUrl(), isGitHub(getProofUrl()) ? 'Repository / PR GitHub' : (isFigma(getProofUrl()) ? 'Desain Figma' : (isImage(getProofUrl()) ? 'Foto / Screenshot Bukti' : 'Bukti Pengerjaan')))"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-[#2563EB] bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                                            Lihat Bukti
+                                        </button>
+                                    </template>
+                                    <a :href="getProofUrl()" target="_blank" rel="noopener"
+                                       class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-[#2563EB] bg-slate-50 hover:bg-blue-50 rounded-lg transition-colors">
+                                        Buka Link
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                    </a>
+                                </div>
+                            </div>
                         </template>
 
                         {{-- File Lampiran Fisik (jika di-upload sebagai file lokal) --}}
                         <template x-if="isLocalFile()">
-                            <a :href="selectedTask?.report_attachment_url" target="_blank" rel="noopener"
-                               class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all shadow-2xs group">
+                            <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 transition-all shadow-2xs group">
                                 <div class="flex items-center gap-2.5 min-w-0">
                                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center flex-shrink-0">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
                                     </div>
                                     <div class="min-w-0">
                                         <p class="text-xs font-bold text-[#0B254A]">Berkas Lampiran Laporan</p>
-                                        <p class="text-[11px] text-slate-400">Dokumen / Bukti / Screenshot</p>
+                                        <p class="text-[11px] text-slate-400 truncate max-w-[200px]" x-text="selectedTask?.report_attachment_url"></p>
                                     </div>
                                 </div>
-                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#2563EB] group-hover:underline flex-shrink-0">
-                                    Unduh / Lihat
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-                                </span>
-                            </a>
+                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                                    <button type="button"
+                                            @click="openPreview('/storage/' + selectedTask?.report_attachment_url, 'Berkas Lampiran')"
+                                            class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-[#2563EB] bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer">
+                                        Lihat Bukti
+                                    </button>
+                                    <a :href="'/storage/' + selectedTask?.report_attachment_url" target="_blank" download
+                                       class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-[#2563EB] bg-slate-50 hover:bg-blue-50 rounded-lg transition-colors">
+                                        Unduh
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                    </a>
+                                </div>
+                            </div>
                         </template>
 
                         {{-- Kosong / Belum ada bukti --}}
@@ -561,17 +628,27 @@
 
                             <div class="flex flex-wrap items-center gap-2">
                                 <template x-if="getProofUrl()">
-                                    <a :href="getProofUrl()" target="_blank" rel="noopener"
-                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-[#0B254A] hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-2xs">
-                                        <template x-if="isGitHub(getProofUrl())">
-                                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                                    <div class="inline-flex items-center gap-1.5 p-1 bg-white border border-slate-200 rounded-lg shadow-2xs">
+                                        <template x-if="isImage(getProofUrl()) || isPdf(getProofUrl())">
+                                            <button type="button"
+                                                    @click="openPreview(getProofUrl(), isGitHub(getProofUrl()) ? 'Repository / PR GitHub' : (isFigma(getProofUrl()) ? 'Desain Figma' : (isImage(getProofUrl()) ? 'Foto / Screenshot Bukti' : 'Bukti Pengerjaan')))"
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-[#2563EB] bg-blue-50 hover:bg-blue-100 rounded-md transition-colors cursor-pointer">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                                                <span>Lihat Bukti</span>
+                                            </button>
                                         </template>
-                                        <template x-if="!isGitHub(getProofUrl())">
-                                            <svg class="w-3.5 h-3.5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
-                                        </template>
-                                        <span x-text="isGitHub(getProofUrl()) ? 'Buka GitHub Mahasiswa' : 'Buka Tautan Bukti'"></span>
-                                        <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
-                                    </a>
+                                        <a :href="getProofUrl()" target="_blank" rel="noopener"
+                                           class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-[#2563EB] hover:bg-slate-50 rounded-md transition-colors">
+                                            <template x-if="isGitHub(getProofUrl())">
+                                                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                                            </template>
+                                            <template x-if="!isGitHub(getProofUrl())">
+                                                <svg class="w-3.5 h-3.5 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                            </template>
+                                            <span x-text="isGitHub(getProofUrl()) ? 'GitHub' : (isFigma(getProofUrl()) ? 'Figma' : (isCanva(getProofUrl()) ? 'Canva' : 'Buka Link'))"></span>
+                                            <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                        </a>
+                                    </div>
                                 </template>
                                 <template x-if="selectedTask?.report_attachment_url">
                                     <a :href="selectedTask?.report_attachment_url" target="_blank" rel="noopener"
@@ -680,6 +757,61 @@
             </div>
         </div>
         @endif
+
+        {{-- ── 7. MODAL PREVIEW BUKTI & DOWNLOAD ── --}}
+        <div x-show="previewModal" x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center bg-[#0B254A]/70 backdrop-blur-xs p-4 sm:p-6"
+             @keydown.escape.window="previewModal = false">
+            <div class="w-full max-w-4xl max-h-[90vh] rounded-2xl bg-white shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                 @click.outside="previewModal = false">
+                {{-- Header Modal --}}
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70">
+                    <div class="min-w-0 pr-4">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-[#2563EB]">Preview Bukti Pengerjaan</span>
+                        <h3 class="text-sm font-extrabold text-[#0B254A] truncate" x-text="previewTitle || selectedTask?.title || 'Bukti Tugas'"></h3>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        {{-- Tombol Download / Buka Asli --}}
+                        <a :href="previewUrl" target="_blank" download
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-[#2563EB] hover:border-slate-300 transition-colors shadow-2xs">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                            <span>Download / Unduh</span>
+                        </a>
+                        <a :href="previewUrl" target="_blank" rel="noopener"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0B254A] text-white hover:bg-[#123b6e] transition-colors shadow-2xs">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                            <span>Tab Baru</span>
+                        </a>
+                        <button type="button" @click="previewModal = false" class="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Body Preview --}}
+                <div class="flex-1 overflow-auto p-4 sm:p-6 bg-slate-900/5 flex items-center justify-center min-h-[360px] max-h-[70vh]">
+                    <template x-if="isImage(previewUrl)">
+                        <img :src="previewUrl" alt="Bukti Pengerjaan" class="max-h-[65vh] w-auto max-w-full rounded-lg object-contain shadow-md bg-white">
+                    </template>
+                    <template x-if="isPdf(previewUrl)">
+                        <iframe :src="previewUrl" class="w-full h-[65vh] rounded-lg border border-slate-200 bg-white" title="PDF Preview"></iframe>
+                    </template>
+                    <template x-if="!isImage(previewUrl) && !isPdf(previewUrl)">
+                        <div class="text-center p-8 bg-white rounded-xl border border-slate-200 max-w-md shadow-sm">
+                            <div class="w-12 h-12 rounded-full bg-blue-50 text-[#2563EB] flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/></svg>
+                            </div>
+                            <h4 class="text-sm font-bold text-[#0B254A] mb-1">Tautan Eksternal</h4>
+                            <p class="text-xs text-slate-500 mb-4 break-all" x-text="previewUrl"></p>
+                            <a :href="previewUrl" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#0B254A] text-white hover:bg-[#123b6e] transition-colors">
+                                Kunjungi Tautan
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                            </a>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
         @endif
 
     </main>

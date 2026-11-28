@@ -1705,7 +1705,10 @@ Route::middleware('auth.api')->group(function () {
                 'corrections.*.item_id' => ['required', 'integer', 'distinct'],
                 'corrections.*.note' => ['required', 'string', 'max:5000'],
                 'corrections.*.assigned_student_id' => ['required', 'integer'],
-                'corrections.*.due_date' => ['nullable', 'date'],
+                'corrections.*.due_date' => ['required', 'date', 'after_or_equal:today'],
+            ], [
+                'corrections.*.due_date.required' => 'Deadline task perbaikan wajib diisi.',
+                'corrections.*.due_date.after_or_equal' => 'Deadline task tidak boleh kurang dari hari ini.',
             ]);
 
             try {
@@ -2947,7 +2950,10 @@ Route::middleware('auth.api')->group(function () {
                 'corrections.*.item_id' => ['required', 'integer', 'distinct'],
                 'corrections.*.note' => ['required', 'string', 'max:5000'],
                 'corrections.*.assigned_student_id' => ['required', 'integer'],
-                'corrections.*.due_date' => ['nullable', 'date'],
+                'corrections.*.due_date' => ['required', 'date', 'after_or_equal:today'],
+            ], [
+                'corrections.*.due_date.required' => 'Deadline task perbaikan wajib diisi.',
+                'corrections.*.due_date.after_or_equal' => 'Deadline task tidak boleh kurang dari hari ini.',
             ]);
 
             try {

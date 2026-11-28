@@ -169,8 +169,29 @@
                     Checklist perbaikan sedang dikerjakan. UAT ulang belum dibuka sampai seluruh tugas diselesaikan dan diverifikasi.
                 </section>
             @elseif($reviewStatus === 'READY_FOR_RETEST')
-                <section class="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm text-blue-900">
-                    Seluruh checklist telah diverifikasi. Klien dapat membuka proyek dan mengirim hasil pengujian ulang.
+                <section class="rounded-2xl border border-blue-200 bg-blue-50 p-6 text-sm text-blue-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-600 text-white">Siap Uji Ulang</span>
+                            <span class="text-xs text-blue-700 font-semibold">Tindak lanjut selesai diverifikasi</span>
+                        </div>
+                        <p class="text-slate-600">Seluruh tugas perbaikan telah diselesaikan oleh mahasiswa dan disetujui Dosen PM. Buka sesi pengujian ulang agar Klien menerima notifikasi dan dapat mengisi lembar UAT terbaru.</p>
+                    </div>
+                    @if(strtolower($proposal['status']['name'] ?? '') !== 'testing' && (int) ($proposal['status_id'] ?? 0) !== 8)
+                        <form action="{{ route('pengurus-tefa.uat.status-testing', $proposalId) }}" method="POST" class="flex-shrink-0">
+                            @csrf
+                            <button type="submit"
+                                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-[#0B3B82] text-white hover:bg-[#082a5c] shadow-sm transition cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                Buka Sesi Uji Ulang &amp; Beritahu Klien
+                            </button>
+                        </form>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold flex-shrink-0">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                            Fase Testing Aktif (Menunggu Uji Klien)
+                        </span>
+                    @endif
                 </section>
             @elseif($reviewStatus === 'APPROVED')
                 <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
