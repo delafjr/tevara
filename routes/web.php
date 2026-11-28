@@ -3026,46 +3026,7 @@ Route::middleware('auth.api')->group(function () {
             ]);
         })->whereNumber('proposal')->name('maintenance.detail');
 
-        // Tiket inisiatif dari tefa (store)
-        Route::post('/maintenance/{proposal}/tickets', function (Request $request, ApiService $api, int $proposal) {
-            $validated = $request->validate([
-                'title'       => ['required', 'string', 'max:255'],
-                'description' => ['nullable', 'string'],
-                'priority'    => ['nullable', 'in:low,medium,high'],
-                'image'       => ['nullable', 'image', 'max:10240'],
-            ]);
-
-            try {
-                $payload = [
-                    'title'       => $validated['title'],
-                    'description' => $validated['description'] ?? null,
-                    'priority'    => $validated['priority'] ?? 'medium',
-                ];
-
-                if ($request->hasFile('image')) {
-                    $response = $api->sendWithFile(
-                        "proposals/{$proposal}/maintenance-tickets",
-                        'image',
-                        $request->file('image'),
-                        $payload
-                    );
-                } else {
-                    $response = $api->post("proposals/{$proposal}/maintenance-tickets", $payload);
-                }
-
-                if ($response->successful()) {
-                    return redirect()
-                        ->route('pengurus-tefa.maintenance.detail', $proposal)
-                        ->with('success', 'Catatan maintenance berhasil ditambahkan. Klien telah dinotifikasi.');
-                }
-
-                return back()->withInput()->with('error', $response->json('message') ?? 'Gagal menambahkan catatan.');
-            } catch (\Throwable $e) {
-                return back()->withInput()->with('error', 'Tidak dapat terhubung ke server: ' . $e->getMessage());
-            }
-        })->whereNumber('proposal')->name('maintenance.ticket.store');
-
-        // Update tiket (balas + status)
+        // Update tiket (balas + status respons penanganan oleh Pengurus TeFa)
         Route::patch('/maintenance/{proposal}/tickets/{ticket}', function (Request $request, ApiService $api, int $proposal, int $ticket) {
             $validated = $request->validate([
                 'status'           => ['nullable', 'in:open,in_progress,resolved'],
