@@ -166,16 +166,32 @@
                                 <h3 class="font-semibold text-slate-900">{{ $item['feature_name'] }}</h3>
                                 <label for="note-{{ $index }}" class="mt-3 block text-xs font-semibold text-slate-600">Poin Perbaikan (Judul/Deskripsi Task) <span class="text-red-600">*</span></label>
                                 <textarea id="note-{{ $index }}" name="corrections[{{ $index }}][note]" required rows="2" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82]" placeholder="Jelaskan apa yang perlu diperbaiki oleh mahasiswa.">{{ old("corrections.$index.note") }}</textarea>
-                                <label for="student-{{ $index }}" class="mt-3 block text-xs font-semibold text-slate-600">Ditujukan ke Mahasiswa <span class="text-red-600">*</span></label>
-                                <select id="student-{{ $index }}" name="corrections[{{ $index }}][assigned_student_id]" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82]">
-                                    <option value="">Pilih mahasiswa</option>
-                                    @foreach($members as $member)
-                                        @php
-                                            $student = $member['student'] ?? [];
-                                        @endphp
-                                        <option value="{{ $student['id'] ?? '' }}">{{ $student['name'] ?? 'Mahasiswa' }}{{ !empty($student['nim']) ? ' · ' . $student['nim'] : '' }}</option>
-                                    @endforeach
-                                </select>
+                                <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label for="student-{{ $index }}" class="block text-xs font-semibold text-slate-600">Ditujukan ke Mahasiswa <span class="text-red-600">*</span></label>
+                                        <select id="student-{{ $index }}" name="corrections[{{ $index }}][assigned_student_id]" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82]">
+                                            <option value="">Pilih mahasiswa</option>
+                                            @foreach($members as $member)
+                                                @php
+                                                    $student = $member['student'] ?? [];
+                                                @endphp
+                                                <option value="{{ $student['id'] ?? '' }}" {{ (string) old("corrections.$index.assigned_student_id") === (string) ($student['id'] ?? '') ? 'selected' : '' }}>
+                                                    {{ $student['name'] ?? 'Mahasiswa' }}{{ !empty($student['nim']) ? ' · ' . $student['nim'] : '' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="due-date-{{ $index }}" class="block text-xs font-semibold text-slate-600">Tenggat Waktu (Deadline) <span class="text-red-600">*</span></label>
+                                        <input type="date"
+                                               id="due-date-{{ $index }}"
+                                               name="corrections[{{ $index }}][due_date]"
+                                               value="{{ old("corrections.$index.due_date", date('Y-m-d', strtotime('+3 days'))) }}"
+                                               min="{{ date('Y-m-d') }}"
+                                               required
+                                               class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3B82]/30 focus:border-[#0B3B82]">
+                                    </div>
+                                </div>
                             </div>
                         @endforeach
                         @if($failedItems->count() === 0)
