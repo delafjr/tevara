@@ -1237,10 +1237,26 @@ Route::middleware('auth.api')->group(function () {
                 'title'       => ['required', 'string', 'max:255'],
                 'description' => ['nullable', 'string'],
                 'priority'    => ['nullable', 'in:low,medium,high'],
+                'image'       => ['nullable', 'image', 'max:10240'],
             ]);
 
             try {
-                $response = $api->post("proposals/{$proposal}/maintenance-tickets", $validated);
+                $payload = [
+                    'title'       => $validated['title'],
+                    'description' => $validated['description'] ?? null,
+                    'priority'    => $validated['priority'] ?? 'medium',
+                ];
+
+                if ($request->hasFile('image')) {
+                    $response = $api->sendWithFile(
+                        "proposals/{$proposal}/maintenance-tickets",
+                        'image',
+                        $request->file('image'),
+                        $payload
+                    );
+                } else {
+                    $response = $api->post("proposals/{$proposal}/maintenance-tickets", $payload);
+                }
 
                 if ($response->successful()) {
                     return redirect()
@@ -3016,10 +3032,26 @@ Route::middleware('auth.api')->group(function () {
                 'title'       => ['required', 'string', 'max:255'],
                 'description' => ['nullable', 'string'],
                 'priority'    => ['nullable', 'in:low,medium,high'],
+                'image'       => ['nullable', 'image', 'max:10240'],
             ]);
 
             try {
-                $response = $api->post("proposals/{$proposal}/maintenance-tickets", $validated);
+                $payload = [
+                    'title'       => $validated['title'],
+                    'description' => $validated['description'] ?? null,
+                    'priority'    => $validated['priority'] ?? 'medium',
+                ];
+
+                if ($request->hasFile('image')) {
+                    $response = $api->sendWithFile(
+                        "proposals/{$proposal}/maintenance-tickets",
+                        'image',
+                        $request->file('image'),
+                        $payload
+                    );
+                } else {
+                    $response = $api->post("proposals/{$proposal}/maintenance-tickets", $payload);
+                }
 
                 if ($response->successful()) {
                     return redirect()
@@ -3039,10 +3071,27 @@ Route::middleware('auth.api')->group(function () {
                 'status'           => ['nullable', 'in:open,in_progress,resolved'],
                 'resolution_notes' => ['nullable', 'string'],
                 'priority'         => ['nullable', 'in:low,medium,high'],
+                'resolution_image' => ['nullable', 'image', 'max:10240'],
             ]);
 
             try {
-                $response = $api->patch("proposals/{$proposal}/maintenance-tickets/{$ticket}", $validated);
+                $payload = [
+                    'status'           => $validated['status'] ?? null,
+                    'resolution_notes' => $validated['resolution_notes'] ?? null,
+                    'priority'         => $validated['priority'] ?? null,
+                ];
+
+                if ($request->hasFile('resolution_image')) {
+                    $response = $api->sendWithFile(
+                        "proposals/{$proposal}/maintenance-tickets/{$ticket}",
+                        'resolution_image',
+                        $request->file('resolution_image'),
+                        $payload,
+                        'PATCH'
+                    );
+                } else {
+                    $response = $api->patch("proposals/{$proposal}/maintenance-tickets/{$ticket}", $payload);
+                }
 
                 if ($response->successful()) {
                     return redirect()
